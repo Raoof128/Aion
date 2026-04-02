@@ -1,0 +1,199 @@
+import { useMemo, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  StyleSheet,
+  Platform,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import Animated, { FadeIn } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import { Ionicons } from "@expo/vector-icons";
+import { colors, fonts } from "../../../lib/theme";
+import { BIBLE_BOOKS } from "../../../lib/bible-data";
+
+function triggerHaptic() {
+  if (Platform.OS !== "web") {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  }
+}
+
+export default function ChapterListScreen() {
+  const router = useRouter();
+  const { bookId } = useLocalSearchParams<{ bookId: string }>();
+
+  const book = useMemo(
+    () => BIBLE_BOOKS.find((b) => b.id === bookId),
+    [bookId]
+  );
+
+  const chapters = useMemo(() => {
+    if (!book) return [];
+    return Array.from({ length: book.chapters }, (_, i) => i + 1);
+  }, [book]);
+
+  const handleChapterPress = useCallback(
+    (chapter: number) => {
+      triggerHaptic();
+      router.push(`/reader/${bookId}/${chapter}`);
+    },
+    [router, bookId]
+  );
+
+  const handleBack = useCallback(() => {
+    triggerHaptic();
+    router.back();
+  }, [router]);
+
+  const renderChapter = useCallback(
+    ({ item }: { item: number }) => (
+      <Pressable
+        style={({ pressed }) => [
+          styles.chapterCell,
+          pressed && styles.chapterCellPressed,
+        ]}
+        onPress={() => handleChapterPress(item)}
+        accessibilityLabel={`Chapter ${item}`}
+        accessibilityRole="button"
+      >
+        <Text style={styles.chapterNumber}>{item}</Text>
+      </Pressable>
+    ),
+    [handleChapterPress]
+  );
+
+  const keyExtractor = useCallback((item: number) => String(item), []);
+
+  if (!book) {
+    return (
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Book not found</Text>
+        </View>
+      </SafeAreaView>
+    );
+  }
+
+  return (
+    <SafeAreaView style={styles.container} edges={["top"]}>
+      <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable
+            onPress={handleBack}
+            style={styles.backButton}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Ionicons
+              name="chevron-back"
+              size={24}
+              color={colors.textPrimary}
+            />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text style={styles.headerTitle} numberOfLines={1}>
+              {book.name}
+            </Text>
+            <Text style={styles.headerSubtitle}>
+              {book.chapters} {book.chapters === 1 ? "chapter" : "chapters"}
+            </Text>
+          </View>
+          {/* Spacer to balance the back button */}
+          <View style={styles.backButton} />
+        </View>
+
+        {/* Chapter Grid */}
+        <FlatList
+          data={chapters}
+          renderItem={renderChapter}
+          keyExtractor={keyExtractor}
+          numColumns={5}
+          columnWrapperStyle={styles.row}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+        />
+      </Animated.View>
+    </SafeAreaView>
+  );
+}
+
+const CELL_SIZE = 56;
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.obsidian,
+  },
+  inner: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 16,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
+  },
+  headerTitle: {
+    fontSize: 18,
+    fontFamily: fonts.uiBold,
+    color: colors.textPrimary,
+  },
+  headerSubtitle: {
+    fontSize: 12,
+    fontFamily: fonts.ui,
+    color: colors.textGhost,
+    marginTop: 2,
+  },
+  listContent: {
+    paddingHorizontal: 20,
+    paddingBottom: 40,
+  },
+  row: {
+    gap: 10,
+    marginBottom: 10,
+  },
+  chapterCell: {
+    width: CELL_SIZE,
+    height: CELL_SIZE,
+    borderRadius: 12,
+    backgroundColor: colors.glass,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  chapterCellPressed: {
+    backgroundColor: colors.purpleAccent,
+    borderColor: colors.purple,
+  },
+  chapterNumber: {
+    fontSize: 16,
+    fontFamily: fonts.uiMedium,
+    color: colors.textPrimary,
+  },
+  errorContainer: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  errorText: {
+    fontSize: 16,
+    fontFamily: fonts.ui,
+    color: colors.textMuted,
+  },
+});

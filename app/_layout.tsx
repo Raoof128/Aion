@@ -92,6 +92,7 @@ export default function RootLayout() {
             name="chat/[id]"
             options={{ title: "Chat", drawerItemStyle: { display: "none" } }}
           />
+          <Drawer.Screen name="reader" options={{ title: "Read Bible" }} />
         </Drawer>
       </GestureHandlerRootView>
     </QueryClientProvider>
