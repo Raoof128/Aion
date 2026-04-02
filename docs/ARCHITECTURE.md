@@ -35,8 +35,8 @@
         │                       │
         ▼                       ▼
 ┌──────────────┐    ┌──────────────────┐
-│  OpenAI API  │    │  Gemini 3 Flash  │
-│  (embeddings)│    │  (chat streaming)│
+│  OpenAI API  │    │  Gemini 3.1      │
+│  (embeddings)│    │  Flash Lite      │
 └──────────────┘    └──────────────────┘
 ```
 
@@ -45,14 +45,15 @@
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Mobile App | React Native + Expo | Cross-platform iOS/Android |
+| Desktop App | Tauri v2 | Native macOS/Windows/Linux (~5MB) |
 | Routing | Expo Router | File-based navigation with deep linking |
-| Styling | NativeWind (Tailwind) | Utility-first styling with full design control |
+| Styling | React Native StyleSheet | Cross-platform styling with theme system |
 | State | React Query | Server state caching for history drawer |
 | Backend | Supabase Edge Functions | Serverless RAG pipeline (Deno runtime) |
 | Database | PostgreSQL + pgvector | Relational data + vector embeddings |
 | Auth | Supabase Anonymous Auth | Zero-friction device-level identity |
 | Embeddings | OpenAI text-embedding-3-small | 1536-dimension text vectors |
-| Chat LLM | Gemini 3 Flash | Fast, cost-effective conversational AI |
+| Chat LLM | Gemini 3.1 Flash Lite | Fast, cost-effective conversational AI |
 | Data Source | bible.helloao.org | BSB Bible translation (23,583 verses) |
 
 ## Data Flow

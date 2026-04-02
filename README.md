@@ -26,11 +26,12 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 ## Tech Stack
 
-- **Frontend:** React Native + Expo + Expo Router + NativeWind
+- **Frontend:** React Native + Expo + Expo Router
+- **Desktop:** Tauri v2 (native macOS/Windows/Linux wrapper, ~5MB)
 - **Backend:** Supabase (PostgreSQL + pgvector + Edge Functions)
 - **Auth:** Supabase Anonymous Auth
 - **Embedding Model:** OpenAI `text-embedding-3-small` (1536 dimensions)
-- **Chat LLM:** Gemini 3 Flash
+- **Chat LLM:** Gemini 3.1 Flash Lite Preview
 - **Data Source:** [bible.helloao.org](https://bible.helloao.org/docs/) (BSB translation)
 - **Client Caching:** @tanstack/react-query
 
@@ -78,7 +79,12 @@ Aion/
 ├── lib/                          # Shared utilities
 │   ├── supabase.ts               # Supabase client
 │   ├── chat.ts                   # SSE streaming hook
+│   ├── theme.ts                  # Design system (colors, fonts)
 │   └── types.ts                  # TypeScript interfaces
+├── src-tauri/                    # Tauri desktop app wrapper
+│   ├── src/                      # Rust entry points
+│   ├── icons/                    # App icons (all platforms)
+│   └── tauri.conf.json           # Tauri configuration
 ├── scripts/
 │   └── ingest.ts                 # Bible data ingestion pipeline
 ├── supabase/
@@ -155,26 +161,39 @@ This fetches the entire BSB Bible from bible.helloao.org, generates embeddings v
 ### 7. Run the App
 
 ```bash
+# Mobile (iOS/Android via Expo Go)
 npx expo start
+
+# Web browser
+npx expo start --web
+
+# Desktop (requires Rust installed)
+npm run desktop
 ```
 
 ## Development
 
 ```bash
-# Type-check the project
-npx tsc --noEmit
+# Type-check
+npm run type-check
 
 # Lint
-npx eslint .
+npm run lint
 
 # Format
-npx prettier --write .
+npm run format
 
 # Run on iOS simulator
 npx expo run:ios
 
 # Run on Android emulator
 npx expo run:android
+
+# Run desktop app (dev mode)
+npm run desktop
+
+# Build desktop app (production)
+npm run desktop:build
 ```
 
 ## Security
