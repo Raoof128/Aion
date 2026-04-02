@@ -11,6 +11,36 @@ interface ChatInputProps {
 
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
+  const [isListening, setIsListening] = useState(false);
+
+  const toggleVoiceInput = () => {
+    if (Platform.OS !== "web") return;
+
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) return;
+
+    if (isListening) {
+      setIsListening(false);
+      return;
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (event: any) => {
+      const transcript = event.results[0][0].transcript;
+      setText((prev) => prev + (prev ? " " : "") + transcript);
+      setIsListening(false);
+    };
+
+    recognition.onerror = () => setIsListening(false);
+    recognition.onend = () => setIsListening(false);
+
+    recognition.start();
+    setIsListening(true);
+  };
 
   const handleSend = () => {
     const trimmed = text.trim();
@@ -48,6 +78,18 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           editable={!disabled}
           accessibilityLabel="Message input"
         />
+        {Platform.OS === "web" && (
+          <Pressable
+            onPress={toggleVoiceInput}
+            style={[styles.micButton, isListening && styles.micButtonActive]}
+            accessibilityLabel={isListening ? "Stop listening" : "Voice input"}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.micIcon, isListening && styles.micIconActive]}>
+              {isListening ? "⏹" : "🎤"}
+            </Text>
+          </Pressable>
+        )}
         <Animated.View style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive, sendAnimStyle]}>
           <Pressable
             onPress={handleSend}
@@ -148,5 +190,25 @@ const styles = StyleSheet.create({
   },
   charCountError: {
     color: colors.error,
+  },
+  micButton: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    marginRight: 6,
+  },
+  micButtonActive: {
+    backgroundColor: "rgba(220, 38, 38, 0.15)",
+    borderWidth: 1,
+    borderColor: "rgba(220, 38, 38, 0.3)",
+  },
+  micIcon: {
+    fontSize: 16,
+  },
+  micIconActive: {
+    color: "#DC2626",
   },
 });

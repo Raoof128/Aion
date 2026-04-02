@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet } from "react-native";
+import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Share } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
@@ -15,7 +15,14 @@ interface DisplayMessage {
   role: "user" | "assistant";
   content: string;
   verses?: Verse[] | null;
+  timestamp: string;
 }
+
+const FOLLOW_UPS = [
+  "Tell me more about this",
+  "Find similar verses",
+  "Explain in simpler terms",
+];
 
 export default function ChatScreen() {
   const { id, initialMessage } = useLocalSearchParams<{
@@ -70,6 +77,7 @@ export default function ChatScreen() {
           role: m.role,
           content: m.content,
           verses: m.verses,
+          timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
         })),
       );
     }
@@ -80,6 +88,7 @@ export default function ChatScreen() {
       id: `user-${Date.now()}`,
       role: "user",
       content: text,
+      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
     };
     setMessages((prev) => [...prev, userMsg]);
 
@@ -94,10 +103,42 @@ export default function ChatScreen() {
         role: "assistant",
         content: streamingText,
         verses: verses.length > 0 ? verses : null,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
       };
       setMessages((prev) => [...prev, assistantMsg]);
     }
   }, [isStreaming]);
+
+  const handleRegenerate = async () => {
+    if (messages.length < 2) return;
+    // Find the last user message
+    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+    if (!lastUserMsg) return;
+    // Remove last assistant message
+    setMessages(prev => prev.slice(0, -1));
+    // Re-send
+    const convId = !isNewChat ? id : conversationId;
+    await sendMessage(lastUserMsg.content, convId);
+  };
+
+  const handleExport = async () => {
+    if (messages.length === 0) return;
+    const text = messages
+      .map((m) => {
+        const role = m.role === "user" ? "You" : "Aion";
+        let msg = `${role}: ${m.content}`;
+        if (m.verses && m.verses.length > 0) {
+          const refs = m.verses.map(v => `  📖 ${v.book_name} ${v.chapter}:${v.verse} — "${v.content}"`).join("\n");
+          msg += "\n" + refs;
+        }
+        return msg;
+      })
+      .join("\n\n");
+
+    try {
+      await Share.share({ message: `Aion Conversation\n${"─".repeat(30)}\n\n${text}` });
+    } catch {}
+  };
 
   const displayMessages: DisplayMessage[] = [
     ...messages,
@@ -108,6 +149,7 @@ export default function ChatScreen() {
             role: "assistant" as const,
             content: streamingText || "Searching scripture...",
             verses: verses.length > 0 ? verses : null,
+            timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           },
         ]
       : []),
@@ -130,7 +172,14 @@ export default function ChatScreen() {
             <Text style={styles.messageCount}>{displayMessages.length}</Text>
           )}
         </View>
-        <View style={styles.headerButton} />
+        <Pressable
+          onPress={handleExport}
+          style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
+          accessibilityLabel="Export conversation"
+          accessibilityRole="button"
+        >
+          <Text style={styles.exportIcon}>↗</Text>
+        </Pressable>
       </View>
 
       <KeyboardAvoidingView
@@ -141,8 +190,18 @@ export default function ChatScreen() {
           ref={flatListRef}
           data={displayMessages}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <ChatBubble role={item.role} content={item.content} verses={item.verses} />
+          renderItem={({ item, index }) => (
+            <ChatBubble
+              role={item.role}
+              content={item.content}
+              verses={item.verses}
+              timestamp={item.timestamp}
+              onRegenerate={
+                item.role === "assistant" && index === displayMessages.length - 1 && !isStreaming
+                  ? handleRegenerate
+                  : undefined
+              }
+            />
           )}
           contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
@@ -161,6 +220,17 @@ export default function ChatScreen() {
                 Ask anything about the Bible{"\n"}and discover scripture with AI
               </Text>
             </View>
+          }
+          ListFooterComponent={
+            displayMessages.length > 0 && !isStreaming ? (
+              <View style={styles.followUps}>
+                {FOLLOW_UPS.map((text) => (
+                  <Pressable key={text} onPress={() => handleSend(text)} style={styles.followUpChip}>
+                    <Text style={styles.followUpText}>{text}</Text>
+                  </Pressable>
+                ))}
+              </View>
+            ) : null
           }
         />
 
@@ -223,6 +293,10 @@ const styles = StyleSheet.create({
   backArrow: {
     color: colors.textSecondary,
     fontSize: 20,
+  },
+  exportIcon: {
+    color: "#9494A8",
+    fontSize: 18,
   },
   headerCenter: {
     flexDirection: "row",
@@ -325,6 +399,26 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.error,
     fontSize: 13,
+    fontFamily: fonts.ui,
+  },
+  followUps: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    paddingHorizontal: 4,
+    paddingTop: 8,
+    gap: 6,
+  },
+  followUpChip: {
+    backgroundColor: colors.purpleMist,
+    borderWidth: 1,
+    borderColor: colors.purpleBorder,
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+  },
+  followUpText: {
+    color: colors.purpleGlow,
+    fontSize: 12,
     fontFamily: fonts.ui,
   },
 });

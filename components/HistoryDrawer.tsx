@@ -1,4 +1,5 @@
-import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Platform, StyleSheet } from "react-native";
+import { useState } from "react";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Platform, StyleSheet, TextInput } from "react-native";
 import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
@@ -27,22 +28,51 @@ function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
     transform: [{ scale: scale.value }],
   }));
 
+  const [isEditing, setIsEditing] = useState(false);
+  const [editTitle, setEditTitle] = useState(item.title || "");
+  const queryClient = useQueryClient();
+
+  const handleRename = async () => {
+    if (!editTitle.trim()) return;
+    await supabase.from("conversations").update({ title: editTitle.trim() }).eq("id", item.id);
+    queryClient.invalidateQueries({ queryKey: ["conversations"] });
+    setIsEditing(false);
+  };
+
   return (
     <Animated.View style={animStyle}>
       <Pressable
-        onPress={() => onOpen(item.id)}
-        onLongPress={() => onDelete(item.id)}
-        onPressIn={() => { scale.value = withSpring(0.98); }}
+        onPress={() => !isEditing && onOpen(item.id)}
+        onLongPress={() => !isEditing && onDelete(item.id)}
+        onPressIn={() => { if (!isEditing) scale.value = withSpring(0.98); }}
         onPressOut={() => { scale.value = withSpring(1); }}
         style={({ hovered }: any) => [styles.conversationRow, hovered && styles.conversationRowHovered]}
         accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo}`}
         accessibilityRole="button"
         accessibilityHint="Tap to open, long press to delete"
       >
-        <Text style={styles.conversationTitle} numberOfLines={2}>
-          {item.title || "Untitled"}
-        </Text>
-        <Text style={styles.conversationTime}>{timeAgo}</Text>
+        <View style={styles.rowContent}>
+          <View style={styles.rowText}>
+            {isEditing ? (
+              <TextInput
+                value={editTitle}
+                onChangeText={setEditTitle}
+                onSubmitEditing={handleRename}
+                onBlur={() => setIsEditing(false)}
+                autoFocus
+                style={styles.editInput}
+              />
+            ) : (
+              <Text style={styles.conversationTitle} numberOfLines={2}>
+                {item.title || "Untitled"}
+              </Text>
+            )}
+            <Text style={styles.conversationTime}>{timeAgo}</Text>
+          </View>
+          <Pressable onPress={() => setIsEditing(true)} style={styles.editButton}>
+            <Text style={styles.editIcon}>✎</Text>
+          </Pressable>
+        </View>
       </Pressable>
     </Animated.View>
   );
@@ -248,5 +278,26 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: fonts.ui,
     marginTop: 4,
+  },
+  rowContent: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  rowText: {
+    flex: 1,
+  },
+  editButton: {
+    padding: 8,
+  },
+  editIcon: {
+    color: "#56566A",
+    fontSize: 14,
+  },
+  editInput: {
+    color: "#F0F0F5",
+    fontSize: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: "#8A2BE2",
+    paddingVertical: 4,
   },
 });

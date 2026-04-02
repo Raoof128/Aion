@@ -10,14 +10,18 @@ import {
   PlayfairDisplay_400Regular_Italic,
   PlayfairDisplay_700Bold,
 } from "@expo-google-fonts/playfair-display";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
 import { HistoryDrawer } from "../components/HistoryDrawer";
+import { Onboarding } from "../components/Onboarding";
 import { colors } from "../lib/theme";
 
 const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [onboardingChecked, setOnboardingChecked] = useState(false);
 
   const [fontsLoaded] = useFonts({
     Inter_400Regular,
@@ -44,12 +48,33 @@ export default function RootLayout() {
     initAuth();
   }, []);
 
+  useEffect(() => {
+    async function checkOnboarding() {
+      const done = await AsyncStorage.getItem("onboarding_complete");
+      setShowOnboarding(!done);
+      setOnboardingChecked(true);
+    }
+    checkOnboarding();
+  }, []);
+
   if (!ready || !fontsLoaded) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.purple} size="large" />
       </View>
     );
+  }
+
+  if (!onboardingChecked) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.purple} size="large" />
+      </View>
+    );
+  }
+
+  if (showOnboarding) {
+    return <Onboarding onComplete={() => setShowOnboarding(false)} />;
   }
 
   return (

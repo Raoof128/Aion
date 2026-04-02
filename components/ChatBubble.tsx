@@ -1,7 +1,7 @@
-import { useEffect } from "react";
-import { View, Text, StyleSheet } from "react-native";
+import { useEffect, useState } from "react";
+import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
 import Animated, {
-  FadeIn,
+
   FadeInLeft,
   FadeInRight,
   useAnimatedStyle,
@@ -9,6 +9,8 @@ import Animated, {
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
+import * as Haptics from "expo-haptics";
+import Markdown from "react-native-markdown-display";
 import { VerseCard } from "./VerseCard";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
@@ -48,9 +50,46 @@ interface ChatBubbleProps {
   role: "user" | "assistant";
   content: string;
   verses?: Verse[] | null;
+  timestamp?: string;
+  onRegenerate?: () => void;
 }
 
-export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
+const markdownStyles = {
+  body: { color: colors.textPrimary, fontSize: 15, fontFamily: fonts.ui, lineHeight: 26 },
+  heading1: { color: colors.white, fontSize: 22, fontWeight: "700" as const, marginVertical: 8 },
+  heading2: { color: colors.white, fontSize: 18, fontWeight: "700" as const, marginVertical: 6 },
+  heading3: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" as const, marginVertical: 4 },
+  strong: { color: colors.white, fontWeight: "700" as const },
+  em: { color: colors.textSecondary, fontStyle: "italic" as const },
+  bullet_list: { marginVertical: 4 },
+  ordered_list: { marginVertical: 4 },
+  list_item: { marginVertical: 2 },
+  code_inline: { backgroundColor: colors.glass, color: colors.purpleGlow, paddingHorizontal: 4, borderRadius: 4, fontFamily: "monospace" },
+  code_block: { backgroundColor: colors.onyx, padding: 12, borderRadius: 8, fontFamily: "monospace", color: colors.textPrimary },
+  blockquote: { borderLeftWidth: 3, borderLeftColor: colors.purple, paddingLeft: 12, marginVertical: 8, opacity: 0.8 },
+  link: { color: colors.purpleGlow },
+};
+
+export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: ChatBubbleProps) {
+  const [responseCopied, setResponseCopied] = useState(false);
+  const [feedback, setFeedback] = useState<"up" | "down" | null>(null);
+
+  const handleCopyResponse = async () => {
+    try {
+      if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(content);
+      } else {
+        const Clipboard = await import("expo-clipboard");
+        await Clipboard.setStringAsync(content);
+      }
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      setResponseCopied(true);
+      setTimeout(() => setResponseCopied(false), 1500);
+    } catch {}
+  };
+
   if (role === "user") {
     return (
       <Animated.View
@@ -63,6 +102,7 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
         <View style={styles.userBubble}>
           <Text style={styles.userText}>{content}</Text>
         </View>
+        {timestamp && <Text style={[styles.timestamp, styles.timestampRight]}>{timestamp}</Text>}
       </Animated.View>
     );
   }
@@ -81,7 +121,25 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
         <View style={styles.aiDot} />
         <Text style={styles.aiLabel}>Aion</Text>
       </View>
-      {isSearching ? <PulsingDot /> : <Text style={styles.assistantText}>{content}</Text>}
+      {isSearching ? <PulsingDot /> : <Markdown style={markdownStyles}>{content}</Markdown>}
+      {!isSearching && (
+        <View style={styles.messageActions}>
+          <Pressable onPress={handleCopyResponse} style={styles.messageActionButton}>
+            <Text style={styles.messageActionText}>{responseCopied ? "✓ Copied" : "Copy"}</Text>
+          </Pressable>
+          {onRegenerate && (
+            <Pressable onPress={onRegenerate} style={styles.messageActionButton}>
+              <Text style={styles.messageActionText}>↻ Retry</Text>
+            </Pressable>
+          )}
+          <Pressable onPress={() => setFeedback("up")} style={[styles.messageActionButton, feedback === "up" && styles.feedbackActive]}>
+            <Text style={[styles.messageActionText, feedback === "up" && styles.feedbackActiveText]}>👍</Text>
+          </Pressable>
+          <Pressable onPress={() => setFeedback("down")} style={[styles.messageActionButton, feedback === "down" && styles.feedbackActive]}>
+            <Text style={[styles.messageActionText, feedback === "down" && styles.feedbackActiveText]}>👎</Text>
+          </Pressable>
+        </View>
+      )}
       {verses && verses.length > 0 && (
         <>
           <View style={styles.verseSeparator} />
@@ -93,6 +151,7 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
           </View>
         </>
       )}
+      {timestamp && <Text style={styles.timestamp}>{timestamp}</Text>}
     </Animated.View>
   );
 }
@@ -170,5 +229,39 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
     textTransform: "uppercase",
     marginBottom: 4,
+  },
+  timestamp: {
+    color: colors.textGhost,
+    fontSize: 10,
+    fontFamily: fonts.ui,
+    marginTop: 2,
+  },
+  timestampRight: {
+    textAlign: "right",
+  },
+  messageActions: {
+    flexDirection: "row",
+    marginTop: 8,
+    gap: 8,
+  },
+  messageActionButton: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    backgroundColor: colors.glass,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  messageActionText: {
+    color: colors.textMuted,
+    fontSize: 11,
+    fontFamily: fonts.uiMedium,
+  },
+  feedbackActive: {
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleBorder,
+  },
+  feedbackActiveText: {
+    color: colors.purpleGlow,
   },
 });

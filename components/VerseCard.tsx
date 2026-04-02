@@ -13,6 +13,8 @@ interface VerseCardProps {
 export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   const reference = `${verse.book_name} ${verse.chapter}:${verse.verse}`;
   const [copied, setCopied] = useState(false);
+  const [expanded, setExpanded] = useState(false);
+  const isLong = verse.content.length > 150;
 
   const flashOpacity = useSharedValue(0);
   const flashStyle = useAnimatedStyle(() => ({
@@ -79,7 +81,16 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
 
         <View style={styles.divider} />
 
-        <Text style={styles.content}>"{verse.content}"</Text>
+        <Pressable onPress={() => isLong && setExpanded(!expanded)} disabled={!isLong}>
+          <Text style={styles.content}>
+            "{expanded || !isLong ? verse.content : verse.content.slice(0, 150) + "..."}"
+          </Text>
+          {isLong && (
+            <Text style={styles.expandToggle}>
+              {expanded ? "Show less" : "Show more"}
+            </Text>
+          )}
+        </Pressable>
 
         <View style={styles.actions}>
           <Pressable
@@ -170,6 +181,14 @@ const styles = StyleSheet.create({
     lineHeight: 28,
     paddingHorizontal: 16,
     paddingVertical: 14,
+  },
+  expandToggle: {
+    color: "#A855F7",
+    fontSize: 12,
+    marginTop: 4,
+    fontFamily: fonts.uiMedium,
+    paddingHorizontal: 16,
+    paddingBottom: 4,
   },
   actions: {
     flexDirection: "row",
