@@ -6,7 +6,12 @@
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "lint": "eslint app/ components/ lib/",
+    "lint:fix": "eslint app/ components/ lib/ --fix",
+    "format": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts'",
+    "format:check": "prettier --check 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts'",
+    "type-check": "npx tsc --noEmit"
   },
   "dependencies": {
     "@marsidev/react-turnstile": "^1.5.0",
@@ -19,7 +24,6 @@
     "expo-linking": "~8.0.11",
     "expo-router": "~6.0.23",
     "expo-status-bar": "~3.0.9",
-    "nativewind": "^4.2.3",
     "react": "19.1.0",
     "react-native": "0.81.5",
     "react-native-drawer-layout": "^4.2.2",
@@ -31,7 +35,17 @@
     "tailwindcss": "^3.4.19"
   },
   "devDependencies": {
+    "@react-navigation/drawer": "^7.9.8",
     "@types/react": "~19.1.0",
+    "@typescript-eslint/eslint-plugin": "^8.58.0",
+    "@typescript-eslint/parser": "^8.58.0",
+    "eslint": "^10.1.0",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-import": "^2.32.0",
+    "eslint-plugin-react": "^7.37.5",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "nativewind": "^4.2.3",
+    "prettier": "^3.8.1",
     "typescript": "~5.9.2"
   },
   "private": true

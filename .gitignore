@@ -42,4 +42,13 @@ yarn-error.*
 
 # Secrets
 .env
+.env.local
+.env.production
 scripts/.env
+
+# Editor
+.vscode/
+.idea/
+
+# OS
+Thumbs.db
