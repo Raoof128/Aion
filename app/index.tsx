@@ -60,7 +60,7 @@ export default function HomeScreen() {
         {/* Subtle background glow orb behind the logo area */}
         <View style={styles.glowOrb} />
 
-        <View style={styles.centerContent}>
+        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           {/* Time-based greeting */}
           <Animated.Text
             entering={FadeIn.duration(400).delay(0)}
@@ -120,7 +120,7 @@ export default function HomeScreen() {
               <Text style={styles.suggestionsLabel}>Explore</Text>
               <View style={styles.labelLine} />
             </View>
-            <ScrollView style={styles.pillScroll} showsVerticalScrollIndicator={false}>
+            <View style={styles.pillGrid}>
               {PROMPT_SUGGESTIONS.map((prompt, index) => (
                 <PromptPill
                   key={prompt.label}
@@ -130,9 +130,9 @@ export default function HomeScreen() {
                   index={index}
                 />
               ))}
-            </ScrollView>
+            </View>
           </Animated.View>
-        </View>
+        </ScrollView>
 
         <ChatInput onSend={handleSend} />
       </KeyboardAvoidingView>
@@ -161,11 +161,15 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.15,
     shadowRadius: 80,
   },
-  centerContent: {
+  scrollContainer: {
     flex: 1,
+  },
+  scrollContent: {
+    flexGrow: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
+    paddingVertical: 40,
   },
   greeting: {
     color: colors.textMuted,
@@ -224,8 +228,11 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     paddingHorizontal: 12,
   },
-  pillScroll: {
-    maxHeight: 320,
+  pillGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+    gap: 8,
   },
   votdCard: {
     width: "100%",

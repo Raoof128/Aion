@@ -12,6 +12,7 @@ interface ChatInputProps {
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
   const [isListening, setIsListening] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
 
   const toggleVoiceInput = () => {
     if (Platform.OS !== "web") return;
@@ -61,23 +62,27 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   return (
     <View style={styles.wrapper}>
-      {text.length > 0 && (
-        <Text style={[styles.charCount, text.length > 450 && styles.charCountWarn, text.length > 500 && styles.charCountError]}>
-          {text.length}/500
-        </Text>
-      )}
-      <View style={[styles.container, disabled && styles.containerDisabled]}>
-        <TextInput
-          style={styles.input}
-          placeholder="Ask Aion anything..."
-          placeholderTextColor={colors.textGhost}
-          value={text}
-          onChangeText={setText}
-          onSubmitEditing={handleSend}
-          multiline
-          editable={!disabled}
-          accessibilityLabel="Message input"
-        />
+      <View style={[styles.container, disabled && styles.containerDisabled, isFocused && styles.containerFocused]}>
+        <View style={styles.inputCol}>
+          <TextInput
+            style={styles.input}
+            placeholder="Ask Aion anything..."
+            placeholderTextColor={colors.textGhost}
+            value={text}
+            onChangeText={setText}
+            onSubmitEditing={handleSend}
+            onFocus={() => setIsFocused(true)}
+            onBlur={() => setIsFocused(false)}
+            multiline
+            editable={!disabled}
+            accessibilityLabel="Message input"
+          />
+          {text.length > 0 && (
+            <Text style={[styles.charCount, text.length > 450 && styles.charCountWarn, text.length > 500 && styles.charCountError]}>
+              {text.length}/500
+            </Text>
+          )}
+        </View>
         {Platform.OS === "web" && (
           <Pressable
             onPress={toggleVoiceInput}
@@ -107,6 +112,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           </Pressable>
         </Animated.View>
       </View>
+      <Text style={styles.poweredBy}>Powered by Aion AI</Text>
     </View>
   );
 }
@@ -115,8 +121,10 @@ const styles = StyleSheet.create({
   wrapper: {
     paddingHorizontal: 16,
     paddingBottom: 12,
-    paddingTop: 8,
+    paddingTop: 12,
     backgroundColor: colors.obsidian,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.04)",
   },
   container: {
     flexDirection: "row",
@@ -177,13 +185,19 @@ const styles = StyleSheet.create({
     borderColor: colors.purpleBorder,
     backgroundColor: "rgba(138, 43, 226, 0.03)",
   },
+  containerFocused: {
+    borderColor: "rgba(138, 43, 226, 0.35)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
+  inputCol: {
+    flex: 1,
+  },
   charCount: {
-    color: colors.textGhost,
-    fontSize: 10,
-    fontFamily: fonts.ui,
+    color: "#56566A",
+    fontSize: 9,
     textAlign: "right",
-    marginBottom: 4,
-    paddingRight: 4,
+    paddingRight: 14,
+    paddingBottom: 2,
   },
   charCountWarn: {
     color: colors.purpleGlow,
@@ -210,5 +224,12 @@ const styles = StyleSheet.create({
   },
   micIconActive: {
     color: "#DC2626",
+  },
+  poweredBy: {
+    color: "rgba(255,255,255,0.12)",
+    fontSize: 9,
+    textAlign: "center",
+    marginTop: 6,
+    letterSpacing: 1,
   },
 });
