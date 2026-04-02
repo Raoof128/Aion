@@ -1,0 +1,17 @@
+{
+  "name": "aion-scripts",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "ingest": "npx tsx ingest.ts"
+  },
+  "dependencies": {
+    "@supabase/supabase-js": "^2.49.0",
+    "openai": "^4.80.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0",
+    "dotenv": "^16.4.0"
+  }
+}
