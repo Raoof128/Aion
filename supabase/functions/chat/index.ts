@@ -275,7 +275,7 @@ Deno.serve(async (req) => {
       headers: {
         "Access-Control-Allow-Origin": "*",
         "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "authorization, content-type, x-client-info, apikey",
+        "Access-Control-Allow-Headers": "authorization, content-type, x-client-info, apikey, x-dev-bypass",
       },
     });
   }
@@ -310,13 +310,20 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Dev bypass: skip rate limiting if secret header matches
+    const devBypassKey = req.headers.get("x-dev-bypass");
+    const devSecret = Deno.env.get("DEV_BYPASS_SECRET");
+    const isDevMode = devSecret && devBypassKey === devSecret;
+
     // Rate limit by IP (not user_id — anonymous UUIDs can be spoofed)
-    const rateCheck = await checkRateLimit(clientIp, user.id);
-    if (!rateCheck.allowed) {
-      return new Response(
-        JSON.stringify({ error: rateCheck.message }),
-        { status: 429, headers: { "Content-Type": "application/json" } }
-      );
+    if (!isDevMode) {
+      const rateCheck = await checkRateLimit(clientIp, user.id);
+      if (!rateCheck.allowed) {
+        return new Response(
+          JSON.stringify({ error: rateCheck.message }),
+          { status: 429, headers: { "Content-Type": "application/json" } }
+        );
+      }
     }
 
     // Parse body

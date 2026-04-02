@@ -3,6 +3,7 @@ import { supabase } from "./supabase";
 import type { Verse, ChatSSEEvent } from "./types";
 
 const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const DEV_BYPASS_SECRET = process.env.EXPO_PUBLIC_DEV_BYPASS || "";
 
 interface UseChatReturn {
   sendMessage: (message: string, conversationId: string | null) => Promise<void>;
@@ -37,12 +38,18 @@ export function useChat(): UseChatReturn {
 
         abortRef.current = new AbortController();
 
+        const headers: Record<string, string> = {
+          Authorization: `Bearer ${session.access_token}`,
+          "Content-Type": "application/json",
+        };
+        // Dev bypass: only sent when EXPO_PUBLIC_DEV_BYPASS is set (never in production builds)
+        if (DEV_BYPASS_SECRET) {
+          headers["x-dev-bypass"] = DEV_BYPASS_SECRET;
+        }
+
         const response = await fetch(`${SUPABASE_URL}/functions/v1/chat`, {
           method: "POST",
-          headers: {
-            Authorization: `Bearer ${session.access_token}`,
-            "Content-Type": "application/json",
-          },
+          headers,
           body: JSON.stringify({
             message,
             conversation_id: convId,
