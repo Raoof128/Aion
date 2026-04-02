@@ -8,15 +8,33 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// --- Rate Limiting (database-persisted, survives cold starts) ---
-// Limits: 5/min per user, 50/3hrs per user, 200/day global
-async function checkRateLimit(userId: string): Promise<{ allowed: boolean; message?: string }> {
+// --- Constants ---
+const MAX_MESSAGE_LENGTH = 500;
+
+// --- IP Extraction ---
+function getClientIp(req: Request): string {
+  // Supabase Edge Functions set x-forwarded-for from the real client
+  const forwarded = req.headers.get("x-forwarded-for");
+  if (forwarded) {
+    // x-forwarded-for can be comma-separated; first IP is the client
+    return forwarded.split(",")[0].trim();
+  }
+  return req.headers.get("x-real-ip") || "unknown";
+}
+
+// --- Rate Limiting (IP-based, database-persisted) ---
+// Limits: 5/min per IP, 30/3hrs per IP, 200/day global
+async function checkRateLimit(
+  ipAddress: string,
+  userId: string
+): Promise<{ allowed: boolean; message?: string }> {
   const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_ip_address: ipAddress,
     p_user_id: userId,
   });
 
   if (error) {
-    // If rate limit check fails, deny by default (fail-closed)
+    // Fail-closed: deny if rate limit check itself fails
     return { allowed: false, message: "Rate limit check failed. Please try again." };
   }
 
@@ -24,8 +42,45 @@ async function checkRateLimit(userId: string): Promise<{ allowed: boolean; messa
   return { allowed: result.allowed, message: result.message ?? undefined };
 }
 
-// --- Message length cap (prevents token-stuffing) ---
-const MAX_MESSAGE_LENGTH = 500;
+// --- Response Cache ---
+// Hash a query string for exact-match cache lookups
+async function hashQuery(query: string): Promise<string> {
+  const normalized = query.toLowerCase().trim();
+  const encoded = new TextEncoder().encode(normalized);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", encoded);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+interface CachedResponse {
+  response_text: string;
+  verses: { book_id: string; book_name: string; chapter: number; verse: number; content: string }[];
+}
+
+async function getCachedResponse(queryHash: string): Promise<CachedResponse | null> {
+  const { data, error } = await supabase
+    .from("response_cache")
+    .select("response_text, verses")
+    .eq("query_hash", queryHash)
+    .single();
+
+  if (error || !data) return null;
+  return data as CachedResponse;
+}
+
+async function cacheResponse(
+  queryHash: string,
+  queryText: string,
+  responseText: string,
+  verses: { book_id: string; book_name: string; chapter: number; verse: number; content: string }[]
+): Promise<void> {
+  await supabase.from("response_cache").upsert({
+    query_hash: queryHash,
+    query_text: queryText,
+    response_text: responseText,
+    verses: verses,
+  }, { onConflict: "query_hash" });
+}
 
 // --- Keyword Extraction ---
 function extractKeyword(message: string): string {
@@ -230,6 +285,9 @@ Deno.serve(async (req) => {
   }
 
   try {
+    // Extract client IP before anything else
+    const clientIp = getClientIp(req);
+
     // Auth: extract user from JWT
     const authHeader = req.headers.get("authorization");
     if (!authHeader) {
@@ -252,8 +310,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limit (database-persisted)
-    const rateCheck = await checkRateLimit(user.id);
+    // Rate limit by IP (not user_id — anonymous UUIDs can be spoofed)
+    const rateCheck = await checkRateLimit(clientIp, user.id);
     if (!rateCheck.allowed) {
       return new Response(
         JSON.stringify({ error: rateCheck.message }),
@@ -278,7 +336,54 @@ Deno.serve(async (req) => {
       );
     }
 
-    // RAG pipeline
+    // --- Check exact-match cache (zero LLM cost) ---
+    const queryHash = await hashQuery(message);
+    const cached = await getCachedResponse(queryHash);
+
+    if (cached) {
+      // Cache hit! Serve from DB — no OpenAI embedding, no Gemini call
+      const encoder = new TextEncoder();
+      const stream = new ReadableStream({
+        start(controller) {
+          const send = (event: string, data: unknown) => {
+            controller.enqueue(
+              encoder.encode(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`)
+            );
+          };
+
+          // Send the full cached response as a single text chunk
+          send("text", { content: cached.response_text });
+          send("verses", { verses: cached.verses });
+
+          // Still persist the conversation for this user
+          persistMessages(
+            user.id,
+            conversation_id,
+            message,
+            cached.response_text,
+            cached.verses as VerseResult[]
+          ).then((convId) => {
+            send("conversation", { id: convId });
+            send("done", {});
+            controller.close();
+          }).catch((err) => {
+            send("error", { message: (err as Error).message });
+            controller.close();
+          });
+        },
+      });
+
+      return new Response(stream, {
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          Connection: "keep-alive",
+          "Access-Control-Allow-Origin": "*",
+        },
+      });
+    }
+
+    // --- Cache miss: full RAG pipeline ---
     const keyword = extractKeyword(message);
     const embedding = await embedText(message);
     const verses = await searchVerses(embedding, keyword);
@@ -302,15 +407,18 @@ Deno.serve(async (req) => {
             send("text", { content: chunk });
           }
 
-          send("verses", {
-            verses: verses.map((v) => ({
-              book_id: v.book_id,
-              book_name: v.book_name,
-              chapter: v.chapter,
-              verse: v.verse,
-              content: v.content,
-            })),
-          });
+          const versesJson = verses.map((v) => ({
+            book_id: v.book_id,
+            book_name: v.book_name,
+            chapter: v.chapter,
+            verse: v.verse,
+            content: v.content,
+          }));
+
+          send("verses", { verses: versesJson });
+
+          // Cache this response for future exact-match hits
+          await cacheResponse(queryHash, message, fullResponse, versesJson);
 
           const convId = await persistMessages(
             user.id,
