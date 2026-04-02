@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
+import { View, Text, Pressable, Platform, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInUp } from "react-native-reanimated";
 import { colors, fonts } from "../lib/theme";
@@ -13,6 +13,18 @@ interface VerseCardProps {
 export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   const reference = `${verse.book_name} ${verse.chapter}:${verse.verse}`;
   const [copied, setCopied] = useState(false);
+
+  const handleShare = async () => {
+    const text = `${reference} — "${verse.content}"`;
+    try {
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
+      await Share.share({ message: text });
+    } catch {
+      // Silently fail
+    }
+  };
 
   const handleCopy = async () => {
     const text = `${reference} — "${verse.content}"`;
@@ -44,7 +56,9 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
       <View style={styles.glowBar} />
 
       <View style={styles.header}>
-        <Text style={styles.bookIcon}>📖</Text>
+        <View style={styles.verseBadge}>
+          <Text style={styles.verseBadgeText}>{verse.chapter}:{verse.verse}</Text>
+        </View>
         <Text style={styles.reference}>{reference}</Text>
       </View>
 
@@ -63,6 +77,14 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
             {copied ? "✓ Copied" : "Copy"}
           </Text>
         </Pressable>
+        <Pressable
+          onPress={handleShare}
+          style={styles.actionButton}
+          accessibilityLabel="Share verse"
+          accessibilityRole="button"
+        >
+          <Text style={styles.actionText}>Share</Text>
+        </Pressable>
       </View>
     </Animated.View>
   );
@@ -74,12 +96,13 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.steel,
     borderRadius: 16,
-    marginVertical: 6,
+    marginVertical: 8,
     overflow: "hidden",
     shadowColor: colors.purpleDim,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.12,
+    shadowRadius: 20,
+    elevation: 4,
   },
   glowBar: {
     height: 2,
@@ -96,9 +119,20 @@ const styles = StyleSheet.create({
     paddingTop: 14,
     paddingBottom: 8,
   },
-  bookIcon: {
-    fontSize: 14,
+  verseBadge: {
+    backgroundColor: colors.purpleMist,
+    borderWidth: 1,
+    borderColor: colors.purpleBorder,
+    borderRadius: 6,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
     marginRight: 8,
+  },
+  verseBadgeText: {
+    color: colors.purpleGlow,
+    fontSize: 10,
+    fontFamily: fonts.uiBold,
+    fontWeight: "700",
   },
   reference: {
     color: colors.purpleGlow,

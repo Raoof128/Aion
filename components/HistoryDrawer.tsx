@@ -1,4 +1,5 @@
-import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Platform, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
@@ -43,6 +44,9 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
         text: "Delete",
         style: "destructive",
         onPress: async () => {
+          if (Platform.OS !== "web") {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          }
           await supabase.from("conversations").delete().eq("id", id);
           queryClient.invalidateQueries({ queryKey: ["conversations"] });
         },
@@ -77,30 +81,43 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
           <ActivityIndicator color={colors.purple} size="small" />
         </View>
       ) : conversations.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>✦</Text>
-          <Text style={styles.emptyText}>No conversations yet</Text>
-        </View>
+        <>
+          <View style={styles.emptyContainer}>
+            <Text style={styles.emptyIcon}>✦</Text>
+            <Text style={styles.emptyTitle}>No conversations yet</Text>
+            <Text style={styles.emptySubtitle}>Your chat history will appear here</Text>
+          </View>
+          <View style={styles.drawerFooter}>
+            <Text style={styles.footerText}>0 conversations</Text>
+          </View>
+        </>
       ) : (
-        <FlatList
-          data={conversations}
-          keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
-            <Pressable
-              onPress={() => handleOpen(item.id)}
-              onLongPress={() => handleDelete(item.id)}
-              style={styles.conversationRow}
-              accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo(item.updated_at)}`}
-              accessibilityRole="button"
-              accessibilityHint="Tap to open, long press to delete"
-            >
-              <Text style={styles.conversationTitle} numberOfLines={1}>
-                {item.title || "Untitled"}
-              </Text>
-              <Text style={styles.conversationTime}>{timeAgo(item.updated_at)}</Text>
-            </Pressable>
-          )}
-        />
+        <>
+          <FlatList
+            data={conversations}
+            keyExtractor={(item) => item.id}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => handleOpen(item.id)}
+                onLongPress={() => handleDelete(item.id)}
+                style={styles.conversationRow}
+                accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo(item.updated_at)}`}
+                accessibilityRole="button"
+                accessibilityHint="Tap to open, long press to delete"
+              >
+                <Text style={styles.conversationTitle} numberOfLines={2}>
+                  {item.title || "Untitled"}
+                </Text>
+                <Text style={styles.conversationTime}>{timeAgo(item.updated_at)}</Text>
+              </Pressable>
+            )}
+          />
+          <View style={styles.drawerFooter}>
+            <Text style={styles.footerText}>
+              {conversations.length} conversation{conversations.length !== 1 ? "s" : ""}
+            </Text>
+          </View>
+        </>
       )}
     </View>
   );
@@ -159,10 +176,28 @@ const styles = StyleSheet.create({
     fontSize: 20,
     marginBottom: 8,
   },
-  emptyText: {
+  emptyTitle: {
+    color: colors.textSecondary,
+    fontSize: 14,
+    fontFamily: fonts.uiMedium,
+    marginBottom: 4,
+  },
+  emptySubtitle: {
     color: colors.textGhost,
-    fontSize: 13,
+    fontSize: 12,
     fontFamily: fonts.ui,
+  },
+  drawerFooter: {
+    paddingVertical: 16,
+    borderTopWidth: 1,
+    borderTopColor: colors.glass,
+    alignItems: "center",
+  },
+  footerText: {
+    color: colors.textGhost,
+    fontSize: 11,
+    fontFamily: fonts.ui,
+    letterSpacing: 1,
   },
   conversationRow: {
     paddingVertical: 14,
@@ -173,6 +208,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
     fontSize: 14,
     fontFamily: fonts.ui,
+    lineHeight: 20,
   },
   conversationTime: {
     color: colors.textGhost,

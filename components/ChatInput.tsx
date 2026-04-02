@@ -31,7 +31,12 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={styles.container}>
+      {text.length > 0 && (
+        <Text style={[styles.charCount, text.length > 450 && styles.charCountWarn, text.length > 500 && styles.charCountError]}>
+          {text.length}/500
+        </Text>
+      )}
+      <View style={[styles.container, disabled && styles.containerDisabled]}>
         <TextInput
           style={styles.input}
           placeholder="Ask Aion anything..."
@@ -112,5 +117,23 @@ const styles = StyleSheet.create({
   },
   sendIconActive: {
     color: colors.white,
+  },
+  containerDisabled: {
+    borderColor: colors.purpleBorder,
+    backgroundColor: "rgba(138, 43, 226, 0.03)",
+  },
+  charCount: {
+    color: colors.textGhost,
+    fontSize: 10,
+    fontFamily: fonts.ui,
+    textAlign: "right",
+    marginBottom: 4,
+    paddingRight: 4,
+  },
+  charCountWarn: {
+    color: colors.purpleGlow,
+  },
+  charCountError: {
+    color: colors.error,
   },
 });

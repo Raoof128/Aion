@@ -81,11 +81,15 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
       </View>
       {isSearching ? <PulsingDot /> : <Text style={styles.assistantText}>{content}</Text>}
       {verses && verses.length > 0 && (
-        <View style={styles.versesContainer}>
-          {verses.map((v, i) => (
-            <VerseCard key={`${v.book_id}-${v.chapter}-${v.verse}`} verse={v} index={i} />
-          ))}
-        </View>
+        <>
+          <View style={styles.verseSeparator} />
+          <Text style={styles.verseCountLabel}>{verses.length} verse{verses.length !== 1 ? "s" : ""} found</Text>
+          <View style={styles.versesContainer}>
+            {verses.map((v, i) => (
+              <VerseCard key={`${v.book_id}-${v.chapter}-${v.verse}`} verse={v} index={i} />
+            ))}
+          </View>
+        </>
       )}
     </Animated.View>
   );
@@ -97,9 +101,9 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   userBubble: {
-    backgroundColor: colors.glass,
+    backgroundColor: "rgba(138, 43, 226, 0.08)",
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: "rgba(138, 43, 226, 0.15)",
     borderRadius: 20,
     borderBottomRightRadius: 4,
     paddingHorizontal: 16,
@@ -151,5 +155,18 @@ const styles = StyleSheet.create({
   versesContainer: {
     marginTop: 8,
     width: "100%",
+  },
+  verseSeparator: {
+    height: 1,
+    backgroundColor: colors.glass,
+    marginVertical: 8,
+  },
+  verseCountLabel: {
+    color: colors.textGhost,
+    fontSize: 11,
+    fontFamily: fonts.uiMedium,
+    letterSpacing: 1,
+    textTransform: "uppercase",
+    marginBottom: 4,
   },
 });

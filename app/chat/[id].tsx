@@ -27,6 +27,7 @@ export default function ChatScreen() {
     useChat();
 
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
+  const [showScrollButton, setShowScrollButton] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const hasSentInitial = useRef(false);
 
@@ -119,8 +120,11 @@ export default function ChatScreen() {
           <Text style={styles.backArrow}>←</Text>
         </Pressable>
         <View style={styles.headerCenter}>
-          <View style={styles.headerDot} />
+          <View style={[styles.headerDot, isStreaming && styles.headerDotActive]} />
           <Text style={styles.headerTitle}>AION</Text>
+          {displayMessages.length > 0 && (
+            <Text style={styles.messageCount}>{displayMessages.length}</Text>
+          )}
         </View>
         <View style={styles.headerButton} />
       </View>
@@ -138,10 +142,20 @@ export default function ChatScreen() {
           )}
           contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onScroll={(e) => {
+            const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+            const distanceFromBottom =
+              contentSize.height - layoutMeasurement.height - contentOffset.y;
+            setShowScrollButton(distanceFromBottom > 100);
+          }}
+          scrollEventThrottle={100}
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>✦</Text>
-              <Text style={styles.emptyText}>Begin your search</Text>
+              <Text style={styles.emptyTitle}>Begin your search</Text>
+              <Text style={styles.emptySubtitle}>
+                Ask anything about the Bible{"\n"}and discover scripture with AI
+              </Text>
             </View>
           }
         />
@@ -154,6 +168,17 @@ export default function ChatScreen() {
           >
             <Text style={styles.errorText}>{error}</Text>
           </View>
+        )}
+
+        {showScrollButton && (
+          <Pressable
+            onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+            style={styles.scrollToBottom}
+            accessibilityLabel="Scroll to bottom"
+            accessibilityRole="button"
+          >
+            <Text style={styles.scrollToBottomIcon}>↓</Text>
+          </Pressable>
         )}
 
         <ChatInput onSend={handleSend} disabled={isStreaming} />
@@ -218,18 +243,62 @@ const styles = StyleSheet.create({
   emptyState: {
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 120,
+    paddingTop: 140,
   },
   emptyIcon: {
     color: colors.purpleDim,
-    fontSize: 28,
-    marginBottom: 12,
+    fontSize: 36,
+    marginBottom: 16,
   },
-  emptyText: {
+  emptyTitle: {
+    color: colors.textSecondary,
+    fontSize: 18,
+    fontFamily: fonts.uiMedium,
+    marginBottom: 8,
+  },
+  emptySubtitle: {
     color: colors.textGhost,
-    fontSize: 14,
+    fontSize: 13,
     fontFamily: fonts.ui,
-    letterSpacing: 1,
+    textAlign: "center",
+    lineHeight: 20,
+  },
+  headerDotActive: {
+    backgroundColor: colors.purpleGlow,
+    shadowOpacity: 1.0,
+    shadowRadius: 8,
+  },
+  messageCount: {
+    color: colors.textGhost,
+    fontSize: 10,
+    fontFamily: fonts.ui,
+    marginLeft: 8,
+    backgroundColor: colors.glass,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 8,
+    overflow: "hidden",
+  },
+  scrollToBottom: {
+    position: "absolute",
+    bottom: 80,
+    alignSelf: "center",
+    backgroundColor: colors.purple,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    alignItems: "center",
+    justifyContent: "center",
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 8,
+    zIndex: 10,
+  },
+  scrollToBottomIcon: {
+    color: colors.white,
+    fontSize: 16,
+    fontWeight: "700",
   },
   errorBanner: {
     backgroundColor: colors.errorBg,

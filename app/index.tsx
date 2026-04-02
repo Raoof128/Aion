@@ -1,6 +1,7 @@
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
 import { PromptPill } from "../components/PromptPill";
 import { ChatInput } from "../components/ChatInput";
 import { colors, fonts } from "../lib/theme";
@@ -10,7 +11,16 @@ const PROMPT_SUGGESTIONS = [
   { icon: "🧠", label: "What is a stoic view on Ecclesiastes?" },
   { icon: "🔥", label: "I'm feeling completely burnt out today" },
   { icon: "✨", label: "What does the Bible say about new beginnings?" },
+  { icon: "🕊️", label: "Verses about finding peace in chaos" },
+  { icon: "⚡", label: "What does Proverbs say about wisdom?" },
 ];
+
+function getGreeting(): string {
+  const hour = new Date().getHours();
+  if (hour < 12) return "Good morning";
+  if (hour < 17) return "Good afternoon";
+  return "Good evening";
+}
 
 export default function HomeScreen() {
   const router = useRouter();
@@ -29,15 +39,50 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
+        {/* Subtle background glow orb behind the logo area */}
+        <View style={styles.glowOrb} />
+
         <View style={styles.centerContent}>
+          {/* Time-based greeting */}
+          <Animated.Text
+            entering={FadeIn.duration(400).delay(0)}
+            style={styles.greeting}
+          >
+            {getGreeting()}
+          </Animated.Text>
+
           {/* Logo */}
-          <Text style={styles.logo}>A I O N</Text>
-          <View style={styles.divider} />
-          <Text style={styles.tagline}>"Seek, and you shall find."</Text>
+          <Animated.Text
+            entering={FadeInDown.duration(600).delay(100)}
+            style={styles.logo}
+          >
+            A I O N
+          </Animated.Text>
+
+          {/* Divider */}
+          <Animated.View
+            entering={FadeIn.duration(400).delay(400)}
+            style={styles.divider}
+          />
+
+          {/* Tagline */}
+          <Animated.Text
+            entering={FadeIn.duration(400).delay(600)}
+            style={styles.tagline}
+          >
+            "Seek, and you shall find."
+          </Animated.Text>
 
           {/* Suggestions */}
-          <View style={styles.suggestionsSection}>
-            <Text style={styles.suggestionsLabel}>✨ Suggested for you today</Text>
+          <Animated.View
+            entering={FadeInDown.duration(500).delay(800)}
+            style={styles.suggestionsSection}
+          >
+            <View style={styles.labelRow}>
+              <View style={styles.labelLine} />
+              <Text style={styles.suggestionsLabel}>Explore</Text>
+              <View style={styles.labelLine} />
+            </View>
             <ScrollView style={styles.pillScroll} showsVerticalScrollIndicator={false}>
               {PROMPT_SUGGESTIONS.map((prompt) => (
                 <PromptPill
@@ -48,7 +93,7 @@ export default function HomeScreen() {
                 />
               ))}
             </ScrollView>
-          </View>
+          </Animated.View>
         </View>
 
         <ChatInput onSend={handleSend} />
@@ -65,11 +110,32 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
+  glowOrb: {
+    position: "absolute",
+    width: 200,
+    height: 200,
+    borderRadius: 100,
+    backgroundColor: "rgba(138, 43, 226, 0.04)",
+    top: "30%",
+    alignSelf: "center",
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.15,
+    shadowRadius: 80,
+  },
   centerContent: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
     paddingHorizontal: 24,
+  },
+  greeting: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontFamily: fonts.uiMedium,
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    marginBottom: 20,
   },
   logo: {
     color: colors.white,
@@ -101,16 +167,26 @@ const styles = StyleSheet.create({
     width: "100%",
     maxWidth: 420,
   },
+  labelRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 16,
+    width: "100%",
+  },
+  labelLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.glass,
+  },
   suggestionsLabel: {
-    color: colors.textSecondary,
-    fontSize: 12,
+    color: colors.textGhost,
+    fontSize: 11,
     fontFamily: fonts.uiMedium,
-    letterSpacing: 1.5,
+    letterSpacing: 3,
     textTransform: "uppercase",
-    marginBottom: 12,
-    paddingLeft: 4,
+    paddingHorizontal: 12,
   },
   pillScroll: {
-    maxHeight: 280,
+    maxHeight: 320,
   },
 });
