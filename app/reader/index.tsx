@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { colors, fonts } from "../../lib/theme";
 import {
@@ -46,23 +46,29 @@ export default function BookListScreen() {
   }, []);
 
   const renderBookCard = useCallback(
-    ({ item }: { item: BibleBook }) => (
-      <Pressable
-        style={({ pressed }) => [
-          styles.bookCard,
-          pressed && styles.bookCardPressed,
-        ]}
-        onPress={() => handleBookPress(item)}
-        accessibilityLabel={`${item.name}, ${item.chapters} chapters`}
-        accessibilityRole="button"
+    ({ item, index }: { item: BibleBook; index: number }) => (
+      <Animated.View
+        entering={FadeInUp.delay(index * 30).duration(300)}
+        style={styles.bookCardWrapper}
       >
-        <Text style={styles.bookName} numberOfLines={1}>
-          {item.name}
-        </Text>
-        <Text style={styles.chapterCount}>
-          {item.chapters} {item.chapters === 1 ? "chapter" : "chapters"}
-        </Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed, hovered }: any) => [
+            styles.bookCard,
+            hovered && styles.bookCardHovered,
+            pressed && styles.bookCardPressed,
+          ]}
+          onPress={() => handleBookPress(item)}
+          accessibilityLabel={`${item.name}, ${item.chapters} chapters`}
+          accessibilityRole="button"
+        >
+          <Text style={styles.bookName} numberOfLines={1}>
+            {item.name}
+          </Text>
+          <Text style={styles.chapterCount}>
+            {item.chapters} {item.chapters === 1 ? "chapter" : "chapters"}
+          </Text>
+        </Pressable>
+      </Animated.View>
     ),
     [handleBookPress]
   );
@@ -74,10 +80,22 @@ export default function BookListScreen() {
       <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
         {/* Header */}
         <View style={styles.header}>
-          <View style={styles.headerRow}>
-            <View style={styles.purpleDot} />
-            <Text style={styles.headerTitle}>READER</Text>
+          <Pressable
+            onPress={() => { triggerHaptic(); router.back(); }}
+            style={styles.backButton}
+            accessibilityLabel="Go back"
+            accessibilityRole="button"
+          >
+            <Text style={styles.backText}>←</Text>
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <View style={styles.headerRow}>
+              <View style={styles.purpleDot} />
+              <Text style={styles.headerTitle}>READER</Text>
+            </View>
           </View>
+          {/* Spacer to balance back button */}
+          <View style={styles.backButton} />
         </View>
 
         {/* Tabs */}
@@ -95,7 +113,7 @@ export default function BookListScreen() {
                 activeTab === "OT" && styles.tabTextActive,
               ]}
             >
-              Old Testament
+              Old Testament (39)
             </Text>
           </Pressable>
           <Pressable
@@ -111,9 +129,16 @@ export default function BookListScreen() {
                 activeTab === "NT" && styles.tabTextActive,
               ]}
             >
-              New Testament
+              New Testament (27)
             </Text>
           </Pressable>
+        </View>
+
+        {/* Section indicator */}
+        <View style={styles.sectionInfo}>
+          <View style={styles.sectionLine} />
+          <Text style={styles.sectionText}>{books.length} BOOKS</Text>
+          <View style={styles.sectionLine} />
         </View>
 
         {/* Book Grid */}
@@ -140,9 +165,25 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   header: {
+    flexDirection: "row",
+    alignItems: "center",
     paddingHorizontal: 20,
     paddingTop: 16,
     paddingBottom: 12,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backText: {
+    color: colors.textSecondary,
+    fontSize: 20,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: "center",
   },
   headerRow: {
     flexDirection: "row",
@@ -186,6 +227,24 @@ const styles = StyleSheet.create({
   tabTextActive: {
     color: colors.purpleGlow,
   },
+  sectionInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 16,
+    marginBottom: 12,
+    gap: 10,
+  },
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.glassBorder,
+  },
+  sectionText: {
+    fontSize: 10,
+    letterSpacing: 2,
+    color: colors.textGhost,
+    fontFamily: fonts.uiBold,
+  },
   listContent: {
     paddingHorizontal: 16,
     paddingBottom: 40,
@@ -194,6 +253,9 @@ const styles = StyleSheet.create({
     gap: 10,
     marginBottom: 10,
   },
+  bookCardWrapper: {
+    flex: 1,
+  },
   bookCard: {
     flex: 1,
     backgroundColor: colors.glass,
@@ -201,6 +263,10 @@ const styles = StyleSheet.create({
     padding: 14,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  bookCardHovered: {
+    backgroundColor: "rgba(138, 43, 226, 0.06)",
+    borderColor: "rgba(138, 43, 226, 0.20)",
   },
   bookCardPressed: {
     backgroundColor: colors.purpleAccent,

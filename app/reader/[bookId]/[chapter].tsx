@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import {
   View,
   Text,
@@ -39,6 +39,9 @@ export default function ChapterReaderScreen() {
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+
+  const scrollRef = useRef<ScrollView>(null);
 
   const chapterNum = Number(chapter);
 
@@ -51,46 +54,32 @@ export default function ChapterReaderScreen() {
   const hasPrev = chapterNum > 1;
   const hasNext = chapterNum < totalChapters;
 
-  useEffect(() => {
-    let cancelled = false;
+  const fetchChapter = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const { data, error: fetchError } = await supabase
+        .from("bible_verses")
+        .select("verse, content, book_name")
+        .eq("book_id", bookId)
+        .eq("chapter", chapterNum)
+        .order("verse", { ascending: true });
 
-    async function fetchVerses() {
-      setLoading(true);
-      setError(null);
-
-      try {
-        const { data, error: fetchError } = await supabase
-          .from("bible_verses")
-          .select("verse, content, book_name")
-          .eq("book_id", bookId)
-          .eq("chapter", chapterNum)
-          .order("verse", { ascending: true });
-
-        if (cancelled) return;
-
-        if (fetchError) {
-          setError("Failed to load chapter");
-          console.error("Supabase fetch error:", fetchError);
-        } else {
-          setVerses(data ?? []);
-        }
-      } catch (err) {
-        if (!cancelled) {
-          setError("Failed to load chapter");
-          console.error("Fetch error:", err);
-        }
-      } finally {
-        if (!cancelled) {
-          setLoading(false);
-        }
+      if (fetchError) {
+        setError("Failed to load chapter");
+      } else {
+        setVerses(data ?? []);
       }
+    } catch {
+      setError("Failed to load chapter");
+    } finally {
+      setLoading(false);
     }
-
-    fetchVerses();
-    return () => {
-      cancelled = true;
-    };
   }, [bookId, chapterNum]);
+
+  useEffect(() => {
+    fetchChapter();
+  }, [fetchChapter]);
 
   const handleBack = useCallback(() => {
     triggerHaptic();
@@ -100,6 +89,7 @@ export default function ChapterReaderScreen() {
   const navigateChapter = useCallback(
     (dir: "prev" | "next") => {
       triggerHaptic();
+      scrollRef.current?.scrollTo({ y: 0, animated: false });
       const target = dir === "prev" ? chapterNum - 1 : chapterNum + 1;
       router.replace(`/reader/${bookId}/${target}`);
     },
@@ -115,7 +105,10 @@ export default function ChapterReaderScreen() {
         <View style={styles.header}>
           <Pressable
             onPress={handleBack}
-            style={styles.headerButton}
+            style={({ hovered }: any) => [
+              styles.headerButton,
+              hovered && styles.headerButtonHovered,
+            ]}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
@@ -129,7 +122,11 @@ export default function ChapterReaderScreen() {
           <View style={styles.headerNav}>
             <Pressable
               onPress={() => navigateChapter("prev")}
-              style={[styles.navArrow, !hasPrev && styles.navArrowDisabled]}
+              style={({ hovered }: any) => [
+                styles.navArrow,
+                hovered && styles.navArrowHovered,
+                !hasPrev && styles.navArrowDisabled,
+              ]}
               disabled={!hasPrev}
               accessibilityLabel="Previous chapter"
               accessibilityRole="button"
@@ -147,7 +144,11 @@ export default function ChapterReaderScreen() {
 
             <Pressable
               onPress={() => navigateChapter("next")}
-              style={[styles.navArrow, !hasNext && styles.navArrowDisabled]}
+              style={({ hovered }: any) => [
+                styles.navArrow,
+                hovered && styles.navArrowHovered,
+                !hasNext && styles.navArrowDisabled,
+              ]}
               disabled={!hasNext}
               accessibilityLabel="Next chapter"
               accessibilityRole="button"
@@ -164,6 +165,11 @@ export default function ChapterReaderScreen() {
           <View style={styles.headerButton} />
         </View>
 
+        {/* Reading progress bar */}
+        <View style={styles.progressBarBg}>
+          <View style={[styles.progressBarFill, { width: `${scrollProgress * 100}%` as any }]} />
+        </View>
+
         {/* Content */}
         {loading ? (
           <View style={styles.centered}>
@@ -173,30 +179,7 @@ export default function ChapterReaderScreen() {
           <View style={styles.centered}>
             <Text style={styles.errorText}>{error}</Text>
             <Pressable
-              onPress={() => {
-                triggerHaptic();
-                setLoading(true);
-                setError(null);
-                // Re-trigger fetch by forcing state update
-                setVerses([]);
-                // The useEffect will re-run because we reset loading
-                setTimeout(() => {
-                  supabase
-                    .from("bible_verses")
-                    .select("verse, content, book_name")
-                    .eq("book_id", bookId)
-                    .eq("chapter", chapterNum)
-                    .order("verse", { ascending: true })
-                    .then(({ data, error: fetchError }) => {
-                      if (fetchError) {
-                        setError("Failed to load chapter");
-                      } else {
-                        setVerses(data ?? []);
-                      }
-                      setLoading(false);
-                    });
-                }, 100);
-              }}
+              onPress={fetchChapter}
               style={styles.retryButton}
               accessibilityLabel="Retry loading chapter"
               accessibilityRole="button"
@@ -206,10 +189,27 @@ export default function ChapterReaderScreen() {
           </View>
         ) : (
           <ScrollView
+            ref={scrollRef}
             style={styles.scrollView}
             contentContainerStyle={styles.scrollContent}
             showsVerticalScrollIndicator={false}
+            onScroll={(e) => {
+              const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const totalHeight = contentSize.height - layoutMeasurement.height;
+              if (totalHeight > 0) {
+                setScrollProgress(Math.min(contentOffset.y / totalHeight, 1));
+              }
+            }}
+            scrollEventThrottle={16}
           >
+            {/* Chapter heading */}
+            <View style={styles.chapterHeading}>
+              <View style={styles.headingLine} />
+              <Text style={styles.headingText}>{book?.name}</Text>
+              <View style={styles.headingLine} />
+            </View>
+            <Text style={styles.chapterNumLarge}>{chapter}</Text>
+
             {/* Verse text — continuous flowing layout */}
             <Text style={styles.verseBlock}>
               {verses.map((v) => (
@@ -229,8 +229,9 @@ export default function ChapterReaderScreen() {
               <View style={styles.bottomButtons}>
                 <Pressable
                   onPress={() => navigateChapter("prev")}
-                  style={({ pressed }) => [
+                  style={({ pressed, hovered }: any) => [
                     styles.bottomButton,
+                    hovered && styles.bottomButtonHovered,
                     !hasPrev && styles.bottomButtonDisabled,
                     pressed && hasPrev && styles.bottomButtonPressed,
                   ]}
@@ -255,8 +256,9 @@ export default function ChapterReaderScreen() {
 
                 <Pressable
                   onPress={() => navigateChapter("next")}
-                  style={({ pressed }) => [
+                  style={({ pressed, hovered }: any) => [
                     styles.bottomButton,
+                    hovered && styles.bottomButtonHovered,
                     !hasNext && styles.bottomButtonDisabled,
                     pressed && hasNext && styles.bottomButtonPressed,
                   ]}
@@ -310,6 +312,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  headerButtonHovered: {
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderRadius: 10,
+  },
   headerNav: {
     flex: 1,
     flexDirection: "row",
@@ -325,6 +331,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  navArrowHovered: {
+    backgroundColor: "rgba(138, 43, 226, 0.10)",
+    borderColor: "rgba(138, 43, 226, 0.20)",
+  },
   navArrowDisabled: {
     opacity: 0.4,
   },
@@ -332,6 +342,14 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.uiBold,
     color: colors.textPrimary,
+  },
+  progressBarBg: {
+    height: 2,
+    backgroundColor: "rgba(255,255,255,0.05)",
+  },
+  progressBarFill: {
+    height: 2,
+    backgroundColor: "#8A2BE2",
   },
   centered: {
     flex: 1,
@@ -365,6 +383,32 @@ const styles = StyleSheet.create({
     paddingTop: 28,
     paddingBottom: 60,
   },
+  chapterHeading: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  headingLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: "rgba(255,255,255,0.06)",
+  },
+  headingText: {
+    color: "#9494A8",
+    fontSize: 11,
+    fontWeight: "700",
+    letterSpacing: 3,
+    textTransform: "uppercase",
+    paddingHorizontal: 12,
+  },
+  chapterNumLarge: {
+    color: "#A855F7",
+    fontSize: 48,
+    fontWeight: "200",
+    textAlign: "center",
+    marginBottom: 32,
+    letterSpacing: 4,
+  },
   verseBlock: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -373,10 +417,11 @@ const styles = StyleSheet.create({
     // wrapper for each verse inline
   },
   verseNumber: {
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fonts.uiBold,
     color: colors.purpleGlow,
-    lineHeight: 20,
+    lineHeight: 22,
+    paddingRight: 2,
   },
   verseContent: {
     fontSize: 17,
@@ -411,6 +456,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  bottomButtonHovered: {
+    backgroundColor: "rgba(138, 43, 226, 0.06)",
+    borderColor: "rgba(138, 43, 226, 0.20)",
   },
   bottomButtonPressed: {
     backgroundColor: colors.purpleAccent,

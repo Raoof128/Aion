@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import Animated, { FadeIn } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
 import { colors, fonts } from "../../../lib/theme";
@@ -49,18 +49,23 @@ export default function ChapterListScreen() {
   }, [router]);
 
   const renderChapter = useCallback(
-    ({ item }: { item: number }) => (
-      <Pressable
-        style={({ pressed }) => [
-          styles.chapterCell,
-          pressed && styles.chapterCellPressed,
-        ]}
-        onPress={() => handleChapterPress(item)}
-        accessibilityLabel={`Chapter ${item}`}
-        accessibilityRole="button"
+    ({ item, index }: { item: number; index: number }) => (
+      <Animated.View
+        entering={FadeInUp.delay(Math.min(index * 15, 500)).duration(200)}
       >
-        <Text style={styles.chapterNumber}>{item}</Text>
-      </Pressable>
+        <Pressable
+          style={({ pressed, hovered }: any) => [
+            styles.chapterCell,
+            hovered && styles.chapterCellHovered,
+            pressed && styles.chapterCellPressed,
+          ]}
+          onPress={() => handleChapterPress(item)}
+          accessibilityLabel={`Chapter ${item}`}
+          accessibilityRole="button"
+        >
+          <Text style={styles.chapterNumber}>{item}</Text>
+        </Pressable>
+      </Animated.View>
     ),
     [handleChapterPress]
   );
@@ -84,7 +89,10 @@ export default function ChapterListScreen() {
         <View style={styles.header}>
           <Pressable
             onPress={handleBack}
-            style={styles.backButton}
+            style={({ hovered }: any) => [
+              styles.backButton,
+              hovered && styles.backButtonHovered,
+            ]}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
@@ -104,6 +112,13 @@ export default function ChapterListScreen() {
           </View>
           {/* Spacer to balance the back button */}
           <View style={styles.backButton} />
+        </View>
+
+        {/* Section indicator */}
+        <View style={styles.sectionInfo}>
+          <View style={styles.sectionLine} />
+          <Text style={styles.sectionText}>SELECT CHAPTER</Text>
+          <View style={styles.sectionLine} />
         </View>
 
         {/* Chapter Grid */}
@@ -144,6 +159,10 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
   },
+  backButtonHovered: {
+    backgroundColor: colors.glass,
+    borderRadius: 10,
+  },
   headerCenter: {
     flex: 1,
     alignItems: "center",
@@ -158,6 +177,24 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
     color: colors.textGhost,
     marginTop: 2,
+  },
+  sectionInfo: {
+    flexDirection: "row",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    gap: 10,
+  },
+  sectionLine: {
+    flex: 1,
+    height: 1,
+    backgroundColor: colors.glassBorder,
+  },
+  sectionText: {
+    fontSize: 10,
+    letterSpacing: 2,
+    color: colors.textGhost,
+    fontFamily: fonts.uiBold,
   },
   listContent: {
     paddingHorizontal: 20,
@@ -176,6 +213,10 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
     alignItems: "center",
     justifyContent: "center",
+  },
+  chapterCellHovered: {
+    borderColor: "rgba(138, 43, 226, 0.25)",
+    backgroundColor: "rgba(138, 43, 226, 0.06)",
   },
   chapterCellPressed: {
     backgroundColor: colors.purpleAccent,
