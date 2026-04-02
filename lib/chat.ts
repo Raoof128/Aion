@@ -7,6 +7,7 @@ const DEV_BYPASS_SECRET = process.env.EXPO_PUBLIC_DEV_BYPASS || "";
 
 interface UseChatReturn {
   sendMessage: (message: string, conversationId: string | null) => Promise<void>;
+  reset: () => void;
   streamingText: string;
   verses: Verse[];
   conversationId: string | null;
@@ -110,5 +111,17 @@ export function useChat(): UseChatReturn {
     }
   }, []);
 
-  return { sendMessage, streamingText, verses, conversationId, isStreaming, error };
+  const reset = useCallback(() => {
+    setStreamingText("");
+    setVerses([]);
+    setConversationId(null);
+    setIsStreaming(false);
+    setError(null);
+    if (abortRef.current) {
+      abortRef.current.abort();
+      abortRef.current = null;
+    }
+  }, []);
+
+  return { sendMessage, reset, streamingText, verses, conversationId, isStreaming, error };
 }

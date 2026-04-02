@@ -1,11 +1,12 @@
 import { useEffect, useRef, useState } from "react";
-import { View, FlatList, KeyboardAvoidingView, Platform } from "react-native";
-import { useLocalSearchParams } from "expo-router";
+import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet } from "react-native";
+import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { useChat } from "../../lib/chat";
 import { ChatBubble } from "../../components/ChatBubble";
 import { ChatInput } from "../../components/ChatInput";
+import { colors } from "../../lib/theme";
 import type { Message, Verse } from "../../lib/types";
 
 interface DisplayMessage {
@@ -21,20 +22,26 @@ export default function ChatScreen() {
     initialMessage?: string;
   }>();
 
-  const { sendMessage, streamingText, verses, conversationId, isStreaming, error } = useChat();
+  const router = useRouter();
+  const { sendMessage, reset, streamingText, verses, conversationId, isStreaming, error } = useChat();
 
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const flatListRef = useRef<FlatList>(null);
   const hasSentInitial = useRef(false);
 
-  // Load existing messages if opening a past conversation
+  const isNewChat = id === "new" || id.startsWith("new-");
+
+  // Reset everything when navigating to a new chat
   useEffect(() => {
-    if (id !== "new") {
+    setMessages([]);
+    hasSentInitial.current = false;
+    reset();
+
+    if (!isNewChat) {
       loadMessages(id);
     }
   }, [id]);
 
-  // Send initial message from home screen
   useEffect(() => {
     if (initialMessage && !hasSentInitial.current) {
       hasSentInitial.current = true;
@@ -67,7 +74,6 @@ export default function ChatScreen() {
   }
 
   const handleSend = async (text: string) => {
-    // Optimistically add user message
     const userMsg: DisplayMessage = {
       id: `user-${Date.now()}`,
       role: "user",
@@ -75,12 +81,10 @@ export default function ChatScreen() {
     };
     setMessages((prev) => [...prev, userMsg]);
 
-    // Determine conversation ID
-    const convId = id !== "new" ? id : conversationId;
+    const convId = !isNewChat ? id : conversationId;
     await sendMessage(text, convId);
   };
 
-  // When streaming completes, add assistant message to the list
   useEffect(() => {
     if (!isStreaming && streamingText) {
       const assistantMsg: DisplayMessage = {
@@ -93,7 +97,6 @@ export default function ChatScreen() {
     }
   }, [isStreaming]);
 
-  // Build the display list: stored messages + current streaming
   const displayMessages: DisplayMessage[] = [
     ...messages,
     ...(isStreaming
@@ -101,7 +104,7 @@ export default function ChatScreen() {
           {
             id: "streaming",
             role: "assistant" as const,
-            content: streamingText || "...",
+            content: streamingText || "Searching scripture...",
             verses: verses.length > 0 ? verses : null,
           },
         ]
@@ -109,10 +112,18 @@ export default function ChatScreen() {
   ];
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView style={styles.container}>
+      <View style={styles.header}>
+        <Pressable onPress={() => router.back()} style={styles.backButton}>
+          <Text style={styles.backText}>&#8592;</Text>
+        </Pressable>
+        <Text style={styles.headerTitle}>Aion</Text>
+        <View style={styles.backButton} />
+      </View>
+
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
+        style={styles.flex}
       >
         <FlatList
           ref={flatListRef}
@@ -121,13 +132,18 @@ export default function ChatScreen() {
           renderItem={({ item }) => (
             <ChatBubble role={item.role} content={item.content} verses={item.verses} />
           )}
-          contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
+          contentContainerStyle={styles.messageList}
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyText}>Start a conversation...</Text>
+            </View>
+          }
         />
 
         {error && (
-          <View className="px-4 py-2 bg-red-900/50">
-            <ChatBubble role="assistant" content={`Error: ${error}`} />
+          <View style={styles.errorBanner}>
+            <Text style={styles.errorText}>{error}</Text>
           </View>
         )}
 
@@ -136,3 +152,66 @@ export default function ChatScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  flex: {
+    flex: 1,
+  },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  backButton: {
+    width: 40,
+    height: 40,
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  backText: {
+    color: colors.accent,
+    fontSize: 22,
+  },
+  headerTitle: {
+    color: colors.text,
+    fontSize: 16,
+    fontWeight: "300",
+    letterSpacing: 4,
+    textTransform: "uppercase",
+  },
+  messageList: {
+    padding: 16,
+    paddingBottom: 8,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    paddingTop: 100,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    letterSpacing: 1,
+  },
+  errorBanner: {
+    backgroundColor: colors.error,
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginHorizontal: 16,
+    marginBottom: 4,
+    borderRadius: 8,
+  },
+  errorText: {
+    color: colors.errorText,
+    fontSize: 13,
+  },
+});

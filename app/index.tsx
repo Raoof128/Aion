@@ -1,8 +1,9 @@
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform } from "react-native";
+import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { PromptPill } from "../components/PromptPill";
 import { ChatInput } from "../components/ChatInput";
+import { colors } from "../lib/theme";
 
 const PROMPT_SUGGESTIONS = [
   "Find verses with the number 444",
@@ -15,26 +16,29 @@ export default function HomeScreen() {
   const router = useRouter();
 
   const handleSend = (message: string) => {
+    // Use a unique ID each time so Expo Router creates a fresh screen
+    const uniqueId = `new-${Date.now()}`;
     router.push({
-      pathname: "/chat/new",
+      pathname: `/chat/${uniqueId}`,
       params: { initialMessage: message },
     });
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-black">
+    <SafeAreaView style={styles.container}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
-        className="flex-1"
+        style={styles.flex}
       >
-        <View className="flex-1 justify-center items-center px-6">
-          <Text className="text-white text-4xl font-bold mb-2">Aion</Text>
-          <Text className="text-neutral-500 text-base mb-10">Your AI Bible companion</Text>
+        <View style={styles.centerContent}>
+          <Text style={styles.logo}>Aion</Text>
+          <View style={styles.divider} />
+          <Text style={styles.subtitle}>Your AI Bible companion</Text>
 
           <ScrollView
             horizontal={false}
-            className="max-h-40 w-full"
-            contentContainerClassName="flex-row flex-wrap justify-center"
+            style={styles.pillScroll}
+            contentContainerStyle={styles.pillContainer}
           >
             {PROMPT_SUGGESTIONS.map((prompt) => (
               <PromptPill key={prompt} label={prompt} onPress={handleSend} />
@@ -47,3 +51,48 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+  },
+  flex: {
+    flex: 1,
+  },
+  centerContent: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    paddingHorizontal: 24,
+  },
+  logo: {
+    color: colors.text,
+    fontSize: 52,
+    fontWeight: "200",
+    letterSpacing: 12,
+    textTransform: "uppercase",
+  },
+  divider: {
+    width: 40,
+    height: 1,
+    backgroundColor: colors.accent,
+    marginVertical: 12,
+  },
+  subtitle: {
+    color: colors.textMuted,
+    fontSize: 14,
+    letterSpacing: 2,
+    textTransform: "uppercase",
+    marginBottom: 40,
+  },
+  pillScroll: {
+    maxHeight: 160,
+    width: "100%",
+  },
+  pillContainer: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "center",
+  },
+});

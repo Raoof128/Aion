@@ -1,11 +1,12 @@
 import "../global.css";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { Drawer } from "expo-router/drawer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { supabase } from "../lib/supabase";
 import { HistoryDrawer } from "../components/HistoryDrawer";
+import { colors } from "../lib/theme";
 
 const queryClient = new QueryClient();
 
@@ -30,20 +31,20 @@ export default function RootLayout() {
 
   if (!ready) {
     return (
-      <View className="flex-1 items-center justify-center bg-black">
-        <ActivityIndicator color="white" size="large" />
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.accent} size="large" />
       </View>
     );
   }
 
   return (
     <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={{ flex: 1 }}>
+      <GestureHandlerRootView style={styles.root}>
         <Drawer
           drawerContent={(props) => <HistoryDrawer {...props} />}
           screenOptions={{
             headerShown: false,
-            drawerStyle: { backgroundColor: "#0a0a0a", width: 300 },
+            drawerStyle: { backgroundColor: colors.bg, width: 300 },
           }}
         >
           <Drawer.Screen name="index" options={{ title: "Aion" }} />
@@ -56,3 +57,15 @@ export default function RootLayout() {
     </QueryClientProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  loading: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: colors.bg,
+  },
+  root: {
+    flex: 1,
+  },
+});

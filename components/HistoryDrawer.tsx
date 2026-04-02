@@ -1,8 +1,9 @@
-import { View, Text, FlatList, Pressable, Alert } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { supabase } from "../lib/supabase";
+import { colors } from "../lib/theme";
 import type { Conversation } from "../lib/types";
 
 function timeAgo(dateStr: string): string {
@@ -55,20 +56,17 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
   };
 
   return (
-    <View className="flex-1 bg-neutral-950 pt-16 px-4">
-      <Text className="text-white text-xl font-bold mb-4">History</Text>
+    <View style={styles.container}>
+      <Text style={styles.title}>History</Text>
 
-      <Pressable
-        onPress={handleNewChat}
-        className="bg-amber-600 rounded-xl py-3 px-4 mb-4 active:bg-amber-700"
-      >
-        <Text className="text-white font-semibold text-center">+ New Chat</Text>
+      <Pressable onPress={handleNewChat} style={styles.newChatButton}>
+        <Text style={styles.newChatText}>+ New Chat</Text>
       </Pressable>
 
       {isLoading ? (
-        <Text className="text-neutral-500">Loading...</Text>
+        <Text style={styles.emptyText}>Loading...</Text>
       ) : conversations.length === 0 ? (
-        <Text className="text-neutral-500">No conversations yet</Text>
+        <Text style={styles.emptyText}>No conversations yet</Text>
       ) : (
         <FlatList
           data={conversations}
@@ -77,12 +75,12 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
             <Pressable
               onPress={() => handleOpen(item.id)}
               onLongPress={() => handleDelete(item.id)}
-              className="py-3 border-b border-neutral-800 active:bg-neutral-900"
+              style={styles.conversationRow}
             >
-              <Text className="text-white text-base" numberOfLines={1}>
+              <Text style={styles.conversationTitle} numberOfLines={1}>
                 {item.title || "Untitled"}
               </Text>
-              <Text className="text-neutral-500 text-xs mt-1">{timeAgo(item.updated_at)}</Text>
+              <Text style={styles.conversationTime}>{timeAgo(item.updated_at)}</Text>
             </Pressable>
           )}
         />
@@ -90,3 +88,50 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    paddingTop: 60,
+    paddingHorizontal: 16,
+  },
+  title: {
+    color: colors.text,
+    fontSize: 20,
+    fontWeight: "700",
+    marginBottom: 16,
+    letterSpacing: 0.3,
+  },
+  newChatButton: {
+    backgroundColor: colors.accentDim,
+    borderRadius: 12,
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    marginBottom: 20,
+  },
+  newChatText: {
+    color: colors.text,
+    fontWeight: "600",
+    textAlign: "center",
+    fontSize: 15,
+  },
+  emptyText: {
+    color: colors.textMuted,
+    fontSize: 14,
+  },
+  conversationRow: {
+    paddingVertical: 14,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderSubtle,
+  },
+  conversationTitle: {
+    color: colors.text,
+    fontSize: 15,
+  },
+  conversationTime: {
+    color: colors.textMuted,
+    fontSize: 12,
+    marginTop: 4,
+  },
+});

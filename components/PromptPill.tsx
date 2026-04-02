@@ -1,4 +1,6 @@
-import { Pressable, Text } from "react-native";
+import { useState } from "react";
+import { Pressable, Text, StyleSheet } from "react-native";
+import { colors } from "../lib/theme";
 
 interface PromptPillProps {
   label: string;
@@ -6,12 +8,37 @@ interface PromptPillProps {
 }
 
 export function PromptPill({ label, onPress }: PromptPillProps) {
+  const [pressed, setPressed] = useState(false);
+
   return (
     <Pressable
       onPress={() => onPress(label)}
-      className="bg-neutral-900 border border-neutral-800 rounded-full px-4 py-2.5 mr-2 mb-2 active:bg-neutral-800"
+      onPressIn={() => setPressed(true)}
+      onPressOut={() => setPressed(false)}
+      style={[styles.pill, pressed && styles.pillPressed]}
     >
-      <Text className="text-neutral-300 text-sm">{label}</Text>
+      <Text style={styles.label}>{label}</Text>
     </Pressable>
   );
 }
+
+const styles = StyleSheet.create({
+  pill: {
+    backgroundColor: colors.bgElevated,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderRadius: 24,
+    paddingHorizontal: 18,
+    paddingVertical: 12,
+    marginRight: 8,
+    marginBottom: 8,
+  },
+  pillPressed: {
+    backgroundColor: colors.bgCard,
+    borderColor: colors.accentDim,
+  },
+  label: {
+    color: colors.textSecondary,
+    fontSize: 14,
+  },
+});
