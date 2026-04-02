@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeInUp } from "react-native-reanimated";
+import Animated, { FadeInLeft, useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
 
@@ -14,7 +14,20 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   const reference = `${verse.book_name} ${verse.chapter}:${verse.verse}`;
   const [copied, setCopied] = useState(false);
 
+  const flashOpacity = useSharedValue(0);
+  const flashStyle = useAnimatedStyle(() => ({
+    backgroundColor: `rgba(138, 43, 226, ${flashOpacity.value * 0.15})`,
+  }));
+
+  const triggerFlash = () => {
+    flashOpacity.value = withSequence(
+      withTiming(1, { duration: 100 }),
+      withTiming(0, { duration: 300 })
+    );
+  };
+
   const handleShare = async () => {
+    triggerFlash();
     const text = `${reference} — "${verse.content}"`;
     try {
       if (Platform.OS !== "web") {
@@ -27,6 +40,7 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   };
 
   const handleCopy = async () => {
+    triggerFlash();
     const text = `${reference} — "${verse.content}"`;
     try {
       if (Platform.OS !== "web") {
@@ -47,7 +61,7 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
 
   return (
     <Animated.View
-      entering={FadeInUp.delay(index * 100).duration(400).springify()}
+      entering={FadeInLeft.delay(index * 100).duration(400).springify()}
       style={styles.card}
       accessible={true}
       accessibilityLabel={`${reference}: ${verse.content}`}
@@ -55,37 +69,39 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
       {/* Purple glow top border */}
       <View style={styles.glowBar} />
 
-      <View style={styles.header}>
-        <View style={styles.verseBadge}>
-          <Text style={styles.verseBadgeText}>{verse.chapter}:{verse.verse}</Text>
+      <Animated.View style={flashStyle}>
+        <View style={styles.header}>
+          <View style={styles.verseBadge}>
+            <Text style={styles.verseBadgeText}>{verse.chapter}:{verse.verse}</Text>
+          </View>
+          <Text style={styles.reference}>{reference}</Text>
         </View>
-        <Text style={styles.reference}>{reference}</Text>
-      </View>
 
-      <View style={styles.divider} />
+        <View style={styles.divider} />
 
-      <Text style={styles.content}>"{verse.content}"</Text>
+        <Text style={styles.content}>"{verse.content}"</Text>
 
-      <View style={styles.actions}>
-        <Pressable
-          onPress={handleCopy}
-          style={styles.actionButton}
-          accessibilityLabel={copied ? "Copied to clipboard" : "Copy verse"}
-          accessibilityRole="button"
-        >
-          <Text style={[styles.actionText, copied && styles.actionTextActive]}>
-            {copied ? "✓ Copied" : "Copy"}
-          </Text>
-        </Pressable>
-        <Pressable
-          onPress={handleShare}
-          style={styles.actionButton}
-          accessibilityLabel="Share verse"
-          accessibilityRole="button"
-        >
-          <Text style={styles.actionText}>Share</Text>
-        </Pressable>
-      </View>
+        <View style={styles.actions}>
+          <Pressable
+            onPress={handleCopy}
+            style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
+            accessibilityLabel={copied ? "Copied to clipboard" : "Copy verse"}
+            accessibilityRole="button"
+          >
+            <Text style={[styles.actionText, copied && styles.actionTextActive]}>
+              {copied ? "✓ Copied" : "Copy"}
+            </Text>
+          </Pressable>
+          <Pressable
+            onPress={handleShare}
+            style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
+            accessibilityLabel="Share verse"
+            accessibilityRole="button"
+          >
+            <Text style={styles.actionText}>Share</Text>
+          </Pressable>
+        </View>
+      </Animated.View>
     </Animated.View>
   );
 }
@@ -168,6 +184,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  actionButtonHovered: {
+    backgroundColor: "rgba(138, 43, 226, 0.10)",
+    borderColor: colors.purpleBorder,
   },
   actionText: {
     color: colors.textMuted,

@@ -2,6 +2,8 @@ import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
 import Animated, {
   FadeIn,
+  FadeInLeft,
+  FadeInRight,
   useAnimatedStyle,
   useSharedValue,
   withRepeat,
@@ -52,7 +54,7 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
   if (role === "user") {
     return (
       <Animated.View
-        entering={FadeIn.duration(200)}
+        entering={FadeInRight.duration(250)}
         style={styles.userContainer}
         accessible={true}
         accessibilityLabel={`You said: ${content}`}
@@ -69,7 +71,7 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
 
   return (
     <Animated.View
-      entering={FadeIn.duration(200)}
+      entering={FadeInLeft.duration(250)}
       style={styles.assistantContainer}
       accessible={true}
       accessibilityLabel={`Aion said: ${content}`}

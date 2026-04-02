@@ -54,7 +54,10 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             onPressIn={() => { sendScale.value = withSpring(0.85); }}
             onPressOut={() => { sendScale.value = withSpring(1); }}
             disabled={!canSend}
-            style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
+            style={({ hovered }: any) => [
+              styles.sendButtonInner,
+              hovered && canSend && styles.sendButtonInnerHovered,
+            ]}
             accessibilityLabel="Send message"
             accessibilityRole="button"
           >
@@ -99,6 +102,16 @@ const styles = StyleSheet.create({
     height: 36,
     alignItems: "center",
     justifyContent: "center",
+  },
+  sendButtonInner: {
+    width: "100%",
+    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    borderRadius: 18,
+  },
+  sendButtonInnerHovered: {
+    backgroundColor: "rgba(255, 255, 255, 0.1)",
   },
   sendActive: {
     backgroundColor: colors.purple,

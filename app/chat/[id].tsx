@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
 import { supabase } from "../../lib/supabase";
 import { useChat } from "../../lib/chat";
 import { ChatBubble } from "../../components/ChatBubble";
@@ -116,7 +117,10 @@ export default function ChatScreen() {
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.headerButton}>
+        <Pressable
+          onPress={() => router.back()}
+          style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
+        >
           <Text style={styles.backArrow}>←</Text>
         </Pressable>
         <View style={styles.headerCenter}>
@@ -171,14 +175,16 @@ export default function ChatScreen() {
         )}
 
         {showScrollButton && (
-          <Pressable
-            onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
-            style={styles.scrollToBottom}
-            accessibilityLabel="Scroll to bottom"
-            accessibilityRole="button"
-          >
-            <Text style={styles.scrollToBottomIcon}>↓</Text>
-          </Pressable>
+          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.scrollToBottomWrapper}>
+            <Pressable
+              onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              style={styles.scrollToBottom}
+              accessibilityLabel="Scroll to bottom"
+              accessibilityRole="button"
+            >
+              <Text style={styles.scrollToBottomIcon}>↓</Text>
+            </Pressable>
+          </Animated.View>
         )}
 
         <ChatInput onSend={handleSend} disabled={isStreaming} />
@@ -209,6 +215,10 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
+  },
+  headerButtonHovered: {
+    backgroundColor: colors.glass,
+    borderRadius: 10,
   },
   backArrow: {
     color: colors.textSecondary,
@@ -279,10 +289,13 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     overflow: "hidden",
   },
-  scrollToBottom: {
+  scrollToBottomWrapper: {
     position: "absolute",
     bottom: 80,
     alignSelf: "center",
+    zIndex: 10,
+  },
+  scrollToBottom: {
     backgroundColor: colors.purple,
     width: 36,
     height: 36,
@@ -293,7 +306,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-    zIndex: 10,
   },
   scrollToBottomIcon: {
     color: colors.white,

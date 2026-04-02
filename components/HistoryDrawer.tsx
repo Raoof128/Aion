@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 import { colors, fonts } from "../lib/theme";
 import type { Conversation } from "../lib/types";
@@ -13,6 +14,38 @@ function timeAgo(dateStr: string): string {
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;
+}
+
+function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
+  item: Conversation;
+  onOpen: (id: string) => void;
+  onDelete: (id: string) => void;
+  timeAgo: string;
+}) {
+  const scale = useSharedValue(1);
+  const animStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
+
+  return (
+    <Animated.View style={animStyle}>
+      <Pressable
+        onPress={() => onOpen(item.id)}
+        onLongPress={() => onDelete(item.id)}
+        onPressIn={() => { scale.value = withSpring(0.98); }}
+        onPressOut={() => { scale.value = withSpring(1); }}
+        style={({ hovered }: any) => [styles.conversationRow, hovered && styles.conversationRowHovered]}
+        accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo}`}
+        accessibilityRole="button"
+        accessibilityHint="Tap to open, long press to delete"
+      >
+        <Text style={styles.conversationTitle} numberOfLines={2}>
+          {item.title || "Untitled"}
+        </Text>
+        <Text style={styles.conversationTime}>{timeAgo}</Text>
+      </Pressable>
+    </Animated.View>
+  );
 }
 
 export function HistoryDrawer(props: DrawerContentComponentProps) {
@@ -68,7 +101,7 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
 
       <Pressable
         onPress={handleNewChat}
-        style={styles.newChatButton}
+        style={({ hovered }: any) => [styles.newChatButton, hovered && styles.newChatButtonHovered]}
         accessibilityLabel="Start new chat"
         accessibilityRole="button"
       >
@@ -97,19 +130,12 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
             data={conversations}
             keyExtractor={(item) => item.id}
             renderItem={({ item }) => (
-              <Pressable
-                onPress={() => handleOpen(item.id)}
-                onLongPress={() => handleDelete(item.id)}
-                style={styles.conversationRow}
-                accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo(item.updated_at)}`}
-                accessibilityRole="button"
-                accessibilityHint="Tap to open, long press to delete"
-              >
-                <Text style={styles.conversationTitle} numberOfLines={2}>
-                  {item.title || "Untitled"}
-                </Text>
-                <Text style={styles.conversationTime}>{timeAgo(item.updated_at)}</Text>
-              </Pressable>
+              <ConversationItem
+                item={item}
+                onOpen={handleOpen}
+                onDelete={handleDelete}
+                timeAgo={timeAgo(item.updated_at)}
+              />
             )}
           />
           <View style={styles.drawerFooter}>
@@ -155,6 +181,10 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 16,
     marginBottom: 20,
+  },
+  newChatButtonHovered: {
+    backgroundColor: "rgba(138, 43, 226, 0.15)",
+    borderColor: "rgba(138, 43, 226, 0.30)",
   },
   newChatIcon: {
     color: colors.purple,
@@ -203,6 +233,9 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderBottomWidth: 1,
     borderBottomColor: colors.glass,
+  },
+  conversationRowHovered: {
+    backgroundColor: colors.glass,
   },
   conversationTitle: {
     color: colors.textPrimary,

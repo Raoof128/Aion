@@ -1,7 +1,8 @@
+import { useEffect } from "react";
 import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeIn } from "react-native-reanimated";
+import Animated, { FadeInDown, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from "react-native-reanimated";
 import { PromptPill } from "../components/PromptPill";
 import { ChatInput } from "../components/ChatInput";
 import { colors, fonts } from "../lib/theme";
@@ -24,6 +25,21 @@ function getGreeting(): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+
+  const breathe = useSharedValue(0.5);
+
+  useEffect(() => {
+    breathe.value = withRepeat(
+      withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
+      -1,
+      true
+    );
+  }, []);
+
+  const breatheStyle = useAnimatedStyle(() => ({
+    shadowOpacity: breathe.value,
+    opacity: 0.6 + breathe.value * 0.4,
+  }));
 
   const handleSend = (message: string) => {
     const uniqueId = `new-${Date.now()}`;
@@ -62,7 +78,7 @@ export default function HomeScreen() {
           {/* Divider */}
           <Animated.View
             entering={FadeIn.duration(400).delay(400)}
-            style={styles.divider}
+            style={[styles.divider, breatheStyle]}
           />
 
           {/* Tagline */}
@@ -84,12 +100,13 @@ export default function HomeScreen() {
               <View style={styles.labelLine} />
             </View>
             <ScrollView style={styles.pillScroll} showsVerticalScrollIndicator={false}>
-              {PROMPT_SUGGESTIONS.map((prompt) => (
+              {PROMPT_SUGGESTIONS.map((prompt, index) => (
                 <PromptPill
                   key={prompt.label}
                   icon={prompt.icon}
                   label={prompt.label}
                   onPress={handleSend}
+                  index={index}
                 />
               ))}
             </ScrollView>
