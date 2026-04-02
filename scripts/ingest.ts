@@ -5,7 +5,8 @@ import OpenAI from "openai";
 // --- Config ---
 const TRANSLATION_ID = "BSB";
 const API_BASE = "https://bible.helloao.org/api";
-const BATCH_SIZE = 100;
+const BATCH_SIZE = 25; // smaller batches to avoid Supabase statement timeout
+const MAX_RETRIES = 3;
 const SUPABASE_URL = process.env.SUPABASE_URL!;
 const SUPABASE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 const OPENAI_KEY = process.env.OPENAI_API_KEY!;
@@ -20,15 +21,20 @@ interface ChapterContent {
   content?: (string | { noteId: number })[];
 }
 
-interface Chapter {
+interface ChapterInner {
   number: number;
   content: ChapterContent[];
+}
+
+interface ChapterWrapper {
+  numberOfVerses: number;
+  chapter: ChapterInner;
 }
 
 interface Book {
   id: string;
   name: string;
-  chapters: Chapter[];
+  chapters: ChapterWrapper[];
 }
 
 interface CompleteResponse {
@@ -60,7 +66,8 @@ function extractVerses(data: CompleteResponse): VerseRow[] {
   const verses: VerseRow[] = [];
 
   for (const book of data.books) {
-    for (const chapter of book.chapters) {
+    for (const chapterWrapper of book.chapters) {
+      const chapter = chapterWrapper.chapter;
       for (const item of chapter.content) {
         if (item.type === "verse" && item.number && item.content) {
           const text = flattenVerseContent(item.content);
@@ -127,15 +134,23 @@ async function main() {
       embedding: JSON.stringify(embeddings[idx]),
     }));
 
-    const { error } = await supabase
-      .from("bible_verses")
-      .upsert(rows, {
-        onConflict: "translation_id,book_id,chapter,verse",
-      });
+    let retries = 0;
+    while (retries < MAX_RETRIES) {
+      const { error } = await supabase
+        .from("bible_verses")
+        .upsert(rows, {
+          onConflict: "translation_id,book_id,chapter,verse",
+        });
 
-    if (error) {
-      console.error(`Error at batch ${i / BATCH_SIZE}:`, error.message);
-      throw error;
+      if (!error) break;
+
+      retries++;
+      if (retries >= MAX_RETRIES) {
+        console.error(`\nFailed after ${MAX_RETRIES} retries at batch ${Math.floor(i / BATCH_SIZE)}:`, error.message);
+        throw error;
+      }
+      console.log(`\n  Retry ${retries}/${MAX_RETRIES} (${error.message})...`);
+      await sleep(2000 * retries);
     }
 
     inserted += batch.length;
@@ -143,7 +158,7 @@ async function main() {
       `  ${inserted}/${verses.length} verses (${((inserted / verses.length) * 100).toFixed(1)}%)\r`
     );
 
-    await sleep(200);
+    await sleep(300);
   }
 
   console.log(`\n\nDone! Inserted ${inserted} verses into bible_verses.`);
