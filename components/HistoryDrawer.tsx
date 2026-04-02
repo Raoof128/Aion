@@ -1,20 +1,19 @@
 import { View, Text, FlatList, Pressable, Alert } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import { supabase } from "../lib/supabase";
 import type { Conversation } from "../lib/types";
 
 function timeAgo(dateStr: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 1000
-  );
+  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
   if (seconds < 60) return "just now";
   if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
   if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-export function HistoryDrawer(props: any) {
+export function HistoryDrawer(props: DrawerContentComponentProps) {
   const router = useRouter();
   const queryClient = useQueryClient();
 
@@ -83,9 +82,7 @@ export function HistoryDrawer(props: any) {
               <Text className="text-white text-base" numberOfLines={1}>
                 {item.title || "Untitled"}
               </Text>
-              <Text className="text-neutral-500 text-xs mt-1">
-                {timeAgo(item.updated_at)}
-              </Text>
+              <Text className="text-neutral-500 text-xs mt-1">{timeAgo(item.updated_at)}</Text>
             </Pressable>
           )}
         />

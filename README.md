@@ -1,8 +1,28 @@
 # Aion
 
+![TypeScript](https://img.shields.io/badge/TypeScript-3178C6?logo=typescript&logoColor=white)
+![React Native](https://img.shields.io/badge/React%20Native-20232A?logo=react&logoColor=61DAFB)
+![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
+![License](https://img.shields.io/badge/License-MIT-yellow)
+
 AI-powered Bible companion using Agentic Hybrid RAG (Retrieval-Augmented Generation).
 
 Users interact through a Perplexity-style chat interface with dynamic prompt suggestions and rich verse cards. All AI responses are grounded in actual Bible data retrieved via combined keyword and semantic search.
+
+## Features
+
+- **Conversational Bible Q&A** — Ask questions in plain language and receive contextual answers grounded in scripture
+- **Hybrid RAG retrieval** — Combines keyword matching and semantic vector search (pgvector) for precise verse lookup
+- **Streaming responses** — Real-time SSE streaming from Gemini via Supabase Edge Functions
+- **Rich verse cards** — Inline Bible verse display with book, chapter, and verse attribution
+- **Prompt suggestions** — Dynamic suggestion pills on the home screen to inspire exploration
+- **Conversation history** — Persistent history accessible via a slide-out drawer
+- **Anonymous auth** — Zero sign-up friction; users are authenticated silently on first launch
+- **Rate limiting & caching** — IP-based rate limits and exact-match response cache to control costs
+
+## Screenshots
+
+> _Screenshots coming soon._
 
 ## Tech Stack
 
@@ -18,25 +38,27 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 ```
 User Message
-    |
-    v
-[React Native App] ---> [Supabase Edge Function]
-                              |
-                    +---------+---------+
-                    |                   |
-              [Regex Extract]    [OpenAI Embed]
-              (keyword: "444")   (1536-dim vector)
-                    |                   |
-                    +---------+---------+
-                              |
-                    [Hybrid Search (pgvector)]
-                    Keyword match + Semantic similarity
-                              |
-                    [Retrieved Verses]
-                              |
-                    [Gemini 3 Flash - SSE Stream]
-                              |
-                    [Chat Response + Verse Cards]
+    │
+    ▼
+[React Native App] ──────────────► [Supabase Edge Function]
+                                           │
+                               ┌───────────┴───────────┐
+                               │                       │
+                         [Regex Extract]         [OpenAI Embed]
+                         keyword: "John 3:16"    1536-dim vector
+                               │                       │
+                               └───────────┬───────────┘
+                                           │
+                               [Hybrid Search — pgvector]
+                               Keyword match + Semantic similarity
+                                           │
+                                   [Retrieved Verses]
+                                           │
+                               [Gemini 3 Flash — SSE Stream]
+                                           │
+                               [Chat Response + Verse Cards]
+                                           │
+    [React Native App] ◄─────────────────────────────────
 ```
 
 ## Project Structure
@@ -104,8 +126,8 @@ OPENAI_API_KEY=your-openai-key
 
 Run the SQL migrations in your Supabase SQL Editor:
 
-1. `supabase/migrations/20260402080000_initial_schema.sql` - Tables, indexes, RLS, hybrid search function
-2. `supabase/migrations/20260402081000_rate_limits.sql` - Rate limiting, response cache, global usage
+1. `supabase/migrations/20260402080000_initial_schema.sql` — Tables, indexes, RLS, hybrid search function
+2. `supabase/migrations/20260402081000_rate_limits.sql` — Rate limiting, response cache, global usage
 
 Enable **Anonymous Sign-Ins** in Supabase Dashboard > Authentication > Providers.
 
@@ -136,6 +158,25 @@ This fetches the entire BSB Bible from bible.helloao.org, generates embeddings v
 npx expo start
 ```
 
+## Development
+
+```bash
+# Type-check the project
+npx tsc --noEmit
+
+# Lint
+npx eslint .
+
+# Format
+npx prettier --write .
+
+# Run on iOS simulator
+npx expo run:ios
+
+# Run on Android emulator
+npx expo run:android
+```
+
 ## Security
 
 - **API keys server-side only:** OpenAI, Gemini, and service_role keys stored as Edge Function secrets
@@ -146,6 +187,10 @@ npx expo start
 - **Dev bypass:** Secret header for testing, excluded from production builds
 - **Fail-closed:** Rate limit errors default to deny
 
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) before opening a pull request.
+
 ## License
 
-Private project.
+See [LICENSE](LICENSE) for details.

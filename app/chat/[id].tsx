@@ -21,14 +21,7 @@ export default function ChatScreen() {
     initialMessage?: string;
   }>();
 
-  const {
-    sendMessage,
-    streamingText,
-    verses,
-    conversationId,
-    isStreaming,
-    error,
-  } = useChat();
+  const { sendMessage, streamingText, verses, conversationId, isStreaming, error } = useChat();
 
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const flatListRef = useRef<FlatList>(null);
@@ -50,11 +43,16 @@ export default function ChatScreen() {
   }, [initialMessage]);
 
   async function loadMessages(convId: string) {
-    const { data } = await supabase
+    const { data, error } = await supabase
       .from("messages")
       .select("*")
       .eq("conversation_id", convId)
       .order("created_at", { ascending: true });
+
+    if (error) {
+      console.error("Failed to load messages:", error.message);
+      return;
+    }
 
     if (data) {
       setMessages(
@@ -63,7 +61,7 @@ export default function ChatScreen() {
           role: m.role,
           content: m.content,
           verses: m.verses,
-        }))
+        })),
       );
     }
   }
@@ -121,16 +119,10 @@ export default function ChatScreen() {
           data={displayMessages}
           keyExtractor={(item) => item.id}
           renderItem={({ item }) => (
-            <ChatBubble
-              role={item.role}
-              content={item.content}
-              verses={item.verses}
-            />
+            <ChatBubble role={item.role} content={item.content} verses={item.verses} />
           )}
           contentContainerStyle={{ padding: 16, paddingBottom: 8 }}
-          onContentSizeChange={() =>
-            flatListRef.current?.scrollToEnd({ animated: true })
-          }
+          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
         />
 
         {error && (

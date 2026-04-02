@@ -19,16 +19,11 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
 
   return (
     <View className="self-start max-w-[95%] my-1">
-      <Text className="text-neutral-200 text-base leading-7 mb-2">
-        {content}
-      </Text>
+      <Text className="text-neutral-200 text-base leading-7 mb-2">{content}</Text>
       {verses && verses.length > 0 && (
         <View className="mt-1">
           {verses.map((v) => (
-            <VerseCard
-              key={`${v.book_id}-${v.chapter}-${v.verse}`}
-              verse={v}
-            />
+            <VerseCard key={`${v.book_id}-${v.chapter}-${v.verse}`} verse={v} />
           ))}
         </View>
       )}

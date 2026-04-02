@@ -29,9 +29,7 @@ export default function HomeScreen() {
       >
         <View className="flex-1 justify-center items-center px-6">
           <Text className="text-white text-4xl font-bold mb-2">Aion</Text>
-          <Text className="text-neutral-500 text-base mb-10">
-            Your AI Bible companion
-          </Text>
+          <Text className="text-neutral-500 text-base mb-10">Your AI Bible companion</Text>
 
           <ScrollView
             horizontal={false}

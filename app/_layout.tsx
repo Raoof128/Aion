@@ -14,11 +14,16 @@ export default function RootLayout() {
 
   useEffect(() => {
     async function initAuth() {
-      const { data } = await supabase.auth.getSession();
-      if (!data.session) {
-        await supabase.auth.signInAnonymously();
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (!data.session) {
+          await supabase.auth.signInAnonymously();
+        }
+      } catch (error) {
+        console.error("Auth initialization failed:", error);
+      } finally {
+        setReady(true);
       }
-      setReady(true);
     }
     initAuth();
   }, []);
