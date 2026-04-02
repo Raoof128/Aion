@@ -8,37 +8,24 @@ const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
-// --- Rate Limiting (in-memory, resets on cold start) ---
-const rateLimits = new Map<string, { minute: number[]; window: number[] }>();
+// --- Rate Limiting (database-persisted, survives cold starts) ---
+// Limits: 5/min per user, 50/3hrs per user, 200/day global
+async function checkRateLimit(userId: string): Promise<{ allowed: boolean; message?: string }> {
+  const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_user_id: userId,
+  });
 
-function checkRateLimit(userId: string): { allowed: boolean; message?: string } {
-  const now = Date.now();
-  const oneMinuteAgo = now - 60_000;
-  const threeHoursAgo = now - 3 * 60 * 60_000;
-
-  if (!rateLimits.has(userId)) {
-    rateLimits.set(userId, { minute: [], window: [] });
-  }
-  const limits = rateLimits.get(userId)!;
-
-  // Clean old entries
-  limits.minute = limits.minute.filter((t) => t > oneMinuteAgo);
-  limits.window = limits.window.filter((t) => t > threeHoursAgo);
-
-  if (limits.minute.length >= 5) {
-    return { allowed: false, message: "Too many requests. Please wait a moment." };
-  }
-  if (limits.window.length >= 50) {
-    return {
-      allowed: false,
-      message: "You've reached the daily limit. Create an account for more access.",
-    };
+  if (error) {
+    // If rate limit check fails, deny by default (fail-closed)
+    return { allowed: false, message: "Rate limit check failed. Please try again." };
   }
 
-  limits.minute.push(now);
-  limits.window.push(now);
-  return { allowed: true };
+  const result = data[0];
+  return { allowed: result.allowed, message: result.message ?? undefined };
 }
+
+// --- Message length cap (prevents token-stuffing) ---
+const MAX_MESSAGE_LENGTH = 500;
 
 // --- Keyword Extraction ---
 function extractKeyword(message: string): string {
@@ -265,8 +252,8 @@ Deno.serve(async (req) => {
       });
     }
 
-    // Rate limit
-    const rateCheck = checkRateLimit(user.id);
+    // Rate limit (database-persisted)
+    const rateCheck = await checkRateLimit(user.id);
     if (!rateCheck.allowed) {
       return new Response(
         JSON.stringify({ error: rateCheck.message }),
@@ -279,6 +266,14 @@ Deno.serve(async (req) => {
     if (!message || typeof message !== "string") {
       return new Response(
         JSON.stringify({ error: "Message is required" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
+    // Prevent token-stuffing attacks
+    if (message.length > MAX_MESSAGE_LENGTH) {
+      return new Response(
+        JSON.stringify({ error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters.` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
       );
     }
