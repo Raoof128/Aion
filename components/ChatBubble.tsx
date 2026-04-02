@@ -1,7 +1,46 @@
+import { useEffect } from "react";
 import { View, Text, StyleSheet } from "react-native";
+import Animated, {
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+} from "react-native-reanimated";
 import { VerseCard } from "./VerseCard";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
+
+function PulsingDot() {
+  const opacity = useSharedValue(0.3);
+
+  useEffect(() => {
+    opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
+  }, []);
+
+  const style = useAnimatedStyle(() => ({
+    opacity: opacity.value,
+  }));
+
+  return (
+    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 }}>
+      {[0, 1, 2].map((i) => (
+        <Animated.View
+          key={i}
+          style={[
+            {
+              width: 6,
+              height: 6,
+              borderRadius: 3,
+              backgroundColor: colors.purple,
+            },
+            style,
+          ]}
+        />
+      ))}
+    </View>
+  );
+}
 
 interface ChatBubbleProps {
   role: "user" | "assistant";
@@ -12,21 +51,35 @@ interface ChatBubbleProps {
 export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
   if (role === "user") {
     return (
-      <View style={styles.userContainer}>
+      <Animated.View
+        entering={FadeIn.duration(200)}
+        style={styles.userContainer}
+        accessible={true}
+        accessibilityLabel={`You said: ${content}`}
+        accessibilityRole="text"
+      >
         <View style={styles.userBubble}>
           <Text style={styles.userText}>{content}</Text>
         </View>
-      </View>
+      </Animated.View>
     );
   }
 
+  const isSearching = content === "Searching scripture...";
+
   return (
-    <View style={styles.assistantContainer}>
+    <Animated.View
+      entering={FadeIn.duration(200)}
+      style={styles.assistantContainer}
+      accessible={true}
+      accessibilityLabel={`Aion said: ${content}`}
+      accessibilityRole="text"
+    >
       <View style={styles.assistantHeader}>
         <View style={styles.aiDot} />
         <Text style={styles.aiLabel}>Aion</Text>
       </View>
-      <Text style={styles.assistantText}>{content}</Text>
+      {isSearching ? <PulsingDot /> : <Text style={styles.assistantText}>{content}</Text>}
       {verses && verses.length > 0 && (
         <View style={styles.versesContainer}>
           {verses.map((v, i) => (
@@ -34,7 +87,7 @@ export function ChatBubble({ role, content, verses }: ChatBubbleProps) {
           ))}
         </View>
       )}
-    </View>
+    </Animated.View>
   );
 }
 

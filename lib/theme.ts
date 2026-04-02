@@ -12,7 +12,7 @@ export const colors = {
   onyx: "#111114",
   slate: "#17171B",
   graphite: "#1E1E24",
-  steel: "#2A2A32",
+  steel: "#3E3E4A",
 
   // Ether — the glow
   purple: "#8A2BE2",
@@ -32,8 +32,11 @@ export const colors = {
   white: "#FFFFFF",
   textPrimary: "#F0F0F5",
   textSecondary: "#9494A8",
-  textMuted: "#5C5C6E",
-  textGhost: "#3A3A48",
+  textMuted: "#7A7A8E",
+  textGhost: "#56566A",
+
+  // Focus ring (web)
+  focus: "rgba(138, 43, 226, 0.5)",
 
   // Semantic
   error: "#DC2626",

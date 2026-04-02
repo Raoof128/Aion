@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Pressable, Text, View, Platform, StyleSheet } from "react-native";
+import { Pressable, Text, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import { colors, fonts } from "../lib/theme";
 
@@ -25,6 +25,8 @@ export function PromptPill({ icon, label, onPress }: PromptPillProps) {
       onPressIn={() => setPressed(true)}
       onPressOut={() => setPressed(false)}
       style={[styles.pill, pressed && styles.pillPressed]}
+      accessibilityLabel={label}
+      accessibilityRole="button"
     >
       <Text style={styles.icon}>{icon}</Text>
       <Text style={styles.label}>{label}</Text>

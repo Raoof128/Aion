@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { View, TextInput, Pressable, Text, Platform, StyleSheet } from "react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { colors, fonts } from "../lib/theme";
 
@@ -23,6 +24,11 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   const canSend = text.trim().length > 0 && !disabled;
 
+  const sendScale = useSharedValue(1);
+  const sendAnimStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: sendScale.value }],
+  }));
+
   return (
     <View style={styles.wrapper}>
       <View style={styles.container}>
@@ -35,14 +41,21 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
           onSubmitEditing={handleSend}
           multiline
           editable={!disabled}
+          accessibilityLabel="Message input"
         />
-        <Pressable
-          onPress={handleSend}
-          disabled={!canSend}
-          style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive]}
-        >
-          <Text style={[styles.sendIcon, canSend && styles.sendIconActive]}>↑</Text>
-        </Pressable>
+        <Animated.View style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive, sendAnimStyle]}>
+          <Pressable
+            onPress={handleSend}
+            onPressIn={() => { sendScale.value = withSpring(0.85); }}
+            onPressOut={() => { sendScale.value = withSpring(1); }}
+            disabled={!canSend}
+            style={{ width: "100%", height: "100%", alignItems: "center", justifyContent: "center" }}
+            accessibilityLabel="Send message"
+            accessibilityRole="button"
+          >
+            <Text style={[styles.sendIcon, canSend && styles.sendIconActive]}>↑</Text>
+          </Pressable>
+        </Animated.View>
       </View>
     </View>
   );

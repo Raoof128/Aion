@@ -37,6 +37,8 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
     <Animated.View
       entering={FadeInUp.delay(index * 100).duration(400).springify()}
       style={styles.card}
+      accessible={true}
+      accessibilityLabel={`${reference}: ${verse.content}`}
     >
       {/* Purple glow top border */}
       <View style={styles.glowBar} />
@@ -51,7 +53,12 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
       <Text style={styles.content}>"{verse.content}"</Text>
 
       <View style={styles.actions}>
-        <Pressable onPress={handleCopy} style={styles.actionButton}>
+        <Pressable
+          onPress={handleCopy}
+          style={styles.actionButton}
+          accessibilityLabel={copied ? "Copied to clipboard" : "Copy verse"}
+          accessibilityRole="button"
+        >
           <Text style={[styles.actionText, copied && styles.actionTextActive]}>
             {copied ? "✓ Copied" : "Copy"}
           </Text>

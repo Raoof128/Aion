@@ -147,7 +147,11 @@ export default function ChatScreen() {
         />
 
         {error && (
-          <View style={styles.errorBanner}>
+          <View
+            style={styles.errorBanner}
+            accessibilityRole="alert"
+            accessibilityLabel={`Error: ${error}`}
+          >
             <Text style={styles.errorText}>{error}</Text>
           </View>
         )}

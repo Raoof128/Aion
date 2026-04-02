@@ -1,4 +1,4 @@
-import { View, Text, FlatList, Pressable, Alert, StyleSheet } from "react-native";
+import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, StyleSheet } from "react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
@@ -62,13 +62,20 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
         <View style={styles.titleDivider} />
       </View>
 
-      <Pressable onPress={handleNewChat} style={styles.newChatButton}>
+      <Pressable
+        onPress={handleNewChat}
+        style={styles.newChatButton}
+        accessibilityLabel="Start new chat"
+        accessibilityRole="button"
+      >
         <Text style={styles.newChatIcon}>+</Text>
         <Text style={styles.newChatText}>New Chat</Text>
       </Pressable>
 
       {isLoading ? (
-        <Text style={styles.emptyText}>Loading...</Text>
+        <View style={styles.emptyContainer}>
+          <ActivityIndicator color={colors.purple} size="small" />
+        </View>
       ) : conversations.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>✦</Text>
@@ -83,6 +90,9 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
               onPress={() => handleOpen(item.id)}
               onLongPress={() => handleDelete(item.id)}
               style={styles.conversationRow}
+              accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo(item.updated_at)}`}
+              accessibilityRole="button"
+              accessibilityHint="Tap to open, long press to delete"
             >
               <Text style={styles.conversationTitle} numberOfLines={1}>
                 {item.title || "Untitled"}
