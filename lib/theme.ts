@@ -1,34 +1,75 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, Platform } from "react-native";
 
-// Aion Design System — Dark luxury with warm amber accents
+// ═══════════════════════════════════════════════════════
+// OBSIDIAN & ETHER — Aion Design System 2026
+// Dark-first, glassmorphic, futuristic data terminal
+// ═══════════════════════════════════════════════════════
+
 export const colors = {
-  bg: "#050505",
-  bgElevated: "#0f0f0f",
-  bgCard: "#141414",
-  bgInput: "#1a1a1a",
-  border: "#262626",
-  borderSubtle: "#1c1c1c",
-  text: "#f0ece4",
-  textSecondary: "#8a8578",
-  textMuted: "#524e45",
-  accent: "#d4a340",
-  accentDim: "#a37c2c",
-  accentBright: "#f0c040",
-  userBubble: "#2c2418",
-  userBubbleBorder: "#3d3220",
-  error: "#7a2020",
-  errorText: "#e08080",
+  // Obsidian — the void
+  void: "#000000",
+  obsidian: "#0A0A0C",
+  onyx: "#111114",
+  slate: "#17171B",
+  graphite: "#1E1E24",
+  steel: "#2A2A32",
+
+  // Ether — the glow
+  purple: "#8A2BE2",
+  purpleDim: "#6B21A8",
+  purpleGlow: "#A855F7",
+  purpleMist: "rgba(138, 43, 226, 0.08)",
+  purpleBorder: "rgba(138, 43, 226, 0.15)",
+  purpleAccent: "rgba(138, 43, 226, 0.25)",
+
+  // Glass surfaces
+  glass: "rgba(255, 255, 255, 0.06)",
+  glassBorder: "rgba(255, 255, 255, 0.10)",
+  glassHover: "rgba(255, 255, 255, 0.10)",
+  glassBright: "rgba(255, 255, 255, 0.14)",
+
+  // Text
+  white: "#FFFFFF",
+  textPrimary: "#F0F0F5",
+  textSecondary: "#9494A8",
+  textMuted: "#5C5C6E",
+  textGhost: "#3A3A48",
+
+  // Semantic
+  error: "#DC2626",
+  errorBg: "rgba(220, 38, 38, 0.12)",
+  success: "#22C55E",
 } as const;
 
+// Font families — loaded in _layout.tsx
 export const fonts = {
-  regular: { fontFamily: "System" },
-  bold: { fontFamily: "System", fontWeight: "700" as const },
-  light: { fontFamily: "System", fontWeight: "300" as const },
+  // UI / Headers — clean, modern, techy
+  ui: Platform.select({
+    web: "Inter, -apple-system, sans-serif",
+    default: "Inter_400Regular",
+  }),
+  uiMedium: Platform.select({
+    web: "Inter, -apple-system, sans-serif",
+    default: "Inter_500Medium",
+  }),
+  uiBold: Platform.select({
+    web: "Inter, -apple-system, sans-serif",
+    default: "Inter_700Bold",
+  }),
+  // Verse text — ancient, authoritative serif
+  verse: Platform.select({
+    web: "'Playfair Display', Georgia, serif",
+    default: "PlayfairDisplay_400Regular",
+  }),
+  verseItalic: Platform.select({
+    web: "'Playfair Display', Georgia, serif",
+    default: "PlayfairDisplay_400Regular_Italic",
+  }),
 } as const;
 
 export const shared = StyleSheet.create({
   screenContainer: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.obsidian,
   },
 });

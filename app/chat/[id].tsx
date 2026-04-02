@@ -6,7 +6,7 @@ import { supabase } from "../../lib/supabase";
 import { useChat } from "../../lib/chat";
 import { ChatBubble } from "../../components/ChatBubble";
 import { ChatInput } from "../../components/ChatInput";
-import { colors } from "../../lib/theme";
+import { colors, fonts } from "../../lib/theme";
 import type { Message, Verse } from "../../lib/types";
 
 interface DisplayMessage {
@@ -23,7 +23,8 @@ export default function ChatScreen() {
   }>();
 
   const router = useRouter();
-  const { sendMessage, reset, streamingText, verses, conversationId, isStreaming, error } = useChat();
+  const { sendMessage, reset, streamingText, verses, conversationId, isStreaming, error } =
+    useChat();
 
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const flatListRef = useRef<FlatList>(null);
@@ -31,7 +32,6 @@ export default function ChatScreen() {
 
   const isNewChat = id === "new" || id.startsWith("new-");
 
-  // Reset everything when navigating to a new chat
   useEffect(() => {
     setMessages([]);
     hasSentInitial.current = false;
@@ -113,12 +113,16 @@ export default function ChatScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
+      {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => router.back()} style={styles.backButton}>
-          <Text style={styles.backText}>&#8592;</Text>
+        <Pressable onPress={() => router.back()} style={styles.headerButton}>
+          <Text style={styles.backArrow}>←</Text>
         </Pressable>
-        <Text style={styles.headerTitle}>Aion</Text>
-        <View style={styles.backButton} />
+        <View style={styles.headerCenter}>
+          <View style={styles.headerDot} />
+          <Text style={styles.headerTitle}>AION</Text>
+        </View>
+        <View style={styles.headerButton} />
       </View>
 
       <KeyboardAvoidingView
@@ -136,7 +140,8 @@ export default function ChatScreen() {
           onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyText}>Start a conversation...</Text>
+              <Text style={styles.emptyIcon}>✦</Text>
+              <Text style={styles.emptyText}>Begin your search</Text>
             </View>
           }
         />
@@ -156,7 +161,7 @@ export default function ChatScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: colors.obsidian,
   },
   flex: {
     flex: 1,
@@ -168,50 +173,73 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 12,
     borderBottomWidth: 1,
-    borderBottomColor: colors.borderSubtle,
+    borderBottomColor: colors.glass,
   },
-  backButton: {
+  headerButton: {
     width: 40,
     height: 40,
     alignItems: "center",
     justifyContent: "center",
   },
-  backText: {
-    color: colors.accent,
-    fontSize: 22,
+  backArrow: {
+    color: colors.textSecondary,
+    fontSize: 20,
+  },
+  headerCenter: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  headerDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.purple,
+    marginRight: 8,
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 4,
   },
   headerTitle: {
-    color: colors.text,
-    fontSize: 16,
-    fontWeight: "300",
+    color: colors.textSecondary,
+    fontSize: 12,
+    fontFamily: fonts.uiBold,
+    fontWeight: "700",
     letterSpacing: 4,
-    textTransform: "uppercase",
   },
   messageList: {
     padding: 16,
     paddingBottom: 8,
   },
   emptyState: {
-    flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 100,
+    paddingTop: 120,
+  },
+  emptyIcon: {
+    color: colors.purpleDim,
+    fontSize: 28,
+    marginBottom: 12,
   },
   emptyText: {
-    color: colors.textMuted,
+    color: colors.textGhost,
     fontSize: 14,
+    fontFamily: fonts.ui,
     letterSpacing: 1,
   },
   errorBanner: {
-    backgroundColor: colors.error,
+    backgroundColor: colors.errorBg,
+    borderWidth: 1,
+    borderColor: colors.error,
     paddingHorizontal: 16,
     paddingVertical: 10,
     marginHorizontal: 16,
     marginBottom: 4,
-    borderRadius: 8,
+    borderRadius: 10,
   },
   errorText: {
-    color: colors.errorText,
+    color: colors.error,
     fontSize: 13,
+    fontFamily: fonts.ui,
   },
 });

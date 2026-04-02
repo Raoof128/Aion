@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { View, TextInput, Pressable, Text, StyleSheet } from "react-native";
-import { colors } from "../lib/theme";
+import { View, TextInput, Pressable, Text, Platform, StyleSheet } from "react-native";
+import * as Haptics from "expo-haptics";
+import { colors, fonts } from "../lib/theme";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -13,6 +14,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const handleSend = () => {
     const trimmed = text.trim();
     if (!trimmed || disabled) return;
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
     onSend(trimmed);
     setText("");
   };
@@ -20,12 +24,12 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const canSend = text.trim().length > 0 && !disabled;
 
   return (
-    <View style={styles.container}>
-      <View style={styles.inputRow}>
+    <View style={styles.wrapper}>
+      <View style={styles.container}>
         <TextInput
           style={styles.input}
           placeholder="Ask Aion anything..."
-          placeholderTextColor={colors.textMuted}
+          placeholderTextColor={colors.textGhost}
           value={text}
           onChangeText={setText}
           onSubmitEditing={handleSend}
@@ -35,9 +39,9 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
         <Pressable
           onPress={handleSend}
           disabled={!canSend}
-          style={[styles.sendButton, canSend ? styles.sendButtonActive : styles.sendButtonInactive]}
+          style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive]}
         >
-          <Text style={[styles.sendIcon, canSend && styles.sendIconActive]}>&#8593;</Text>
+          <Text style={[styles.sendIcon, canSend && styles.sendIconActive]}>↑</Text>
         </Pressable>
       </View>
     </View>
@@ -45,52 +49,55 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    borderTopWidth: 1,
-    borderTopColor: colors.borderSubtle,
-    backgroundColor: colors.bg,
+  wrapper: {
     paddingHorizontal: 16,
-    paddingVertical: 12,
+    paddingBottom: 12,
+    paddingTop: 8,
+    backgroundColor: colors.obsidian,
   },
-  inputRow: {
+  container: {
     flexDirection: "row",
     alignItems: "flex-end",
+    backgroundColor: colors.glass,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    borderRadius: 24,
+    paddingHorizontal: 6,
+    paddingVertical: 6,
   },
   input: {
     flex: 1,
-    backgroundColor: colors.bgInput,
-    color: colors.text,
-    borderRadius: 22,
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 12,
-    marginRight: 10,
+    color: colors.textPrimary,
     fontSize: 15,
+    fontFamily: fonts.ui,
+    paddingHorizontal: 14,
+    paddingTop: 10,
+    paddingBottom: 10,
     maxHeight: 100,
-    borderWidth: 1,
-    borderColor: colors.border,
   },
   sendButton: {
-    borderRadius: 20,
-    width: 40,
-    height: 40,
+    borderRadius: 18,
+    width: 36,
+    height: 36,
     alignItems: "center",
     justifyContent: "center",
   },
-  sendButtonActive: {
-    backgroundColor: colors.accent,
+  sendActive: {
+    backgroundColor: colors.purple,
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
   },
-  sendButtonInactive: {
-    backgroundColor: colors.bgInput,
-    borderWidth: 1,
-    borderColor: colors.border,
+  sendInactive: {
+    backgroundColor: colors.steel,
   },
   sendIcon: {
-    fontSize: 18,
+    fontSize: 16,
     fontWeight: "700",
-    color: colors.textMuted,
+    color: colors.textGhost,
   },
   sendIconActive: {
-    color: colors.bg,
+    color: colors.white,
   },
 });

@@ -1,19 +1,25 @@
 import { useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
-import { colors } from "../lib/theme";
+import * as Haptics from "expo-haptics";
+import Animated, { FadeInUp } from "react-native-reanimated";
+import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
 
 interface VerseCardProps {
   verse: Verse;
+  index?: number;
 }
 
-export function VerseCard({ verse }: VerseCardProps) {
+export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   const reference = `${verse.book_name} ${verse.chapter}:${verse.verse}`;
   const [copied, setCopied] = useState(false);
 
   const handleCopy = async () => {
     const text = `${reference} — "${verse.content}"`;
     try {
+      if (Platform.OS !== "web") {
+        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      }
       if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
         await navigator.clipboard.writeText(text);
       } else {
@@ -23,60 +29,111 @@ export function VerseCard({ verse }: VerseCardProps) {
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch {
-      // Silently fail if clipboard unavailable
+      // Silently fail
     }
   };
 
   return (
-    <View style={styles.card}>
+    <Animated.View
+      entering={FadeInUp.delay(index * 100).duration(400).springify()}
+      style={styles.card}
+    >
+      {/* Purple glow top border */}
+      <View style={styles.glowBar} />
+
       <View style={styles.header}>
+        <Text style={styles.bookIcon}>📖</Text>
         <Text style={styles.reference}>{reference}</Text>
-        <Pressable onPress={handleCopy} hitSlop={8}>
-          <Text style={[styles.copyButton, copied && styles.copiedButton]}>
-            {copied ? "Copied!" : "Copy"}
+      </View>
+
+      <View style={styles.divider} />
+
+      <Text style={styles.content}>"{verse.content}"</Text>
+
+      <View style={styles.actions}>
+        <Pressable onPress={handleCopy} style={styles.actionButton}>
+          <Text style={[styles.actionText, copied && styles.actionTextActive]}>
+            {copied ? "✓ Copied" : "Copy"}
           </Text>
         </Pressable>
       </View>
-      <Text style={styles.content}>{verse.content}</Text>
-    </View>
+    </Animated.View>
   );
 }
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.bgCard,
+    backgroundColor: colors.onyx,
     borderWidth: 1,
-    borderColor: colors.borderSubtle,
+    borderColor: colors.steel,
     borderRadius: 16,
-    padding: 16,
     marginVertical: 6,
-    borderLeftWidth: 3,
-    borderLeftColor: colors.accentDim,
+    overflow: "hidden",
+    shadowColor: colors.purpleDim,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+  },
+  glowBar: {
+    height: 2,
+    backgroundColor: colors.purple,
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 6,
   },
   header: {
     flexDirection: "row",
     alignItems: "center",
-    justifyContent: "space-between",
-    marginBottom: 8,
+    paddingHorizontal: 16,
+    paddingTop: 14,
+    paddingBottom: 8,
+  },
+  bookIcon: {
+    fontSize: 14,
+    marginRight: 8,
   },
   reference: {
-    color: colors.accent,
-    fontSize: 13,
-    fontWeight: "600",
-    letterSpacing: 0.5,
+    color: colors.purpleGlow,
+    fontSize: 11,
+    fontFamily: fonts.uiBold,
+    fontWeight: "700",
+    letterSpacing: 2,
     textTransform: "uppercase",
   },
-  copyButton: {
-    color: colors.textMuted,
-    fontSize: 12,
-  },
-  copiedButton: {
-    color: colors.accent,
+  divider: {
+    height: 1,
+    backgroundColor: colors.steel,
+    marginHorizontal: 16,
   },
   content: {
-    color: colors.text,
-    fontSize: 15,
-    lineHeight: 24,
-    fontStyle: "italic",
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontFamily: fonts.verse,
+    lineHeight: 28,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
+  },
+  actions: {
+    flexDirection: "row",
+    paddingHorizontal: 16,
+    paddingBottom: 12,
+    gap: 12,
+  },
+  actionButton: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: colors.glass,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+  },
+  actionText: {
+    color: colors.textMuted,
+    fontSize: 12,
+    fontFamily: fonts.uiMedium,
+  },
+  actionTextActive: {
+    color: colors.purpleGlow,
   },
 });
