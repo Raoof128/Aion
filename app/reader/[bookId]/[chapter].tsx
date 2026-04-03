@@ -43,6 +43,8 @@ export default function ChapterReaderScreen() {
   const [scrollProgress, setScrollProgress] = useState(0);
   const [copyFeedback, setCopyFeedback] = useState<number | null>(null);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
+  const [bookmarkFeedback, setBookmarkFeedback] = useState<number | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
@@ -85,6 +87,25 @@ export default function ChapterReaderScreen() {
     fetchChapter();
   }, [fetchChapter]);
 
+  // Load existing bookmarks for this chapter
+  useEffect(() => {
+    async function loadBookmarks() {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) return;
+      const { data } = await supabase
+        .from("user_verse_data")
+        .select("verse")
+        .eq("user_id", session.session.user.id)
+        .eq("book_id", bookId)
+        .eq("chapter", chapterNum)
+        .eq("is_bookmarked", true);
+      if (data) {
+        setBookmarkedVerses(new Set(data.map((d: { verse: number }) => d.verse)));
+      }
+    }
+    loadBookmarks();
+  }, [bookId, chapterNum]);
+
   const handleVerseCopy = async (v: Verse) => {
     const text = `${book?.name} ${chapterNum}:${v.verse} — "${v.content}"`;
     try {
@@ -111,10 +132,46 @@ export default function ChapterReaderScreen() {
     setSelectedVerse(null);
   };
 
-  const handleVerseBookmark = (_v: Verse) => {
-    // TODO: Wire to Supabase user_verse_data table
+  const handleVerseBookmark = async (v: Verse) => {
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    try {
+      const { data: session } = await supabase.auth.getSession();
+      if (!session?.session) return;
+      const userId = session.session.user.id;
+      const isCurrentlyBookmarked = bookmarkedVerses.has(v.verse);
+
+      if (isCurrentlyBookmarked) {
+        await supabase
+          .from("user_verse_data")
+          .update({ is_bookmarked: false })
+          .eq("user_id", userId)
+          .eq("book_id", bookId)
+          .eq("chapter", chapterNum)
+          .eq("verse", v.verse);
+        setBookmarkedVerses((prev) => {
+          const next = new Set(prev);
+          next.delete(v.verse);
+          return next;
+        });
+      } else {
+        await supabase
+          .from("user_verse_data")
+          .upsert({
+            user_id: userId,
+            book_id: bookId,
+            chapter: chapterNum,
+            verse: v.verse,
+            is_bookmarked: true,
+          }, { onConflict: "user_id,book_id,chapter,verse" });
+        setBookmarkedVerses((prev) => new Set(prev).add(v.verse));
+      }
+
+      setBookmarkFeedback(v.verse);
+      setTimeout(() => setBookmarkFeedback(null), 1200);
+    } catch (err) {
+      console.error("Bookmark error:", err);
     }
     setSelectedVerse(null);
   };
@@ -274,10 +331,17 @@ export default function ChapterReaderScreen() {
                       i > 0 && i % 5 === 0 && styles.verseLineParagraph,
                     ]}
                   >
-                    <Text style={styles.verseNumber}>{v.verse}</Text>
+                    <Text style={[styles.verseNumber, bookmarkedVerses.has(v.verse) && styles.verseNumberBookmarked]}>
+                      {bookmarkedVerses.has(v.verse) ? "🔖" : v.verse}
+                    </Text>
                     <Text style={styles.verseContent}>
                       {v.content}
                       {copyFeedback === v.verse && <Text style={styles.copiedBadge}> ✓ Copied</Text>}
+                      {bookmarkFeedback === v.verse && (
+                        <Text style={styles.copiedBadge}>
+                          {bookmarkedVerses.has(v.verse) ? " ✓ Saved" : " Removed"}
+                        </Text>
+                      )}
                     </Text>
                   </Pressable>
                   {selectedVerse === v.verse && (
@@ -285,8 +349,10 @@ export default function ChapterReaderScreen() {
                       <Pressable onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }} style={styles.verseActionBtn}>
                         <Text style={styles.verseActionText}>Copy</Text>
                       </Pressable>
-                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }} style={styles.verseActionBtn}>
-                        <Text style={styles.verseActionText}>🔖 Bookmark</Text>
+                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }} style={[styles.verseActionBtn, bookmarkedVerses.has(v.verse) && styles.verseActionActive]}>
+                        <Text style={[styles.verseActionText, bookmarkedVerses.has(v.verse) && styles.verseActionActiveText]}>
+                          {bookmarkedVerses.has(v.verse) ? "🔖 Saved" : "🔖 Bookmark"}
+                        </Text>
                       </Pressable>
                       <Pressable onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }} style={styles.verseActionBtn}>
                         <Text style={styles.verseActionText}>Share</Text>
@@ -607,5 +673,16 @@ const styles = StyleSheet.create({
     color: "#A855F7",
     fontSize: 12,
     fontStyle: "italic",
+  },
+  verseNumberBookmarked: {
+    fontSize: 14,
+    opacity: 1,
+  },
+  verseActionActive: {
+    backgroundColor: "rgba(138, 43, 226, 0.12)",
+    borderColor: "rgba(138, 43, 226, 0.25)",
+  },
+  verseActionActiveText: {
+    color: "#A855F7",
   },
 });
