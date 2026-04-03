@@ -2,21 +2,22 @@ import { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Sparkles, Search, BookOpen } from "lucide-react-native";
 
 
 const SLIDES = [
   {
-    icon: "✦",
+    Icon: Sparkles,
     title: "Welcome to Aion",
     subtitle: "Your AI-powered Bible companion.\nAsk anything about Scripture.",
   },
   {
-    icon: "🔍",
+    Icon: Search,
     title: "Hybrid Search",
     subtitle: "Searches by meaning AND exact keywords.\nFinds the exact verse, every time.",
   },
   {
-    icon: "📖",
+    Icon: BookOpen,
     title: "Grounded in Scripture",
     subtitle: "Every response is backed by real Bible verses.\nNo hallucinations. No guessing.",
   },
@@ -43,7 +44,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   return (
     <View style={styles.container}>
       <Animated.View key={step} entering={FadeInRight.duration(300)} exiting={FadeOutLeft.duration(200)} style={styles.slide}>
-        <Text style={styles.icon}>{slide.icon}</Text>
+        <slide.Icon size={48} color="#A855F7" />
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.subtitle}>{slide.subtitle}</Text>
       </Animated.View>
@@ -74,7 +75,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#000000", justifyContent: "center", alignItems: "center", padding: 32 },
   slide: { alignItems: "center", maxWidth: 320 },
-  icon: { fontSize: 48, marginBottom: 24 },
+  icon: { marginBottom: 24 },
   title: { color: "#F0F0F5", fontSize: 28, fontWeight: "200", letterSpacing: 2, textAlign: "center", marginBottom: 16 },
   subtitle: { color: "#7A7A8E", fontSize: 15, lineHeight: 24, textAlign: "center" },
   footer: { position: "absolute", bottom: 60, alignItems: "center", width: "100%" },

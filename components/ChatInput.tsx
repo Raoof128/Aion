@@ -2,6 +2,7 @@ import { useState } from "react";
 import { View, TextInput, Pressable, Text, Platform, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { ArrowUp, Mic, MicOff } from "lucide-react-native";
 import { colors, fonts } from "../lib/theme";
 
 interface ChatInputProps {
@@ -90,9 +91,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             accessibilityLabel={isListening ? "Stop listening" : "Voice input"}
             accessibilityRole="button"
           >
-            <Text style={[styles.micIcon, isListening && styles.micIconActive]}>
-              {isListening ? "⏹" : "🎤"}
-            </Text>
+            {isListening ? <MicOff size={16} color="#DC2626" /> : <Mic size={16} color={colors.textGhost} />}
           </Pressable>
         )}
         <Animated.View style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive, sendAnimStyle]}>
@@ -108,7 +107,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             accessibilityLabel="Send message"
             accessibilityRole="button"
           >
-            <Text style={[styles.sendIcon, canSend && styles.sendIconActive]}>↑</Text>
+            <ArrowUp size={16} color={canSend ? colors.white : colors.textGhost} strokeWidth={3} />
           </Pressable>
         </Animated.View>
       </View>
@@ -173,14 +172,6 @@ const styles = StyleSheet.create({
   sendInactive: {
     backgroundColor: colors.steel,
   },
-  sendIcon: {
-    fontSize: 16,
-    fontWeight: "700",
-    color: colors.textGhost,
-  },
-  sendIconActive: {
-    color: colors.white,
-  },
   containerDisabled: {
     borderColor: colors.purpleBorder,
     backgroundColor: "rgba(138, 43, 226, 0.03)",
@@ -218,12 +209,6 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(220, 38, 38, 0.15)",
     borderWidth: 1,
     borderColor: "rgba(220, 38, 38, 0.3)",
-  },
-  micIcon: {
-    fontSize: 16,
-  },
-  micIconActive: {
-    color: "#DC2626",
   },
   poweredBy: {
     color: "rgba(255,255,255,0.12)",

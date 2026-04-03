@@ -11,6 +11,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { ChevronLeft } from "lucide-react-native";
 import { colors, fonts } from "../../lib/theme";
 import {
   OT_BOOKS,
@@ -86,7 +87,7 @@ export default function BookListScreen() {
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Text style={styles.backText}>←</Text>
+            <ChevronLeft size={20} color={colors.textSecondary} />
           </Pressable>
           <View style={styles.headerCenter}>
             <View style={styles.headerRow}>
@@ -176,10 +177,6 @@ const styles = StyleSheet.create({
     height: 40,
     alignItems: "center",
     justifyContent: "center",
-  },
-  backText: {
-    color: colors.textSecondary,
-    fontSize: 20,
   },
   headerCenter: {
     flex: 1,

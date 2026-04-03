@@ -14,6 +14,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
+import { Bookmark, BookmarkCheck, Copy, Share2, Sparkles} from "lucide-react-native";
 import { colors, fonts } from "../../../lib/theme";
 import { BIBLE_BOOKS } from "../../../lib/bible-data";
 import { supabase } from "../../../lib/supabase";
@@ -331,9 +332,13 @@ export default function ChapterReaderScreen() {
                       i > 0 && i % 5 === 0 && styles.verseLineParagraph,
                     ]}
                   >
-                    <Text style={[styles.verseNumber, bookmarkedVerses.has(v.verse) && styles.verseNumberBookmarked]}>
-                      {bookmarkedVerses.has(v.verse) ? "🔖" : v.verse}
-                    </Text>
+                    <View style={styles.verseNumberContainer}>
+                      {bookmarkedVerses.has(v.verse) ? (
+                        <BookmarkCheck size={14} color={colors.purpleGlow} />
+                      ) : (
+                        <Text style={styles.verseNumber}>{v.verse}</Text>
+                      )}
+                    </View>
                     <Text style={styles.verseContent}>
                       {v.content}
                       {copyFeedback === v.verse && <Text style={styles.copiedBadge}> ✓ Copied</Text>}
@@ -347,18 +352,34 @@ export default function ChapterReaderScreen() {
                   {selectedVerse === v.verse && (
                     <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
                       <Pressable onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }} style={styles.verseActionBtn}>
-                        <Text style={styles.verseActionText}>Copy</Text>
+                        <View style={styles.verseActionRow}>
+                          <Copy size={12} color={colors.textSecondary} />
+                          <Text style={styles.verseActionText}> Copy</Text>
+                        </View>
                       </Pressable>
                       <Pressable onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }} style={[styles.verseActionBtn, bookmarkedVerses.has(v.verse) && styles.verseActionActive]}>
-                        <Text style={[styles.verseActionText, bookmarkedVerses.has(v.verse) && styles.verseActionActiveText]}>
-                          {bookmarkedVerses.has(v.verse) ? "🔖 Saved" : "🔖 Bookmark"}
-                        </Text>
+                        <View style={styles.verseActionRow}>
+                          {bookmarkedVerses.has(v.verse) ? (
+                            <BookmarkCheck size={12} color={colors.purpleGlow} />
+                          ) : (
+                            <Bookmark size={12} color={colors.textSecondary} />
+                          )}
+                          <Text style={[styles.verseActionText, bookmarkedVerses.has(v.verse) && styles.verseActionActiveText]}>
+                            {bookmarkedVerses.has(v.verse) ? " Saved" : " Bookmark"}
+                          </Text>
+                        </View>
                       </Pressable>
                       <Pressable onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }} style={styles.verseActionBtn}>
-                        <Text style={styles.verseActionText}>Share</Text>
+                        <View style={styles.verseActionRow}>
+                          <Share2 size={12} color={colors.textSecondary} />
+                          <Text style={styles.verseActionText}> Share</Text>
+                        </View>
                       </Pressable>
                       <Pressable onPress={(e) => { e.stopPropagation(); handleAskAion(v); }} style={[styles.verseActionBtn, styles.verseActionPrimary]}>
-                        <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>✦ Ask Aion</Text>
+                        <View style={styles.verseActionRow}>
+                          <Sparkles size={12} color={colors.purpleGlow} />
+                          <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}> Ask Aion</Text>
+                        </View>
                       </Pressable>
                     </Animated.View>
                   )}
@@ -568,14 +589,18 @@ const styles = StyleSheet.create({
   verseLineFirst: {
     paddingTop: 0,
   },
+  verseNumberContainer: {
+    width: 28,
+    alignItems: "flex-end",
+    marginRight: 12,
+    paddingTop: 4,
+  },
   verseNumber: {
     fontSize: 11,
     fontFamily: fonts.uiBold,
     color: colors.purpleGlow,
     lineHeight: 30,
-    width: 28,
     textAlign: "right",
-    marginRight: 12,
     opacity: 0.7,
   },
   verseContent: {
@@ -662,6 +687,10 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(138, 43, 226, 0.12)",
     borderColor: "rgba(138, 43, 226, 0.25)",
   },
+  verseActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   verseActionText: {
     color: "#9494A8",
     fontSize: 12,
@@ -673,10 +702,6 @@ const styles = StyleSheet.create({
     color: "#A855F7",
     fontSize: 12,
     fontStyle: "italic",
-  },
-  verseNumberBookmarked: {
-    fontSize: 14,
-    opacity: 1,
   },
   verseActionActive: {
     backgroundColor: "rgba(138, 43, 226, 0.12)",

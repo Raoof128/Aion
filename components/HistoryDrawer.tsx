@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Platform, StyleSheet, TextInput } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Pencil, Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { DrawerContentComponentProps } from "@react-navigation/drawer";
@@ -70,7 +71,7 @@ function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
             <Text style={styles.conversationTime}>{timeAgo}</Text>
           </View>
           <Pressable onPress={() => setIsEditing(true)} style={styles.editButton}>
-            <Text style={styles.editIcon}>✎</Text>
+            <Pencil size={14} color={colors.textGhost} />
           </Pressable>
         </View>
       </Pressable>
@@ -146,7 +147,7 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
       ) : conversations.length === 0 ? (
         <>
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>✦</Text>
+            <Sparkles size={20} color={colors.textGhost} />
             <Text style={styles.emptyTitle}>No conversations yet</Text>
             <Text style={styles.emptySubtitle}>Your chat history will appear here</Text>
           </View>
@@ -232,8 +233,6 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   emptyIcon: {
-    color: colors.textGhost,
-    fontSize: 20,
     marginBottom: 8,
   },
   emptyTitle: {
@@ -288,10 +287,6 @@ const styles = StyleSheet.create({
   },
   editButton: {
     padding: 8,
-  },
-  editIcon: {
-    color: "#56566A",
-    fontSize: 14,
   },
   editInput: {
     color: "#F0F0F5",

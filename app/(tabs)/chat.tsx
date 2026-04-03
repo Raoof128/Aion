@@ -2,6 +2,7 @@ import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
+import { Sparkles } from "lucide-react-native";
 import { colors, fonts } from "../../lib/theme";
 
 export default function ChatTab() {
@@ -28,7 +29,7 @@ export default function ChatTab() {
       </View>
 
       <View style={styles.content}>
-        <Text style={styles.icon}>✦</Text>
+        <Sparkles size={40} color={colors.purpleDim} />
         <Text style={styles.title}>Ask Aion anything</Text>
         <Text style={styles.subtitle}>Get AI-powered insights grounded{"\n"}in Scripture</Text>
 
@@ -52,7 +53,7 @@ const styles = StyleSheet.create({
   purpleDot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.purple },
   headerTitle: { fontSize: 13, letterSpacing: 2, color: colors.textSecondary, fontFamily: fonts.uiBold },
   content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 },
-  icon: { color: colors.purpleDim, fontSize: 40, marginBottom: 20 },
+  icon: { marginBottom: 20 },
   title: { color: colors.textPrimary, fontSize: 22, fontWeight: "300", letterSpacing: 1, marginBottom: 8 },
   subtitle: { color: colors.textMuted, fontSize: 14, textAlign: "center", lineHeight: 22, marginBottom: 32 },
   startButton: {

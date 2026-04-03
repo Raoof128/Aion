@@ -1,16 +1,17 @@
 import { Pressable, Text, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
 import Animated, { FadeInUp, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import { ChevronRight } from "lucide-react-native";
 import { colors, fonts } from "../lib/theme";
 
 interface PromptPillProps {
-  icon: string;
+  Icon: React.ElementType;
   label: string;
   onPress: (label: string) => void;
   index?: number;
 }
 
-export function PromptPill({ icon, label, onPress, index }: PromptPillProps) {
+export function PromptPill({ Icon, label, onPress, index }: PromptPillProps) {
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
@@ -42,9 +43,9 @@ export function PromptPill({ icon, label, onPress, index }: PromptPillProps) {
       >
         {({ hovered }: any) => (
           <>
-            <Text style={styles.icon}>{icon}</Text>
+            <Icon size={16} color={colors.purpleGlow} />
             <Text style={[styles.label, hovered && styles.labelHovered]}>{label}</Text>
-            <Text style={[styles.arrow, hovered && styles.arrowHovered]}>›</Text>
+            <ChevronRight size={16} color={hovered ? colors.purpleGlow : colors.textGhost} />
           </>
         )}
       </Pressable>
@@ -72,25 +73,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glassHover,
     borderColor: colors.purpleBorder,
   },
-  icon: {
-    fontSize: 16,
-    marginRight: 12,
-  },
   label: {
+    marginLeft: 12,
     flex: 1,
     color: colors.textSecondary,
     fontSize: 14,
     fontFamily: fonts.ui,
   },
-  arrow: {
-    color: colors.textGhost,
-    fontSize: 20,
-    marginLeft: 8,
-  },
   labelHovered: {
     color: colors.textPrimary,
-  },
-  arrowHovered: {
-    color: colors.purpleGlow,
   },
 });

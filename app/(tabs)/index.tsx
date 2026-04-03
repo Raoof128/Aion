@@ -3,18 +3,19 @@ import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Pre
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from "react-native-reanimated";
+import { Search, Brain, Flame, Sparkle, Bird, Zap, BookOpen, ChevronRight} from "lucide-react-native";
 import { PromptPill } from "../../components/PromptPill";
 import { ChatInput } from "../../components/ChatInput";
 import { colors, fonts } from "../../lib/theme";
 import { getVerseOfTheDay } from "../../lib/bible-data";
 
 const PROMPT_SUGGESTIONS = [
-  { icon: "🔍", label: "Find verses with the number 444" },
-  { icon: "🧠", label: "What is a stoic view on Ecclesiastes?" },
-  { icon: "🔥", label: "I'm feeling completely burnt out today" },
-  { icon: "✨", label: "What does the Bible say about new beginnings?" },
-  { icon: "🕊️", label: "Verses about finding peace in chaos" },
-  { icon: "⚡", label: "What does Proverbs say about wisdom?" },
+  { Icon: Search, label: "Find verses with the number 444" },
+  { Icon: Brain, label: "What is a stoic view on Ecclesiastes?" },
+  { Icon: Flame, label: "I'm feeling completely burnt out today" },
+  { Icon: Sparkle, label: "What does the Bible say about new beginnings?" },
+  { Icon: Bird, label: "Verses about finding peace in chaos" },
+  { Icon: Zap, label: "What does Proverbs say about wisdom?" },
 ];
 
 function getGreeting(): string {
@@ -105,9 +106,9 @@ export default function HomeScreen() {
             accessibilityLabel="Open Bible Reader"
             accessibilityRole="button"
           >
-            <Text style={styles.readerButtonIcon}>📖</Text>
+            <BookOpen size={18} color={colors.purpleGlow} />
             <Text style={styles.readerButtonText}>Read the Bible</Text>
-            <Text style={styles.readerButtonArrow}>›</Text>
+            <ChevronRight size={18} color={colors.textGhost} />
           </Pressable>
 
           {/* Suggestions */}
@@ -124,7 +125,7 @@ export default function HomeScreen() {
               {PROMPT_SUGGESTIONS.map((prompt, index) => (
                 <PromptPill
                   key={prompt.label}
-                  icon={prompt.icon}
+                  Icon={prompt.Icon}
                   label={prompt.label}
                   onPress={handleSend}
                   index={index}
@@ -283,18 +284,11 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(138, 43, 226, 0.06)",
     borderColor: "rgba(138, 43, 226, 0.20)",
   },
-  readerButtonIcon: {
-    fontSize: 18,
-    marginRight: 12,
-  },
   readerButtonText: {
     flex: 1,
     color: colors.textPrimary,
     fontSize: 15,
     fontFamily: fonts.uiMedium,
-  },
-  readerButtonArrow: {
-    color: colors.textGhost,
-    fontSize: 20,
+    marginLeft: 12,
   },
 });

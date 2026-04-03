@@ -11,6 +11,7 @@ import {
   TextInput,
 } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Pencil, Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Animated, {
@@ -104,7 +105,7 @@ function ConversationItem({
             onPress={() => setIsEditing(true)}
             style={({ hovered }: any) => [styles.editButton, hovered && styles.editButtonHovered]}
           >
-            <Text style={styles.editIcon}>✎</Text>
+            <Pencil size={14} color={colors.textGhost} />
           </Pressable>
         </View>
       </Pressable>
@@ -198,7 +199,7 @@ export default function MoreScreen() {
         </View>
       ) : conversations.length === 0 ? (
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyIcon}>✦</Text>
+          <Sparkles size={20} color={colors.textGhost} />
           <Text style={styles.emptyTitle}>No conversations yet</Text>
           <Text style={styles.emptySubtitle}>
             Your chat history will appear here
@@ -314,8 +315,6 @@ const styles = StyleSheet.create({
     paddingTop: 40,
   },
   emptyIcon: {
-    color: colors.textGhost,
-    fontSize: 20,
     marginBottom: 8,
   },
   emptyTitle: {
@@ -366,10 +365,6 @@ const styles = StyleSheet.create({
   editButtonHovered: {
     backgroundColor: colors.glass,
     borderRadius: 8,
-  },
-  editIcon: {
-    color: colors.textGhost,
-    fontSize: 14,
   },
   editInput: {
     color: colors.textPrimary,

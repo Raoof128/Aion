@@ -3,6 +3,7 @@ import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleS
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import { ChevronLeft, Share2, ChevronDown, Sparkles } from "lucide-react-native";
 import { supabase } from "../../lib/supabase";
 import { useChat } from "../../lib/chat";
 import { ChatBubble } from "../../components/ChatBubble";
@@ -163,7 +164,7 @@ export default function ChatScreen() {
           onPress={() => router.back()}
           style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
         >
-          <Text style={styles.backArrow}>←</Text>
+          <ChevronLeft size={20} color={colors.textSecondary} />
         </Pressable>
         <View style={styles.headerCenter}>
           <View style={[styles.headerDot, isStreaming && styles.headerDotActive]} />
@@ -178,7 +179,7 @@ export default function ChatScreen() {
           accessibilityLabel="Export conversation"
           accessibilityRole="button"
         >
-          <Text style={styles.exportIcon}>↗</Text>
+          <Share2 size={18} color={colors.textSecondary} />
         </Pressable>
       </View>
 
@@ -214,7 +215,7 @@ export default function ChatScreen() {
           scrollEventThrottle={100}
           ListEmptyComponent={
             <View style={styles.emptyState}>
-              <Text style={styles.emptyIcon}>✦</Text>
+              <Sparkles size={36} color={colors.purpleDim} />
               <Text style={styles.emptyTitle}>Begin your search</Text>
               <Text style={styles.emptySubtitle}>
                 Ask anything about the Bible{"\n"}and discover scripture with AI
@@ -252,7 +253,7 @@ export default function ChatScreen() {
               accessibilityLabel="Scroll to bottom"
               accessibilityRole="button"
             >
-              <Text style={styles.scrollToBottomIcon}>↓</Text>
+              <ChevronDown size={16} color={colors.white} strokeWidth={3} />
             </Pressable>
           </Animated.View>
         )}
@@ -290,14 +291,6 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass,
     borderRadius: 10,
   },
-  backArrow: {
-    color: colors.textSecondary,
-    fontSize: 20,
-  },
-  exportIcon: {
-    color: "#9494A8",
-    fontSize: 18,
-  },
   headerCenter: {
     flexDirection: "row",
     alignItems: "center",
@@ -330,8 +323,6 @@ const styles = StyleSheet.create({
     paddingTop: 140,
   },
   emptyIcon: {
-    color: colors.purpleDim,
-    fontSize: 36,
     marginBottom: 16,
   },
   emptyTitle: {
@@ -380,11 +371,6 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
-  },
-  scrollToBottomIcon: {
-    color: colors.white,
-    fontSize: 16,
-    fontWeight: "700",
   },
   errorBanner: {
     backgroundColor: colors.errorBg,

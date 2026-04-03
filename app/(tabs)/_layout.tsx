@@ -1,12 +1,13 @@
 import { Tabs } from "expo-router";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import { Sparkles, BookOpen, MessageCircle, Menu } from "lucide-react-native";
 import { colors } from "../../lib/theme";
 
-function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
+function TabIcon({ Icon, label, focused }: { Icon: React.ElementType; label: string; focused: boolean }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+      <Icon size={22} color={focused ? colors.purpleGlow : colors.textGhost} />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
       {focused && <View style={styles.tabDot} />}
     </View>
@@ -35,7 +36,7 @@ export default function TabsLayout() {
         name="index"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="✦" label="Home" focused={focused} />
+            <TabIcon Icon={Sparkles} label="Home" focused={focused} />
           ),
         }}
       />
@@ -43,7 +44,7 @@ export default function TabsLayout() {
         name="read"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="📖" label="Read" focused={focused} />
+            <TabIcon Icon={BookOpen} label="Read" focused={focused} />
           ),
         }}
       />
@@ -51,7 +52,7 @@ export default function TabsLayout() {
         name="chat"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="💬" label="Chat" focused={focused} />
+            <TabIcon Icon={MessageCircle} label="Chat" focused={focused} />
           ),
         }}
       />
@@ -59,7 +60,7 @@ export default function TabsLayout() {
         name="more"
         options={{
           tabBarIcon: ({ focused }) => (
-            <TabIcon icon="☰" label="More" focused={focused} />
+            <TabIcon Icon={Menu} label="More" focused={focused} />
           ),
         }}
       />
@@ -80,13 +81,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     gap: 2,
-  },
-  tabIcon: {
-    fontSize: 20,
-    color: colors.textGhost,
-  },
-  tabIconActive: {
-    color: colors.purpleGlow,
   },
   tabLabel: {
     fontSize: 10,

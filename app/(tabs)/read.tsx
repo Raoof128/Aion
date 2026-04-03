@@ -12,6 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { Search, X } from "lucide-react-native";
 import { colors, fonts } from "../../lib/theme";
 import {
   OT_BOOKS,
@@ -134,7 +135,7 @@ export default function ReadScreen() {
 
         {/* Search bar */}
         <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+          <Search size={14} color={colors.textGhost} />
           <TextInput
             style={styles.searchInput}
             placeholder="Search books..."
@@ -145,8 +146,8 @@ export default function ReadScreen() {
             onBlur={() => setSearchFocused(false)}
           />
           {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")}>
-              <Text style={styles.clearIcon}>✕</Text>
+            <Pressable onPress={() => setSearch("")} style={{ padding: 4 }}>
+              <X size={14} color={colors.textGhost} />
             </Pressable>
           )}
         </View>
@@ -292,13 +293,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  searchIcon: { fontSize: 14, marginRight: 10 },
+  searchIcon: { marginRight: 10 },
   searchInput: { flex: 1, color: "#F0F0F5", fontSize: 14 },
   searchContainerFocused: {
     borderColor: "rgba(138, 43, 226, 0.35)",
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
-  clearIcon: { color: "#56566A", fontSize: 14, padding: 4 },
   bookAbbr: {
     color: "#A855F7",
     fontSize: 10,

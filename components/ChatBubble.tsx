@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
+import { Copy, RotateCcw, ThumbsUp, ThumbsDown } from "lucide-react-native";
 import Animated, {
 
   FadeInLeft,
@@ -125,18 +126,24 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
       {!isSearching && (
         <View style={styles.messageActions}>
           <Pressable onPress={handleCopyResponse} style={styles.messageActionButton}>
-            <Text style={styles.messageActionText}>{responseCopied ? "✓ Copied" : "Copy"}</Text>
+            <View style={styles.messageActionRow}>
+              <Copy size={12} color={responseCopied ? colors.purpleGlow : colors.textMuted} />
+              <Text style={styles.messageActionText}>{responseCopied ? " Copied" : " Copy"}</Text>
+            </View>
           </Pressable>
           {onRegenerate && (
             <Pressable onPress={onRegenerate} style={styles.messageActionButton}>
-              <Text style={styles.messageActionText}>↻ Retry</Text>
+              <View style={styles.messageActionRow}>
+                <RotateCcw size={12} color={colors.textMuted} />
+                <Text style={styles.messageActionText}> Retry</Text>
+              </View>
             </Pressable>
           )}
           <Pressable onPress={() => setFeedback("up")} style={[styles.messageActionButton, feedback === "up" && styles.feedbackActive]}>
-            <Text style={[styles.messageActionText, feedback === "up" && styles.feedbackActiveText]}>👍</Text>
+            <ThumbsUp size={14} color={feedback === "up" ? colors.purpleGlow : colors.textMuted} />
           </Pressable>
           <Pressable onPress={() => setFeedback("down")} style={[styles.messageActionButton, feedback === "down" && styles.feedbackActive]}>
-            <Text style={[styles.messageActionText, feedback === "down" && styles.feedbackActiveText]}>👎</Text>
+            <ThumbsDown size={14} color={feedback === "down" ? colors.purpleGlow : colors.textMuted} />
           </Pressable>
         </View>
       )}
@@ -251,6 +258,10 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass,
     borderWidth: 1,
     borderColor: colors.glassBorder,
+  },
+  messageActionRow: {
+    flexDirection: "row",
+    alignItems: "center",
   },
   messageActionText: {
     color: colors.textMuted,
