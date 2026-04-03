@@ -214,8 +214,8 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   newChatButtonHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.15)",
-    borderColor: "rgba(138, 43, 226, 0.30)",
+    backgroundColor: colors.purpleAccent,
+    borderColor: colors.purple,
   },
   newChatIcon: {
     color: colors.purple,
@@ -289,10 +289,10 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   editInput: {
-    color: "#F0F0F5",
+    color: colors.textPrimary,
     fontSize: 14,
     borderBottomWidth: 1,
-    borderBottomColor: "#8A2BE2",
+    borderBottomColor: colors.purple,
     paddingVertical: 4,
   },
 });

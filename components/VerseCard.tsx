@@ -183,7 +183,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
   },
   expandToggle: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
     fontSize: 12,
     marginTop: 4,
     fontFamily: fonts.uiMedium,
@@ -205,7 +205,7 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   actionButtonHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.10)",
+    backgroundColor: colors.purpleMist,
     borderColor: colors.purpleBorder,
   },
   actionText: {

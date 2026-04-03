@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { View, Text, Pressable, StyleSheet } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Sparkles, Search, BookOpen } from "lucide-react-native";
+import { colors } from "../lib/theme";
 
 
 const SLIDES = [
@@ -42,9 +44,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const slide = SLIDES[step];
 
   return (
-    <View style={styles.container}>
+    <SafeAreaView style={styles.container}>
       <Animated.View key={step} entering={FadeInRight.duration(300)} exiting={FadeOutLeft.duration(200)} style={styles.slide}>
-        <slide.Icon size={48} color="#A855F7" />
+        <slide.Icon size={48} color={colors.purpleGlow} />
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.subtitle}>{slide.subtitle}</Text>
       </Animated.View>
@@ -68,22 +70,22 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           </Pressable>
         )}
       </View>
-    </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#000000", justifyContent: "center", alignItems: "center", padding: 32 },
+  container: { flex: 1, backgroundColor: colors.void, justifyContent: "center", alignItems: "center", padding: 32 },
   slide: { alignItems: "center", maxWidth: 320 },
   icon: { marginBottom: 24 },
-  title: { color: "#F0F0F5", fontSize: 28, fontWeight: "200", letterSpacing: 2, textAlign: "center", marginBottom: 16 },
-  subtitle: { color: "#7A7A8E", fontSize: 15, lineHeight: 24, textAlign: "center" },
+  title: { color: colors.textPrimary, fontSize: 28, fontWeight: "200", letterSpacing: 2, textAlign: "center", marginBottom: 16 },
+  subtitle: { color: colors.textMuted, fontSize: 15, lineHeight: 24, textAlign: "center" },
   footer: { position: "absolute", bottom: 60, alignItems: "center", width: "100%" },
   dots: { flexDirection: "row", marginBottom: 24, gap: 8 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: "rgba(255,255,255,0.15)" },
-  dotActive: { backgroundColor: "#8A2BE2", shadowColor: "#8A2BE2", shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 6 },
-  button: { backgroundColor: "#8A2BE2", borderRadius: 16, paddingHorizontal: 40, paddingVertical: 14, shadowColor: "#8A2BE2", shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12 },
-  buttonText: { color: "#FFFFFF", fontSize: 16, fontWeight: "600", letterSpacing: 1 },
+  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.glassBorder },
+  dotActive: { backgroundColor: colors.purple, shadowColor: colors.purple, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 6 },
+  button: { backgroundColor: colors.purple, borderRadius: 16, paddingHorizontal: 40, paddingVertical: 14, shadowColor: colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12 },
+  buttonText: { color: colors.white, fontSize: 16, fontWeight: "600", letterSpacing: 1 },
   skipButton: { marginTop: 16 },
-  skipText: { color: "#56566A", fontSize: 13 },
+  skipText: { color: colors.textGhost, fontSize: 13 },
 });

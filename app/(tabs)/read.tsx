@@ -168,6 +168,13 @@ export default function ReadScreen() {
           columnWrapperStyle={styles.row}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          ListEmptyComponent={
+            search.trim().length > 0 ? (
+              <View style={styles.emptySearch}>
+                <Text style={styles.emptySearchText}>No books match "{search}"</Text>
+              </View>
+            ) : null
+          }
         />
       </Animated.View>
     </SafeAreaView>
@@ -266,11 +273,11 @@ const styles = StyleSheet.create({
   },
   bookCard: {
     flex: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.glass,
     borderRadius: 14,
     padding: 16,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: colors.glassBorder,
     minHeight: 80,
   },
   bookCardHovered: {
@@ -284,9 +291,9 @@ const styles = StyleSheet.create({
   searchContainer: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.glass,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: colors.glassBorder,
     borderRadius: 14,
     marginHorizontal: 20,
     marginBottom: 16,
@@ -294,13 +301,13 @@ const styles = StyleSheet.create({
     paddingVertical: 10,
   },
   searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, color: "#F0F0F5", fontSize: 14 },
+  searchInput: { flex: 1, color: colors.textPrimary, fontSize: 14, fontFamily: fonts.ui },
   searchContainerFocused: {
     borderColor: "rgba(138, 43, 226, 0.35)",
     backgroundColor: "rgba(255, 255, 255, 0.08)",
   },
   bookAbbr: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 1.5,
@@ -317,5 +324,14 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontFamily: fonts.ui,
     color: colors.textGhost,
+  },
+  emptySearch: {
+    alignItems: "center",
+    paddingTop: 40,
+  },
+  emptySearchText: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontFamily: fonts.ui,
   },
 });

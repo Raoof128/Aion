@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet } from "react-native";
 import { Copy, RotateCcw, ThumbsUp, ThumbsDown } from "lucide-react-native";
 import Animated, {
-
   FadeInLeft,
   FadeInRight,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withTiming,
 } from "react-native-reanimated";
@@ -16,11 +16,14 @@ import { VerseCard } from "./VerseCard";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
 
-function PulsingDot() {
+function PulsingDotItem({ delay }: { delay: number }) {
   const opacity = useSharedValue(0.3);
 
   useEffect(() => {
-    opacity.value = withRepeat(withTiming(1, { duration: 800 }), -1, true);
+    opacity.value = withDelay(
+      delay,
+      withRepeat(withTiming(1, { duration: 600 }), -1, true)
+    );
   }, []);
 
   const style = useAnimatedStyle(() => ({
@@ -28,20 +31,20 @@ function PulsingDot() {
   }));
 
   return (
+    <Animated.View
+      style={[
+        { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.purple },
+        style,
+      ]}
+    />
+  );
+}
+
+function PulsingDot() {
+  return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 }}>
       {[0, 1, 2].map((i) => (
-        <Animated.View
-          key={i}
-          style={[
-            {
-              width: 6,
-              height: 6,
-              borderRadius: 3,
-              backgroundColor: colors.purple,
-            },
-            style,
-          ]}
-        />
+        <PulsingDotItem key={i} delay={i * 150} />
       ))}
     </View>
   );
@@ -169,9 +172,9 @@ const styles = StyleSheet.create({
     marginVertical: 6,
   },
   userBubble: {
-    backgroundColor: "rgba(138, 43, 226, 0.08)",
+    backgroundColor: colors.purpleMist,
     borderWidth: 1,
-    borderColor: "rgba(138, 43, 226, 0.15)",
+    borderColor: colors.purpleBorder,
     borderRadius: 20,
     borderBottomRightRadius: 4,
     paddingHorizontal: 16,

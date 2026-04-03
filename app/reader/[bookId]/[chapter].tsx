@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   headerButtonHovered: {
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.glass,
     borderRadius: 10,
   },
   headerNav: {
@@ -499,8 +499,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   navArrowHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.10)",
-    borderColor: "rgba(138, 43, 226, 0.20)",
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleBorder,
   },
   navArrowDisabled: {
     opacity: 0.4,
@@ -512,11 +512,11 @@ const styles = StyleSheet.create({
   },
   progressBarBg: {
     height: 2,
-    backgroundColor: "rgba(255,255,255,0.05)",
+    backgroundColor: colors.glass,
   },
   progressBarFill: {
     height: 2,
-    backgroundColor: "#8A2BE2",
+    backgroundColor: colors.purple,
   },
   centered: {
     flex: 1,
@@ -558,10 +558,10 @@ const styles = StyleSheet.create({
   headingLine: {
     flex: 1,
     height: 1,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.glass,
   },
   headingText: {
-    color: "#9494A8",
+    color: colors.textSecondary,
     fontSize: 11,
     fontWeight: "700",
     letterSpacing: 3,
@@ -569,7 +569,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   chapterNumLarge: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
     fontSize: 48,
     fontWeight: "200",
     textAlign: "center",
@@ -640,8 +640,8 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   bottomButtonHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.06)",
-    borderColor: "rgba(138, 43, 226, 0.20)",
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleBorder,
   },
   bottomButtonPressed: {
     backgroundColor: colors.purpleAccent,
@@ -659,7 +659,7 @@ const styles = StyleSheet.create({
     color: colors.textGhost,
   },
   verseLineSelected: {
-    backgroundColor: "rgba(138, 43, 226, 0.08)",
+    backgroundColor: colors.purpleMist,
     borderRadius: 8,
     marginHorizontal: -4,
     paddingHorizontal: 8,
@@ -679,35 +679,35 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     paddingVertical: 6,
     borderRadius: 8,
-    backgroundColor: "rgba(255,255,255,0.06)",
+    backgroundColor: colors.glass,
     borderWidth: 1,
-    borderColor: "rgba(255,255,255,0.10)",
+    borderColor: colors.glassBorder,
   },
   verseActionPrimary: {
-    backgroundColor: "rgba(138, 43, 226, 0.12)",
-    borderColor: "rgba(138, 43, 226, 0.25)",
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleAccent,
   },
   verseActionRow: {
     flexDirection: "row",
     alignItems: "center",
   },
   verseActionText: {
-    color: "#9494A8",
+    color: colors.textSecondary,
     fontSize: 12,
   },
   verseActionPrimaryText: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
   },
   copiedBadge: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
     fontSize: 12,
     fontStyle: "italic",
   },
   verseActionActive: {
-    backgroundColor: "rgba(138, 43, 226, 0.12)",
-    borderColor: "rgba(138, 43, 226, 0.25)",
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleBorder,
   },
   verseActionActiveText: {
-    color: "#A855F7",
+    color: colors.purpleGlow,
   },
 });

@@ -3,7 +3,8 @@ import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleS
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
-import { ChevronLeft, Share2, ChevronDown, Sparkles } from "lucide-react-native";
+import { ChevronLeft, Share2, ChevronDown, Sparkles, X } from "lucide-react-native";
+import * as Haptics from "expo-haptics";
 import { supabase } from "../../lib/supabase";
 import { useChat } from "../../lib/chat";
 import { ChatBubble } from "../../components/ChatBubble";
@@ -37,8 +38,10 @@ export default function ChatScreen() {
 
   const [messages, setMessages] = useState<DisplayMessage[]>([]);
   const [showScrollButton, setShowScrollButton] = useState(false);
+  const [errorDismissed, setErrorDismissed] = useState(false);
   const flatListRef = useRef<FlatList>(null);
   const hasSentInitial = useRef(false);
+  const isAtBottom = useRef(true);
 
   const isNewChat = id === "new" || id.startsWith("new-");
 
@@ -51,6 +54,10 @@ export default function ChatScreen() {
       loadMessages(id);
     }
   }, [id]);
+
+  useEffect(() => {
+    if (error) setErrorDismissed(false);
+  }, [error]);
 
   useEffect(() => {
     if (initialMessage && !hasSentInitial.current) {
@@ -205,12 +212,17 @@ export default function ChatScreen() {
             />
           )}
           contentContainerStyle={styles.messageList}
-          onContentSizeChange={() => flatListRef.current?.scrollToEnd({ animated: true })}
+          onContentSizeChange={() => {
+            if (isAtBottom.current) {
+              flatListRef.current?.scrollToEnd({ animated: true });
+            }
+          }}
           onScroll={(e) => {
             const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
             const distanceFromBottom =
               contentSize.height - layoutMeasurement.height - contentOffset.y;
             setShowScrollButton(distanceFromBottom > 100);
+            isAtBottom.current = distanceFromBottom <= 100;
           }}
           scrollEventThrottle={100}
           ListEmptyComponent={
@@ -226,7 +238,18 @@ export default function ChatScreen() {
             displayMessages.length > 0 && !isStreaming ? (
               <View style={styles.followUps}>
                 {FOLLOW_UPS.map((text) => (
-                  <Pressable key={text} onPress={() => handleSend(text)} style={styles.followUpChip}>
+                  <Pressable
+                    key={text}
+                    onPress={() => {
+                      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                      handleSend(text);
+                    }}
+                    style={({ pressed, hovered }: any) => [
+                      styles.followUpChip,
+                      hovered && styles.followUpChipHovered,
+                      pressed && styles.followUpChipPressed,
+                    ]}
+                  >
                     <Text style={styles.followUpText}>{text}</Text>
                   </Pressable>
                 ))}
@@ -235,13 +258,16 @@ export default function ChatScreen() {
           }
         />
 
-        {error && (
+        {error && !errorDismissed && (
           <View
             style={styles.errorBanner}
             accessibilityRole="alert"
             accessibilityLabel={`Error: ${error}`}
           >
             <Text style={styles.errorText}>{error}</Text>
+            <Pressable onPress={() => setErrorDismissed(true)} style={styles.errorDismiss}>
+              <X size={14} color={colors.error} />
+            </Pressable>
           </View>
         )}
 
@@ -373,6 +399,9 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   errorBanner: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
     backgroundColor: colors.errorBg,
     borderWidth: 1,
     borderColor: colors.error,
@@ -382,10 +411,14 @@ const styles = StyleSheet.create({
     marginBottom: 4,
     borderRadius: 10,
   },
+  errorDismiss: {
+    padding: 4,
+  },
   errorText: {
     color: colors.error,
     fontSize: 13,
     fontFamily: fonts.ui,
+    flex: 1,
   },
   followUps: {
     flexDirection: "row",
@@ -401,6 +434,14 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 12,
     paddingVertical: 6,
+  },
+  followUpChipHovered: {
+    backgroundColor: colors.purpleAccent,
+    borderColor: colors.purple,
+  },
+  followUpChipPressed: {
+    backgroundColor: colors.purpleAccent,
+    transform: [{ scale: 0.97 }],
   },
   followUpText: {
     color: colors.purpleGlow,
