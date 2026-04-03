@@ -351,13 +351,23 @@ export default function ChapterReaderScreen() {
                   </Pressable>
                   {selectedVerse === v.verse && (
                     <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
-                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }} style={styles.verseActionBtn}>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }}
+                        style={styles.verseActionBtn}
+                        accessibilityLabel="Copy verse"
+                        accessibilityRole="button"
+                      >
                         <View style={styles.verseActionRow}>
                           <Copy size={12} color={colors.textSecondary} />
                           <Text style={styles.verseActionText}> Copy</Text>
                         </View>
                       </Pressable>
-                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }} style={[styles.verseActionBtn, bookmarkedVerses.has(v.verse) && styles.verseActionActive]}>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }}
+                        style={[styles.verseActionBtn, bookmarkedVerses.has(v.verse) && styles.verseActionActive]}
+                        accessibilityLabel={bookmarkedVerses.has(v.verse) ? "Remove bookmark" : "Bookmark verse"}
+                        accessibilityRole="button"
+                      >
                         <View style={styles.verseActionRow}>
                           {bookmarkedVerses.has(v.verse) ? (
                             <BookmarkCheck size={12} color={colors.purpleGlow} />
@@ -369,13 +379,23 @@ export default function ChapterReaderScreen() {
                           </Text>
                         </View>
                       </Pressable>
-                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }} style={styles.verseActionBtn}>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }}
+                        style={styles.verseActionBtn}
+                        accessibilityLabel="Share verse"
+                        accessibilityRole="button"
+                      >
                         <View style={styles.verseActionRow}>
                           <Share2 size={12} color={colors.textSecondary} />
                           <Text style={styles.verseActionText}> Share</Text>
                         </View>
                       </Pressable>
-                      <Pressable onPress={(e) => { e.stopPropagation(); handleAskAion(v); }} style={[styles.verseActionBtn, styles.verseActionPrimary]}>
+                      <Pressable
+                        onPress={(e) => { e.stopPropagation(); handleAskAion(v); }}
+                        style={[styles.verseActionBtn, styles.verseActionPrimary]}
+                        accessibilityLabel="Ask Aion about this verse"
+                        accessibilityRole="button"
+                      >
                         <View style={styles.verseActionRow}>
                           <Sparkles size={12} color={colors.purpleGlow} />
                           <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}> Ask Aion</Text>

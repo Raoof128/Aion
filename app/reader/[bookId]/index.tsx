@@ -218,8 +218,8 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   chapterCellHovered: {
-    borderColor: "rgba(138, 43, 226, 0.25)",
-    backgroundColor: "rgba(138, 43, 226, 0.06)",
+    borderColor: colors.purpleAccent,
+    backgroundColor: colors.purpleMist,
   },
   chapterCellPressed: {
     backgroundColor: colors.purpleAccent,
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     color: colors.textPrimary,
   },
   hintText: {
-    color: "#56566A",
+    color: colors.textGhost,
     fontSize: 11,
     textAlign: "center",
     marginBottom: 12,

@@ -262,8 +262,8 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   bookCardHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.06)",
-    borderColor: "rgba(138, 43, 226, 0.20)",
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.selection,
   },
   bookCardPressed: {
     backgroundColor: colors.purpleAccent,

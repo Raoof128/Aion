@@ -42,6 +42,19 @@ export const colors = {
   error: "#DC2626",
   errorBg: "rgba(220, 38, 38, 0.12)",
   success: "#22C55E",
+
+  // Additional semantic colors
+  warning: "#F59E0B",
+  warningBg: "rgba(245, 158, 11, 0.12)",
+  info: "#3B82F6",
+  infoBg: "rgba(59, 130, 246, 0.12)",
+
+  // Disabled states
+  disabled: "rgba(255, 255, 255, 0.04)",
+  disabledText: "#4A4A58",
+
+  // Selection
+  selection: "rgba(138, 43, 226, 0.20)",
 } as const;
 
 // Font families — loaded in _layout.tsx
@@ -68,6 +81,38 @@ export const fonts = {
     web: "'Playfair Display', Georgia, serif",
     default: "PlayfairDisplay_400Regular_Italic",
   }),
+} as const;
+
+export const typeScale = {
+  xs: 10,
+  sm: 12,
+  base: 14,
+  md: 15,
+  lg: 16,
+  xl: 18,
+  "2xl": 22,
+  "3xl": 28,
+  "4xl": 36,
+  "5xl": 44,
+} as const;
+
+export const lineHeights = {
+  tight: 1.25,
+  normal: 1.5,
+  relaxed: 1.625,
+  loose: 1.75,
+} as const;
+
+export const spacing = {
+  xs: 4,
+  sm: 8,
+  md: 12,
+  lg: 16,
+  xl: 20,
+  "2xl": 24,
+  "3xl": 32,
+  "4xl": 40,
+  "5xl": 48,
 } as const;
 
 export const shared = StyleSheet.create({

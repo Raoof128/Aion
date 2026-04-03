@@ -74,6 +74,7 @@ export default function HomeScreen() {
           <Animated.Text
             entering={FadeInDown.duration(600).delay(100)}
             style={styles.logo}
+            accessibilityRole="header"
           >
             A I O N
           </Animated.Text>
@@ -93,7 +94,12 @@ export default function HomeScreen() {
           </Animated.Text>
 
           {/* Verse of the Day */}
-          <Animated.View entering={FadeIn.duration(400).delay(700)} style={styles.votdCard}>
+          <Animated.View
+            entering={FadeIn.duration(400).delay(700)}
+            style={styles.votdCard}
+            accessibilityRole="summary"
+            accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
+          >
             <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
             <Text style={styles.votdContent}>"{votd.content}"</Text>
             <Text style={styles.votdRef}>— {votd.book_name} {votd.chapter}:{votd.verse}</Text>
@@ -121,7 +127,7 @@ export default function HomeScreen() {
               <Text style={styles.suggestionsLabel}>Explore</Text>
               <View style={styles.labelLine} />
             </View>
-            <View style={styles.pillGrid}>
+            <View style={styles.pillGrid} accessibilityRole="list">
               {PROMPT_SUGGESTIONS.map((prompt, index) => (
                 <PromptPill
                   key={prompt.label}

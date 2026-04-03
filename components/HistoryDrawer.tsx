@@ -8,15 +8,8 @@ import { DrawerContentComponentProps } from "@react-navigation/drawer";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { supabase } from "../lib/supabase";
 import { colors, fonts } from "../lib/theme";
+import { timeAgo } from "../lib/utils";
 import type { Conversation } from "../lib/types";
-
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
 
 function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
   item: Conversation;
@@ -62,6 +55,8 @@ function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
                 onBlur={() => setIsEditing(false)}
                 autoFocus
                 style={styles.editInput}
+                accessibilityLabel="Rename conversation"
+                accessibilityHint="Type a new name and press return to save"
               />
             ) : (
               <Text style={styles.conversationTitle} numberOfLines={2}>
@@ -70,7 +65,12 @@ function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
             )}
             <Text style={styles.conversationTime}>{timeAgo}</Text>
           </View>
-          <Pressable onPress={() => setIsEditing(true)} style={styles.editButton}>
+          <Pressable
+            onPress={() => setIsEditing(true)}
+            style={styles.editButton}
+            accessibilityLabel="Rename conversation"
+            accessibilityRole="button"
+          >
             <Pencil size={14} color={colors.textGhost} />
           </Pressable>
         </View>
@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
   conversationRow: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.glass,
   },
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   editButton: {
-    padding: 8,
+    padding: 12,
   },
   editInput: {
     color: colors.textPrimary,

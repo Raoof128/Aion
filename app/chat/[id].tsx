@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Share } from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeIn, FadeOut } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInUp, FadeOut } from "react-native-reanimated";
 import { ChevronLeft, Share2, ChevronDown, Sparkles, X } from "lucide-react-native";
 import * as Haptics from "expo-haptics";
 import { supabase } from "../../lib/supabase";
@@ -130,6 +130,7 @@ export default function ChatScreen() {
   };
 
   const handleExport = async () => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (messages.length === 0) return;
     const text = messages
       .map((m) => {
@@ -168,8 +169,13 @@ export default function ChatScreen() {
       {/* Header */}
       <View style={styles.header}>
         <Pressable
-          onPress={() => router.back()}
+          onPress={() => {
+            if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            router.back();
+          }}
           style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
         >
           <ChevronLeft size={20} color={colors.textSecondary} />
         </Pressable>
@@ -191,7 +197,7 @@ export default function ChatScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
+        behavior={Platform.OS === "ios" ? "padding" : "height"}
         style={styles.flex}
       >
         <FlatList
@@ -237,21 +243,24 @@ export default function ChatScreen() {
           ListFooterComponent={
             displayMessages.length > 0 && !isStreaming ? (
               <View style={styles.followUps}>
-                {FOLLOW_UPS.map((text) => (
-                  <Pressable
-                    key={text}
-                    onPress={() => {
-                      if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      handleSend(text);
-                    }}
-                    style={({ pressed, hovered }: any) => [
-                      styles.followUpChip,
-                      hovered && styles.followUpChipHovered,
-                      pressed && styles.followUpChipPressed,
-                    ]}
-                  >
-                    <Text style={styles.followUpText}>{text}</Text>
-                  </Pressable>
+                {FOLLOW_UPS.map((text, i) => (
+                  <Animated.View key={text} entering={FadeInUp.delay(i * 80).duration(200)}>
+                    <Pressable
+                      onPress={() => {
+                        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        handleSend(text);
+                      }}
+                      style={({ pressed, hovered }: any) => [
+                        styles.followUpChip,
+                        hovered && styles.followUpChipHovered,
+                        pressed && styles.followUpChipPressed,
+                      ]}
+                      accessibilityLabel={text}
+                      accessibilityRole="button"
+                    >
+                      <Text style={styles.followUpText}>{text}</Text>
+                    </Pressable>
+                  </Animated.View>
                 ))}
               </View>
             ) : null
@@ -274,9 +283,13 @@ export default function ChatScreen() {
         {showScrollButton && (
           <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.scrollToBottomWrapper}>
             <Pressable
-              onPress={() => flatListRef.current?.scrollToEnd({ animated: true })}
+              onPress={() => {
+                if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                flatListRef.current?.scrollToEnd({ animated: true });
+              }}
               style={styles.scrollToBottom}
               accessibilityLabel="Scroll to bottom"
+              accessibilityHint="Scrolls the conversation to the most recent message"
               accessibilityRole="button"
             >
               <ChevronDown size={16} color={colors.white} strokeWidth={3} />
@@ -308,8 +321,8 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.glass,
   },
   headerButton: {
-    width: 40,
-    height: 40,
+    width: 44,
+    height: 44,
     alignItems: "center",
     justifyContent: "center",
   },
@@ -341,7 +354,7 @@ const styles = StyleSheet.create({
   },
   messageList: {
     padding: 16,
-    paddingBottom: 8,
+    paddingBottom: 16,
   },
   emptyState: {
     alignItems: "center",
@@ -371,7 +384,7 @@ const styles = StyleSheet.create({
   },
   messageCount: {
     color: colors.textGhost,
-    fontSize: 10,
+    fontSize: 11,
     fontFamily: fonts.ui,
     marginLeft: 8,
     backgroundColor: colors.glass,
@@ -423,7 +436,7 @@ const styles = StyleSheet.create({
   followUps: {
     flexDirection: "row",
     flexWrap: "wrap",
-    paddingHorizontal: 4,
+    paddingHorizontal: 16,
     paddingTop: 8,
     gap: 6,
   },

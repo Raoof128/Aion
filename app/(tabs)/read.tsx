@@ -144,11 +144,18 @@ export default function ReadScreen() {
             onChangeText={setSearch}
             onFocus={() => setSearchFocused(true)}
             onBlur={() => setSearchFocused(false)}
+            accessibilityLabel="Search Bible books"
           />
           {search.length > 0 && (
-            <Pressable onPress={() => setSearch("")} style={{ padding: 4 }}>
-              <X size={14} color={colors.textGhost} />
-            </Pressable>
+            <Animated.View entering={FadeIn.duration(150)}>
+              <Pressable
+                onPress={() => setSearch("")}
+                accessibilityLabel="Clear search"
+                accessibilityRole="button"
+              >
+                <X size={14} color={colors.textGhost} />
+              </Pressable>
+            </Animated.View>
           )}
         </View>
 
@@ -261,7 +268,7 @@ const styles = StyleSheet.create({
     fontFamily: fonts.uiBold,
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 40,
   },
   row: {

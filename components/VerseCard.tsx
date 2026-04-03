@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeInLeft, useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import Animated, { FadeIn, FadeInLeft, useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
 
@@ -81,14 +81,19 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
 
         <View style={styles.divider} />
 
-        <Pressable onPress={() => isLong && setExpanded(!expanded)} disabled={!isLong}>
+        <Pressable
+          onPress={() => isLong && setExpanded(!expanded)}
+          disabled={!isLong}
+          accessibilityLabel={isLong ? (expanded ? "Show less" : "Show full verse") : undefined}
+          accessibilityRole={isLong ? "button" : undefined}
+        >
           <Text style={styles.content}>
             "{expanded || !isLong ? verse.content : verse.content.slice(0, 150) + "..."}"
           </Text>
           {isLong && (
-            <Text style={styles.expandToggle}>
+            <Animated.Text entering={FadeIn.duration(200)} key={expanded ? "less" : "more"} style={styles.expandToggle}>
               {expanded ? "Show less" : "Show more"}
-            </Text>
+            </Animated.Text>
           )}
         </Pressable>
 
@@ -97,6 +102,7 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
             onPress={handleCopy}
             style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
             accessibilityLabel={copied ? "Copied to clipboard" : "Copy verse"}
+            accessibilityHint="Copies this verse reference and text to the clipboard"
             accessibilityRole="button"
           >
             <Text style={[styles.actionText, copied && styles.actionTextActive]}>
@@ -107,6 +113,7 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
             onPress={handleShare}
             style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
             accessibilityLabel="Share verse"
+            accessibilityHint="Opens the share sheet to share this verse"
             accessibilityRole="button"
           >
             <Text style={styles.actionText}>Share</Text>

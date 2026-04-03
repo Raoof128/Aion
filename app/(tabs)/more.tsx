@@ -15,6 +15,7 @@ import { Pencil, Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import Animated, {
+  FadeInUp,
   useAnimatedStyle,
   useSharedValue,
   withSpring,
@@ -22,28 +23,21 @@ import Animated, {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { colors, fonts } from "../../lib/theme";
+import { timeAgo } from "../../lib/utils";
 import type { Conversation } from "../../lib/types";
-
-function timeAgo(dateStr: string): string {
-  const seconds = Math.floor(
-    (Date.now() - new Date(dateStr).getTime()) / 1000
-  );
-  if (seconds < 60) return "just now";
-  if (seconds < 3600) return `${Math.floor(seconds / 60)}m ago`;
-  if (seconds < 86400) return `${Math.floor(seconds / 3600)}h ago`;
-  return `${Math.floor(seconds / 86400)}d ago`;
-}
 
 function ConversationItem({
   item,
   onOpen,
   onDelete,
   timeAgoStr,
+  index,
 }: {
   item: Conversation;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
   timeAgoStr: string;
+  index: number;
 }) {
   const scale = useSharedValue(1);
   const animStyle = useAnimatedStyle(() => ({
@@ -65,7 +59,7 @@ function ConversationItem({
   };
 
   return (
-    <Animated.View style={animStyle}>
+    <Animated.View entering={FadeInUp.delay(index * 50).duration(200)} style={animStyle}>
       <Pressable
         onPress={() => !isEditing && onOpen(item.id)}
         onLongPress={() => !isEditing && onDelete(item.id)}
@@ -93,6 +87,8 @@ function ConversationItem({
                 onBlur={() => setIsEditing(false)}
                 autoFocus
                 style={styles.editInput}
+                accessibilityLabel="Rename conversation"
+                accessibilityHint="Type a new name and press return to save"
               />
             ) : (
               <Text style={styles.conversationTitle} numberOfLines={2}>
@@ -104,6 +100,8 @@ function ConversationItem({
           <Pressable
             onPress={() => setIsEditing(true)}
             style={({ hovered }: any) => [styles.editButton, hovered && styles.editButtonHovered]}
+            accessibilityLabel="Rename conversation"
+            accessibilityRole="button"
           >
             <Pencil size={14} color={colors.textGhost} />
           </Pressable>
@@ -152,6 +150,9 @@ export default function MoreScreen() {
   };
 
   const handleNewChat = () => {
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     const uniqueId = `new-${Date.now()}`;
     router.push({
       pathname: `/chat/${uniqueId}`,
@@ -209,12 +210,13 @@ export default function MoreScreen() {
         <FlatList
           data={conversations}
           keyExtractor={(item) => item.id}
-          renderItem={({ item }) => (
+          renderItem={({ item, index }) => (
             <ConversationItem
               item={item}
               onOpen={handleOpen}
               onDelete={handleDelete}
               timeAgoStr={timeAgo(item.updated_at)}
+              index={index}
             />
           )}
           contentContainerStyle={styles.listContent}
@@ -276,8 +278,8 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
   },
   newChatButtonHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.15)",
-    borderColor: "rgba(138, 43, 226, 0.30)",
+    backgroundColor: colors.purpleBorder,
+    borderColor: colors.purpleAccent,
   },
   newChatIcon: {
     color: colors.purple,
@@ -329,11 +331,11 @@ const styles = StyleSheet.create({
     fontFamily: fonts.ui,
   },
   listContent: {
-    paddingHorizontal: 16,
+    paddingHorizontal: 20,
     paddingBottom: 20,
   },
   conversationRow: {
-    paddingVertical: 14,
+    paddingVertical: 16,
     borderBottomWidth: 1,
     borderBottomColor: colors.glass,
   },
@@ -360,7 +362,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   editButton: {
-    padding: 8,
+    padding: 12,
   },
   editButtonHovered: {
     backgroundColor: colors.glass,
@@ -381,7 +383,7 @@ const styles = StyleSheet.create({
   },
   footerText: {
     color: colors.textGhost,
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fonts.ui,
     letterSpacing: 1,
   },

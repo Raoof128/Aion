@@ -128,24 +128,44 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
       {isSearching ? <PulsingDot /> : <Markdown style={markdownStyles}>{content}</Markdown>}
       {!isSearching && (
         <View style={styles.messageActions}>
-          <Pressable onPress={handleCopyResponse} style={styles.messageActionButton}>
+          <Pressable
+            onPress={handleCopyResponse}
+            style={({ pressed }: any) => [styles.messageActionButton, pressed && { opacity: 0.7 }]}
+            accessibilityLabel="Copy response"
+            accessibilityRole="button"
+          >
             <View style={styles.messageActionRow}>
               <Copy size={12} color={responseCopied ? colors.purpleGlow : colors.textMuted} />
               <Text style={styles.messageActionText}>{responseCopied ? " Copied" : " Copy"}</Text>
             </View>
           </Pressable>
           {onRegenerate && (
-            <Pressable onPress={onRegenerate} style={styles.messageActionButton}>
+            <Pressable
+              onPress={onRegenerate}
+              style={({ pressed }: any) => [styles.messageActionButton, pressed && { opacity: 0.7 }]}
+              accessibilityLabel="Regenerate response"
+              accessibilityRole="button"
+            >
               <View style={styles.messageActionRow}>
                 <RotateCcw size={12} color={colors.textMuted} />
                 <Text style={styles.messageActionText}> Retry</Text>
               </View>
             </Pressable>
           )}
-          <Pressable onPress={() => setFeedback("up")} style={[styles.messageActionButton, feedback === "up" && styles.feedbackActive]}>
+          <Pressable
+            onPress={() => setFeedback("up")}
+            style={({ pressed }: any) => [styles.messageActionButton, feedback === "up" && styles.feedbackActive, pressed && { opacity: 0.7 }]}
+            accessibilityLabel="Helpful"
+            accessibilityRole="button"
+          >
             <ThumbsUp size={14} color={feedback === "up" ? colors.purpleGlow : colors.textMuted} />
           </Pressable>
-          <Pressable onPress={() => setFeedback("down")} style={[styles.messageActionButton, feedback === "down" && styles.feedbackActive]}>
+          <Pressable
+            onPress={() => setFeedback("down")}
+            style={({ pressed }: any) => [styles.messageActionButton, feedback === "down" && styles.feedbackActive, pressed && { opacity: 0.7 }]}
+            accessibilityLabel="Not helpful"
+            accessibilityRole="button"
+          >
             <ThumbsDown size={14} color={feedback === "down" ? colors.purpleGlow : colors.textMuted} />
           </Pressable>
         </View>
@@ -234,7 +254,7 @@ const styles = StyleSheet.create({
   },
   verseCountLabel: {
     color: colors.textGhost,
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fonts.uiMedium,
     letterSpacing: 1,
     textTransform: "uppercase",
@@ -268,7 +288,7 @@ const styles = StyleSheet.create({
   },
   messageActionText: {
     color: colors.textMuted,
-    fontSize: 11,
+    fontSize: 12,
     fontFamily: fonts.uiMedium,
   },
   feedbackActive: {

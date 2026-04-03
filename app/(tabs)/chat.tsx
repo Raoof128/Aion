@@ -3,10 +3,14 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 import { Sparkles } from "lucide-react-native";
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import { colors, fonts } from "../../lib/theme";
 
 export default function ChatTab() {
   const router = useRouter();
+
+  const btnScale = useSharedValue(1);
+  const btnStyle = useAnimatedStyle(() => ({ transform: [{ scale: btnScale.value }] }));
 
   const handleNewChat = () => {
     if (Platform.OS !== "web") {
@@ -33,14 +37,18 @@ export default function ChatTab() {
         <Text style={styles.title}>Ask Aion anything</Text>
         <Text style={styles.subtitle}>Get AI-powered insights grounded{"\n"}in Scripture</Text>
 
-        <Pressable
-          onPress={handleNewChat}
-          style={({ hovered }: any) => [styles.startButton, hovered && styles.startButtonHovered]}
-          accessibilityLabel="Start new conversation"
-          accessibilityRole="button"
-        >
-          <Text style={styles.startButtonText}>Start a conversation</Text>
-        </Pressable>
+        <Animated.View style={btnStyle}>
+          <Pressable
+            onPress={handleNewChat}
+            onPressIn={() => { btnScale.value = withSpring(0.95); }}
+            onPressOut={() => { btnScale.value = withSpring(1); }}
+            style={({ hovered }: any) => [styles.startButton, hovered && styles.startButtonHovered]}
+            accessibilityLabel="Start new conversation"
+            accessibilityRole="button"
+          >
+            <Text style={styles.startButtonText}>Start a conversation</Text>
+          </Pressable>
+        </Animated.View>
       </View>
     </SafeAreaView>
   );

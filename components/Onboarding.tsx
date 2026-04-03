@@ -1,6 +1,7 @@
 import { useState } from "react";
-import { View, Text, Pressable, StyleSheet } from "react-native";
+import { View, Text, Pressable, StyleSheet, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import * as Haptics from "expo-haptics";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Sparkles, Search, BookOpen } from "lucide-react-native";
@@ -33,6 +34,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
   const [step, setStep] = useState(0);
 
   const handleNext = async () => {
+    if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (step < SLIDES.length - 1) {
       setStep(step + 1);
     } else {
@@ -52,20 +54,38 @@ export function Onboarding({ onComplete }: OnboardingProps) {
       </Animated.View>
 
       <View style={styles.footer}>
-        <View style={styles.dots}>
+        <View style={styles.dots} accessibilityRole="list">
           {SLIDES.map((_, i) => (
-            <View key={i} style={[styles.dot, i === step && styles.dotActive]} />
+            <View
+              key={i}
+              style={[styles.dot, i === step && styles.dotActive]}
+              accessibilityLabel={`Step ${i + 1} of ${SLIDES.length}${i === step ? ", current" : ""}`}
+            />
           ))}
         </View>
 
-        <Pressable onPress={handleNext} style={styles.button}>
+        <Pressable
+          onPress={handleNext}
+          style={styles.button}
+          accessibilityRole="button"
+          accessibilityLabel={step < SLIDES.length - 1 ? "Next" : "Get Started"}
+        >
           <Text style={styles.buttonText}>
             {step < SLIDES.length - 1 ? "Next" : "Get Started"}
           </Text>
         </Pressable>
 
         {step < SLIDES.length - 1 && (
-          <Pressable onPress={async () => { await AsyncStorage.setItem("onboarding_complete", "true"); onComplete(); }} style={styles.skipButton}>
+          <Pressable
+            onPress={async () => {
+              if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              await AsyncStorage.setItem("onboarding_complete", "true");
+              onComplete();
+            }}
+            style={styles.skipButton}
+            accessibilityRole="button"
+            accessibilityLabel="Skip onboarding"
+          >
             <Text style={styles.skipText}>Skip</Text>
           </Pressable>
         )}
