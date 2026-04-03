@@ -210,15 +210,15 @@ export default function ChapterReaderScreen() {
             </View>
             <Text style={styles.chapterNumLarge}>{chapter}</Text>
 
-            {/* Verse text — continuous flowing layout */}
-            <Text style={styles.verseBlock}>
-              {verses.map((v) => (
-                <Text key={v.verse} style={styles.verseText}>
-                  <Text style={styles.verseNumber}>{v.verse} </Text>
-                  <Text style={styles.verseContent}>{v.content} </Text>
-                </Text>
+            {/* Verse text — elegant flowing layout with paragraph grouping */}
+            <View style={styles.verseBlock}>
+              {verses.map((v, i) => (
+                <View key={v.verse} style={[styles.verseLine, i === 0 && styles.verseLineFirst]}>
+                  <Text style={styles.verseNumber}>{v.verse}</Text>
+                  <Text style={styles.verseContent}>{v.content}</Text>
+                </View>
               ))}
-            </Text>
+            </View>
 
             {/* Bottom navigation */}
             <View style={styles.bottomNav}>
@@ -379,9 +379,9 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingTop: 28,
-    paddingBottom: 60,
+    paddingBottom: 80,
   },
   chapterHeading: {
     flexDirection: "row",
@@ -410,24 +410,35 @@ const styles = StyleSheet.create({
     letterSpacing: 4,
   },
   verseBlock: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+    gap: 2,
   },
-  verseText: {
-    // wrapper for each verse inline
+  verseLine: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    paddingVertical: 6,
+    paddingHorizontal: 4,
+    borderRadius: 8,
+  },
+  verseLineFirst: {
+    paddingTop: 0,
   },
   verseNumber: {
     fontSize: 11,
     fontFamily: fonts.uiBold,
     color: colors.purpleGlow,
-    lineHeight: 22,
-    paddingRight: 2,
+    lineHeight: 30,
+    width: 28,
+    textAlign: "right",
+    marginRight: 12,
+    opacity: 0.7,
   },
   verseContent: {
-    fontSize: 17,
+    flex: 1,
+    fontSize: 18,
     fontFamily: fonts.verse,
     color: colors.textPrimary,
-    lineHeight: 32,
+    lineHeight: 30,
+    letterSpacing: 0.2,
   },
   bottomNav: {
     marginTop: 48,

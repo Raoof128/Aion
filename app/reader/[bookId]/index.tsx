@@ -199,10 +199,12 @@ const styles = StyleSheet.create({
   listContent: {
     paddingHorizontal: 20,
     paddingBottom: 40,
+    alignItems: "center",
   },
   row: {
     gap: 10,
     marginBottom: 10,
+    justifyContent: "center",
   },
   chapterCell: {
     width: CELL_SIZE,
