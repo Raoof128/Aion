@@ -1,4 +1,4 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import {
   View,
   Text,
@@ -6,6 +6,7 @@ import {
   Pressable,
   StyleSheet,
   Platform,
+  TextInput,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
@@ -29,8 +30,13 @@ function triggerHaptic() {
 export default function ReadScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Testament>("OT");
+  const [search, setSearch] = useState("");
 
-  const books = activeTab === "OT" ? OT_BOOKS : NT_BOOKS;
+  const filteredBooks = useMemo(() => {
+    const list = activeTab === "OT" ? OT_BOOKS : NT_BOOKS;
+    if (!search.trim()) return list;
+    return list.filter(b => b.name.toLowerCase().includes(search.toLowerCase()));
+  }, [activeTab, search]);
 
   const handleBookPress = useCallback(
     (book: BibleBook) => {
@@ -61,6 +67,7 @@ export default function ReadScreen() {
           accessibilityLabel={`${item.name}, ${item.chapters} chapters`}
           accessibilityRole="button"
         >
+          <Text style={styles.bookAbbr}>{item.id}</Text>
           <Text style={styles.bookName} numberOfLines={1}>
             {item.name}
           </Text>
@@ -124,16 +131,33 @@ export default function ReadScreen() {
           </Pressable>
         </View>
 
+        {/* Search bar */}
+        <View style={styles.searchContainer}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search books..."
+            placeholderTextColor={colors.textGhost}
+            value={search}
+            onChangeText={setSearch}
+          />
+          {search.length > 0 && (
+            <Pressable onPress={() => setSearch("")}>
+              <Text style={styles.clearIcon}>✕</Text>
+            </Pressable>
+          )}
+        </View>
+
         {/* Section indicator */}
         <View style={styles.sectionInfo}>
           <View style={styles.sectionLine} />
-          <Text style={styles.sectionText}>{books.length} BOOKS</Text>
+          <Text style={styles.sectionText}>{filteredBooks.length} BOOKS</Text>
           <View style={styles.sectionLine} />
         </View>
 
         {/* Book Grid */}
         <FlatList
-          data={books}
+          data={filteredBooks}
           renderItem={renderBookCard}
           keyExtractor={keyExtractor}
           numColumns={2}
@@ -238,11 +262,12 @@ const styles = StyleSheet.create({
   },
   bookCard: {
     flex: 1,
-    backgroundColor: colors.glass,
+    backgroundColor: "rgba(255,255,255,0.06)",
     borderRadius: 14,
-    padding: 14,
+    padding: 16,
     borderWidth: 1,
-    borderColor: colors.glassBorder,
+    borderColor: "rgba(255,255,255,0.10)",
+    minHeight: 80,
   },
   bookCardHovered: {
     backgroundColor: "rgba(138, 43, 226, 0.06)",
@@ -251,6 +276,29 @@ const styles = StyleSheet.create({
   bookCardPressed: {
     backgroundColor: colors.purpleAccent,
     borderColor: colors.purpleBorder,
+  },
+  searchContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+    borderRadius: 14,
+    marginHorizontal: 20,
+    marginBottom: 16,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+  },
+  searchIcon: { fontSize: 14, marginRight: 10 },
+  searchInput: { flex: 1, color: "#F0F0F5", fontSize: 14 },
+  clearIcon: { color: "#56566A", fontSize: 14, padding: 4 },
+  bookAbbr: {
+    color: "#A855F7",
+    fontSize: 10,
+    fontWeight: "700",
+    letterSpacing: 1.5,
+    marginBottom: 4,
+    opacity: 0.6,
   },
   bookName: {
     fontSize: 14,

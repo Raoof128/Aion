@@ -120,6 +120,7 @@ export default function ChapterListScreen() {
           <Text style={styles.sectionText}>SELECT CHAPTER</Text>
           <View style={styles.sectionLine} />
         </View>
+        <Text style={styles.hintText}>Tap to start reading</Text>
 
         {/* Chapter Grid */}
         <FlatList
@@ -136,7 +137,7 @@ export default function ChapterListScreen() {
   );
 }
 
-const CELL_SIZE = 56;
+const CELL_SIZE = 64;
 
 const styles = StyleSheet.create({
   container: {
@@ -209,7 +210,7 @@ const styles = StyleSheet.create({
   chapterCell: {
     width: CELL_SIZE,
     height: CELL_SIZE,
-    borderRadius: 12,
+    borderRadius: 14,
     backgroundColor: colors.glass,
     borderWidth: 1,
     borderColor: colors.glassBorder,
@@ -228,6 +229,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     fontFamily: fonts.uiMedium,
     color: colors.textPrimary,
+  },
+  hintText: {
+    color: "#56566A",
+    fontSize: 11,
+    textAlign: "center",
+    marginBottom: 12,
   },
   errorContainer: {
     flex: 1,

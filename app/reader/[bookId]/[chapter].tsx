@@ -7,6 +7,7 @@ import {
   ActivityIndicator,
   StyleSheet,
   Platform,
+  Share,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -40,8 +41,10 @@ export default function ChapterReaderScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
+  const lastScrollY = useRef(0);
 
   const chapterNum = Number(chapter);
 
@@ -80,6 +83,41 @@ export default function ChapterReaderScreen() {
   useEffect(() => {
     fetchChapter();
   }, [fetchChapter]);
+
+  const handleVerseCopy = async (v: Verse) => {
+    const text = `${book?.name} ${chapterNum}:${v.verse} — "${v.content}"`;
+    if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+      await navigator.clipboard.writeText(text);
+    }
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    setSelectedVerse(null);
+  };
+
+  const handleVerseShare = async (v: Verse) => {
+    const text = `${book?.name} ${chapterNum}:${v.verse} — "${v.content}"`;
+    try {
+      await Share.share({ message: text });
+    } catch {}
+    setSelectedVerse(null);
+  };
+
+  const handleVerseBookmark = (_v: Verse) => {
+    // TODO: Wire to Supabase user_verse_data table
+    if (Platform.OS !== "web") {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    }
+    setSelectedVerse(null);
+  };
+
+  const handleAskAion = (v: Verse) => {
+    const question = `Explain ${book?.name} ${chapterNum}:${v.verse} — "${v.content}"`;
+    router.push({
+      pathname: `/chat/new-${Date.now()}`,
+      params: { initialMessage: question },
+    });
+  };
 
   const handleBack = useCallback(() => {
     triggerHaptic();
@@ -195,10 +233,15 @@ export default function ChapterReaderScreen() {
             showsVerticalScrollIndicator={false}
             onScroll={(e) => {
               const { contentOffset, contentSize, layoutMeasurement } = e.nativeEvent;
+              const y = contentOffset.y;
               const totalHeight = contentSize.height - layoutMeasurement.height;
               if (totalHeight > 0) {
-                setScrollProgress(Math.min(contentOffset.y / totalHeight, 1));
+                setScrollProgress(Math.min(y / totalHeight, 1));
               }
+              if (selectedVerse !== null && Math.abs(y - lastScrollY.current) > 20) {
+                setSelectedVerse(null);
+              }
+              lastScrollY.current = y;
             }}
             scrollEventThrottle={16}
           >
@@ -213,9 +256,35 @@ export default function ChapterReaderScreen() {
             {/* Verse text — elegant flowing layout with paragraph grouping */}
             <View style={styles.verseBlock}>
               {verses.map((v, i) => (
-                <View key={v.verse} style={[styles.verseLine, i === 0 && styles.verseLineFirst]}>
-                  <Text style={styles.verseNumber}>{v.verse}</Text>
-                  <Text style={styles.verseContent}>{v.content}</Text>
+                <View key={v.verse}>
+                  <Pressable
+                    onPress={() => setSelectedVerse(selectedVerse === v.verse ? null : v.verse)}
+                    style={[
+                      styles.verseLine,
+                      i === 0 && styles.verseLineFirst,
+                      selectedVerse === v.verse && styles.verseLineSelected,
+                      i > 0 && i % 5 === 0 && styles.verseLineParagraph,
+                    ]}
+                  >
+                    <Text style={styles.verseNumber}>{v.verse}</Text>
+                    <Text style={styles.verseContent}>{v.content}</Text>
+                  </Pressable>
+                  {selectedVerse === v.verse && (
+                    <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
+                      <Pressable onPress={() => handleVerseCopy(v)} style={styles.verseActionBtn}>
+                        <Text style={styles.verseActionText}>Copy</Text>
+                      </Pressable>
+                      <Pressable onPress={() => handleVerseBookmark(v)} style={styles.verseActionBtn}>
+                        <Text style={styles.verseActionText}>🔖 Bookmark</Text>
+                      </Pressable>
+                      <Pressable onPress={() => handleVerseShare(v)} style={styles.verseActionBtn}>
+                        <Text style={styles.verseActionText}>Share</Text>
+                      </Pressable>
+                      <Pressable onPress={() => handleAskAion(v)} style={[styles.verseActionBtn, styles.verseActionPrimary]}>
+                        <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>✦ Ask Aion</Text>
+                      </Pressable>
+                    </Animated.View>
+                  )}
                 </View>
               ))}
             </View>
@@ -486,5 +555,41 @@ const styles = StyleSheet.create({
   },
   bottomButtonTextDisabled: {
     color: colors.textGhost,
+  },
+  verseLineSelected: {
+    backgroundColor: "rgba(138, 43, 226, 0.08)",
+    borderRadius: 8,
+    marginHorizontal: -4,
+    paddingHorizontal: 8,
+  },
+  verseLineParagraph: {
+    marginTop: 16,
+  },
+  verseActions: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    paddingVertical: 8,
+    paddingHorizontal: 4,
+    marginBottom: 4,
+  },
+  verseActionBtn: {
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 8,
+    backgroundColor: "rgba(255,255,255,0.06)",
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.10)",
+  },
+  verseActionPrimary: {
+    backgroundColor: "rgba(138, 43, 226, 0.12)",
+    borderColor: "rgba(138, 43, 226, 0.25)",
+  },
+  verseActionText: {
+    color: "#9494A8",
+    fontSize: 12,
+  },
+  verseActionPrimaryText: {
+    color: "#A855F7",
   },
 });
