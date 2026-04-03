@@ -1,7 +1,7 @@
 import "../global.css";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View, StyleSheet } from "react-native";
-import { Drawer } from "expo-router/drawer";
+import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from "@expo-google-fonts/inter";
@@ -12,7 +12,6 @@ import {
 } from "@expo-google-fonts/playfair-display";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
-import { HistoryDrawer } from "../components/HistoryDrawer";
 import { Onboarding } from "../components/Onboarding";
 import { colors } from "../lib/theme";
 
@@ -57,15 +56,7 @@ export default function RootLayout() {
     checkOnboarding();
   }, []);
 
-  if (!ready || !fontsLoaded) {
-    return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={colors.purple} size="large" />
-      </View>
-    );
-  }
-
-  if (!onboardingChecked) {
+  if (!ready || !fontsLoaded || !onboardingChecked) {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.purple} size="large" />
@@ -80,20 +71,17 @@ export default function RootLayout() {
   return (
     <QueryClientProvider client={queryClient}>
       <GestureHandlerRootView style={styles.root}>
-        <Drawer
-          drawerContent={(props) => <HistoryDrawer {...props} />}
+        <Stack
           screenOptions={{
             headerShown: false,
-            drawerStyle: { backgroundColor: colors.void, width: 300 },
+            contentStyle: { backgroundColor: colors.void },
+            animation: "slide_from_right",
           }}
         >
-          <Drawer.Screen name="index" options={{ title: "Aion" }} />
-          <Drawer.Screen
-            name="chat/[id]"
-            options={{ title: "Chat", drawerItemStyle: { display: "none" } }}
-          />
-          <Drawer.Screen name="reader" options={{ title: "Read Bible" }} />
-        </Drawer>
+          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }} />
+          <Stack.Screen name="chat/[id]" options={{ headerShown: false, animation: "slide_from_bottom" }} />
+          <Stack.Screen name="reader" options={{ headerShown: false }} />
+        </Stack>
       </GestureHandlerRootView>
     </QueryClientProvider>
   );

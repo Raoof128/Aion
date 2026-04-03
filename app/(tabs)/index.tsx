@@ -3,10 +3,10 @@ import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Pre
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeInDown, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from "react-native-reanimated";
-import { PromptPill } from "../components/PromptPill";
-import { ChatInput } from "../components/ChatInput";
-import { colors, fonts } from "../lib/theme";
-import { getVerseOfTheDay } from "../lib/bible-data";
+import { PromptPill } from "../../components/PromptPill";
+import { ChatInput } from "../../components/ChatInput";
+import { colors, fonts } from "../../lib/theme";
+import { getVerseOfTheDay } from "../../lib/bible-data";
 
 const PROMPT_SUGGESTIONS = [
   { icon: "🔍", label: "Find verses with the number 444" },
@@ -52,7 +52,7 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
@@ -100,7 +100,7 @@ export default function HomeScreen() {
 
           {/* Read Bible Button */}
           <Pressable
-            onPress={() => router.push("/reader")}
+            onPress={() => router.push("/read")}
             style={({ hovered }: any) => [styles.readerButton, hovered && styles.readerButtonHovered]}
             accessibilityLabel="Open Bible Reader"
             accessibilityRole="button"
