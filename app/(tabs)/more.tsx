@@ -100,7 +100,10 @@ function ConversationItem({
             )}
             <Text style={styles.conversationTime}>{timeAgoStr}</Text>
           </View>
-          <Pressable onPress={() => setIsEditing(true)} style={styles.editButton}>
+          <Pressable
+            onPress={() => setIsEditing(true)}
+            style={({ hovered }: any) => [styles.editButton, hovered && styles.editButtonHovered]}
+          >
             <Text style={styles.editIcon}>✎</Text>
           </Pressable>
         </View>
@@ -359,6 +362,10 @@ const styles = StyleSheet.create({
   },
   editButton: {
     padding: 8,
+  },
+  editButtonHovered: {
+    backgroundColor: colors.glass,
+    borderRadius: 8,
   },
   editIcon: {
     color: colors.textGhost,

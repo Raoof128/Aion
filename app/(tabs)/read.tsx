@@ -31,6 +31,7 @@ export default function ReadScreen() {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<Testament>("OT");
   const [search, setSearch] = useState("");
+  const [searchFocused, setSearchFocused] = useState(false);
 
   const filteredBooks = useMemo(() => {
     const list = activeTab === "OT" ? OT_BOOKS : NT_BOOKS;
@@ -132,7 +133,7 @@ export default function ReadScreen() {
         </View>
 
         {/* Search bar */}
-        <View style={styles.searchContainer}>
+        <View style={[styles.searchContainer, searchFocused && styles.searchContainerFocused]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={styles.searchInput}
@@ -140,6 +141,8 @@ export default function ReadScreen() {
             placeholderTextColor={colors.textGhost}
             value={search}
             onChangeText={setSearch}
+            onFocus={() => setSearchFocused(true)}
+            onBlur={() => setSearchFocused(false)}
           />
           {search.length > 0 && (
             <Pressable onPress={() => setSearch("")}>
@@ -291,6 +294,10 @@ const styles = StyleSheet.create({
   },
   searchIcon: { fontSize: 14, marginRight: 10 },
   searchInput: { flex: 1, color: "#F0F0F5", fontSize: 14 },
+  searchContainerFocused: {
+    borderColor: "rgba(138, 43, 226, 0.35)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+  },
   clearIcon: { color: "#56566A", fontSize: 14, padding: 4 },
   bookAbbr: {
     color: "#A855F7",
@@ -298,7 +305,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
     letterSpacing: 1.5,
     marginBottom: 4,
-    opacity: 0.6,
+    opacity: 0.8,
   },
   bookName: {
     fontSize: 14,

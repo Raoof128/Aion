@@ -1,33 +1,14 @@
 import { Tabs } from "expo-router";
 import { View, Text, StyleSheet, Platform } from "react-native";
 import * as Haptics from "expo-haptics";
+import { colors } from "../../lib/theme";
 
-const colors = {
-  void: "#000000",
-  obsidian: "#0A0A0C",
-  purple: "#8A2BE2",
-  purpleGlow: "#A855F7",
-  textGhost: "#56566A",
-  glassBorder: "rgba(255, 255, 255, 0.06)",
-};
-
-function TabIcon({
-  icon,
-  label,
-  focused,
-}: {
-  icon: string;
-  label: string;
-  focused: boolean;
-}) {
+function TabIcon({ icon, label, focused }: { icon: string; label: string; focused: boolean }) {
   return (
     <View style={styles.tabItem}>
-      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>
-        {icon}
-      </Text>
-      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
-        {label}
-      </Text>
+      <Text style={[styles.tabIcon, focused && styles.tabIconActive]}>{icon}</Text>
+      <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
+      {focused && <View style={styles.tabDot} />}
     </View>
   );
 }
@@ -91,9 +72,9 @@ const styles = StyleSheet.create({
     backgroundColor: colors.void,
     borderTopWidth: 1,
     borderTopColor: colors.glassBorder,
-    height: 70,
-    paddingBottom: 8,
-    paddingTop: 8,
+    height: 60,
+    paddingBottom: 4,
+    paddingTop: 6,
   },
   tabItem: {
     alignItems: "center",
@@ -114,5 +95,12 @@ const styles = StyleSheet.create({
   },
   tabLabelActive: {
     color: colors.purpleGlow,
+  },
+  tabDot: {
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: colors.purple,
+    marginTop: 2,
   },
 });

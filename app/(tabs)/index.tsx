@@ -242,7 +242,7 @@ const styles = StyleSheet.create({
     borderColor: "rgba(138, 43, 226, 0.15)",
     borderRadius: 16,
     padding: 20,
-    marginBottom: 32,
+    marginBottom: 16,
   },
   votdLabel: {
     color: colors.purpleGlow,
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     paddingHorizontal: 16,
     paddingVertical: 14,
-    marginBottom: 24,
+    marginBottom: 16,
   },
   readerButtonHovered: {
     backgroundColor: "rgba(138, 43, 226, 0.06)",
