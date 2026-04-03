@@ -41,6 +41,7 @@ export default function ChapterReaderScreen() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [scrollProgress, setScrollProgress] = useState(0);
+  const [copyFeedback, setCopyFeedback] = useState<number | null>(null);
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
@@ -86,12 +87,19 @@ export default function ChapterReaderScreen() {
 
   const handleVerseCopy = async (v: Verse) => {
     const text = `${book?.name} ${chapterNum}:${v.verse} — "${v.content}"`;
-    if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
-      await navigator.clipboard.writeText(text);
-    }
+    try {
+      if (Platform.OS === "web" && typeof navigator !== "undefined" && navigator.clipboard) {
+        await navigator.clipboard.writeText(text);
+      } else {
+        const Clipboard = await import("expo-clipboard");
+        await Clipboard.setStringAsync(text);
+      }
+    } catch {}
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
+    setCopyFeedback(v.verse);
+    setTimeout(() => setCopyFeedback(null), 1200);
     setSelectedVerse(null);
   };
 
@@ -121,8 +129,8 @@ export default function ChapterReaderScreen() {
 
   const handleBack = useCallback(() => {
     triggerHaptic();
-    router.back();
-  }, [router]);
+    router.push(`/reader/${bookId}`);
+  }, [router, bookId]);
 
   const navigateChapter = useCallback(
     (dir: "prev" | "next") => {
@@ -267,20 +275,23 @@ export default function ChapterReaderScreen() {
                     ]}
                   >
                     <Text style={styles.verseNumber}>{v.verse}</Text>
-                    <Text style={styles.verseContent}>{v.content}</Text>
+                    <Text style={styles.verseContent}>
+                      {v.content}
+                      {copyFeedback === v.verse && <Text style={styles.copiedBadge}> ✓ Copied</Text>}
+                    </Text>
                   </Pressable>
                   {selectedVerse === v.verse && (
                     <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
-                      <Pressable onPress={() => handleVerseCopy(v)} style={styles.verseActionBtn}>
+                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }} style={styles.verseActionBtn}>
                         <Text style={styles.verseActionText}>Copy</Text>
                       </Pressable>
-                      <Pressable onPress={() => handleVerseBookmark(v)} style={styles.verseActionBtn}>
+                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }} style={styles.verseActionBtn}>
                         <Text style={styles.verseActionText}>🔖 Bookmark</Text>
                       </Pressable>
-                      <Pressable onPress={() => handleVerseShare(v)} style={styles.verseActionBtn}>
+                      <Pressable onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }} style={styles.verseActionBtn}>
                         <Text style={styles.verseActionText}>Share</Text>
                       </Pressable>
-                      <Pressable onPress={() => handleAskAion(v)} style={[styles.verseActionBtn, styles.verseActionPrimary]}>
+                      <Pressable onPress={(e) => { e.stopPropagation(); handleAskAion(v); }} style={[styles.verseActionBtn, styles.verseActionPrimary]}>
                         <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>✦ Ask Aion</Text>
                       </Pressable>
                     </Animated.View>
@@ -591,5 +602,10 @@ const styles = StyleSheet.create({
   },
   verseActionPrimaryText: {
     color: "#A855F7",
+  },
+  copiedBadge: {
+    color: "#A855F7",
+    fontSize: 12,
+    fontStyle: "italic",
   },
 });
