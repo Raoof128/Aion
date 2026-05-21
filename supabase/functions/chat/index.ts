@@ -10,6 +10,7 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
 
 // --- Constants ---
 const MAX_MESSAGE_LENGTH = 500;
+const UUID_REGEX = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 // --- IP Extraction ---
 function getClientIp(req: Request): string {
@@ -239,6 +240,28 @@ async function persistMessages(
     if (error) throw new Error(`Create conversation error: ${error.message}`);
     convId = data.id;
   } else {
+    // Validate UUID format to prevent DB type mismatch errors
+    if (!UUID_REGEX.test(convId)) {
+      throw new Error("Invalid conversation ID format");
+    }
+
+    // Verify ownership to prevent IDOR (Insecure Direct Object Reference)
+    const { data: conv, error: convError } = await supabase
+      .from("conversations")
+      .select("user_id")
+      .eq("id", convId)
+      .maybeSingle();
+
+    if (convError) {
+      throw new Error(`Database error verifying conversation: ${convError.message}`);
+    }
+    if (!conv) {
+      throw new Error("Conversation not found");
+    }
+    if (conv.user_id !== userId) {
+      throw new Error("Unauthorized: Conversation does not belong to this user");
+    }
+
     await supabase
       .from("conversations")
       .update({ updated_at: new Date().toISOString() })

@@ -8,6 +8,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Backend IDOR Security Fix
+- **Summary:** Performed a backend security audit and fixed an Insecure Direct Object Reference (IDOR) vulnerability in the chat Supabase Edge Function (`supabase/functions/chat/index.ts`). The function now validates the UUID format of incoming `conversation_id` and verifies that the authenticated user owns the conversation before updating it or inserting new messages, preventing users from altering others' conversations.
+- **Files Changed:**
+  - [supabase/functions/chat/index.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/supabase/functions/chat/index.ts) - Added UUID format validation and ownership checks before conversation database updates and message inserts.
+- **Verification:** Ran `deno check supabase/functions/chat/index.ts`, `npm run lint`, `npm run format`, and `npm run type-check`, all completing with 0 errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Syntax Fix & Supabase Resilience
 - **Summary:** Fixed a syntax error in the chapter reader screen by removing a duplicate closing parenthesis and semicolon. Additionally, made the Supabase client instantiation resilient by providing fallback values and console warnings when environment variables are missing, preventing import-time app crashes.
 - **Files Changed:**
