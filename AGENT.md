@@ -11,6 +11,24 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Dependency Upgrades
+- **Summary:** Upgraded non-Expo dependencies to their latest compatible versions, aligned Expo modules with Expo SDK 54 recommended versions via `npx expo install --fix`, and pinned `react-dom` to `19.1.0` to resolve a peer dependency conflict with `react@19.1.0` required by `react-native`.
+- **Files Changed:**
+  - [package.json](file:///Users/raoof.r12/Desktop/Raouf/Aion/package.json) - Upgraded dependencies/devDependencies and pinned `react-dom` to `19.1.0`.
+- **Verification:** Ran `npm install` and verified all packages resolved cleanly with 0 vulnerabilities. Ran `npm run lint` and verified linter output is error-free.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Dependency Security Vulnerabilities
+- **Summary:** Resolved npm audit security vulnerabilities (XSS in postcss and ReDoS in markdown-it) by configuring npm overrides.
+- **Files Changed:**
+  - [package.json](file:///Users/raoof.r12/Desktop/Raouf/Aion/package.json) - Added overrides for `postcss` (`^8.5.15`) and `markdown-it` (`^14.1.1`).
+- **Verification:** Ran `npm install` and verified `npm audit` reports 0 vulnerabilities. Verified `npm run lint` still runs successfully with 0 errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** ESLint Dependency Conflict
 - **Summary:** Resolved `npm install` peer dependency conflict between `eslint` and `eslint-plugin-react` by downgrading `eslint` from `^10.1.0` to `^9.39.0`.
 - **Files Changed:**
