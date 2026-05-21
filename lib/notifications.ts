@@ -25,11 +25,23 @@ export async function setDailyVerseEnabled(enabled: boolean): Promise<void> {
 // Sample daily verses for the notification
 const DAILY_VERSES = [
   { ref: "Psalm 46:10", text: "Be still, and know that I am God." },
-  { ref: "Proverbs 3:5", text: "Trust in the LORD with all your heart and lean not on your own understanding." },
-  { ref: "Isaiah 41:10", text: "So do not fear, for I am with you; do not be dismayed, for I am your God." },
+  {
+    ref: "Proverbs 3:5",
+    text: "Trust in the LORD with all your heart and lean not on your own understanding.",
+  },
+  {
+    ref: "Isaiah 41:10",
+    text: "So do not fear, for I am with you; do not be dismayed, for I am your God.",
+  },
   { ref: "Philippians 4:13", text: "I can do all things through Christ who strengthens me." },
-  { ref: "Jeremiah 29:11", text: "For I know the plans I have for you, declares the LORD, plans to prosper you." },
-  { ref: "Romans 8:28", text: "And we know that in all things God works for the good of those who love him." },
+  {
+    ref: "Jeremiah 29:11",
+    text: "For I know the plans I have for you, declares the LORD, plans to prosper you.",
+  },
+  {
+    ref: "Romans 8:28",
+    text: "And we know that in all things God works for the good of those who love him.",
+  },
   { ref: "Psalm 23:1", text: "The LORD is my shepherd; I shall not want." },
 ];
 

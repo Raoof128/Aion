@@ -20,11 +20,8 @@ function PulsingDotItem({ delay }: { delay: number }) {
   const opacity = useSharedValue(0.3);
 
   useEffect(() => {
-    opacity.value = withDelay(
-      delay,
-      withRepeat(withTiming(1, { duration: 600 }), -1, true)
-    );
-  }, []);
+    opacity.value = withDelay(delay, withRepeat(withTiming(1, { duration: 600 }), -1, true));
+  }, [delay, opacity]);
 
   const style = useAnimatedStyle(() => ({
     opacity: opacity.value,
@@ -32,10 +29,7 @@ function PulsingDotItem({ delay }: { delay: number }) {
 
   return (
     <Animated.View
-      style={[
-        { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.purple },
-        style,
-      ]}
+      style={[{ width: 6, height: 6, borderRadius: 3, backgroundColor: colors.purple }, style]}
     />
   );
 }
@@ -62,15 +56,38 @@ const markdownStyles = {
   body: { color: colors.textPrimary, fontSize: 15, fontFamily: fonts.ui, lineHeight: 26 },
   heading1: { color: colors.white, fontSize: 22, fontWeight: "700" as const, marginVertical: 8 },
   heading2: { color: colors.white, fontSize: 18, fontWeight: "700" as const, marginVertical: 6 },
-  heading3: { color: colors.textPrimary, fontSize: 16, fontWeight: "600" as const, marginVertical: 4 },
+  heading3: {
+    color: colors.textPrimary,
+    fontSize: 16,
+    fontWeight: "600" as const,
+    marginVertical: 4,
+  },
   strong: { color: colors.white, fontWeight: "700" as const },
   em: { color: colors.textSecondary, fontStyle: "italic" as const },
   bullet_list: { marginVertical: 4 },
   ordered_list: { marginVertical: 4 },
   list_item: { marginVertical: 2 },
-  code_inline: { backgroundColor: colors.glass, color: colors.purpleGlow, paddingHorizontal: 4, borderRadius: 4, fontFamily: "monospace" },
-  code_block: { backgroundColor: colors.onyx, padding: 12, borderRadius: 8, fontFamily: "monospace", color: colors.textPrimary },
-  blockquote: { borderLeftWidth: 3, borderLeftColor: colors.purple, paddingLeft: 12, marginVertical: 8, opacity: 0.8 },
+  code_inline: {
+    backgroundColor: colors.glass,
+    color: colors.purpleGlow,
+    paddingHorizontal: 4,
+    borderRadius: 4,
+    fontFamily: "monospace",
+  },
+  code_block: {
+    backgroundColor: colors.onyx,
+    padding: 12,
+    borderRadius: 8,
+    fontFamily: "monospace",
+    color: colors.textPrimary,
+  },
+  blockquote: {
+    borderLeftWidth: 3,
+    borderLeftColor: colors.purple,
+    paddingLeft: 12,
+    marginVertical: 8,
+    opacity: 0.8,
+  },
   link: { color: colors.purpleGlow },
 };
 
@@ -130,7 +147,10 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
         <View style={styles.messageActions}>
           <Pressable
             onPress={handleCopyResponse}
-            style={({ pressed }: any) => [styles.messageActionButton, pressed && { opacity: 0.7 }]}
+            style={({ pressed }: { pressed: boolean }) => [
+              styles.messageActionButton,
+              pressed && { opacity: 0.7 },
+            ]}
             accessibilityLabel="Copy response"
             accessibilityRole="button"
           >
@@ -142,7 +162,10 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
           {onRegenerate && (
             <Pressable
               onPress={onRegenerate}
-              style={({ pressed }: any) => [styles.messageActionButton, pressed && { opacity: 0.7 }]}
+              style={({ pressed }: { pressed: boolean }) => [
+                styles.messageActionButton,
+                pressed && { opacity: 0.7 },
+              ]}
               accessibilityLabel="Regenerate response"
               accessibilityRole="button"
             >
@@ -154,7 +177,11 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
           )}
           <Pressable
             onPress={() => setFeedback("up")}
-            style={({ pressed }: any) => [styles.messageActionButton, feedback === "up" && styles.feedbackActive, pressed && { opacity: 0.7 }]}
+            style={({ pressed }: { pressed: boolean }) => [
+              styles.messageActionButton,
+              feedback === "up" && styles.feedbackActive,
+              pressed && { opacity: 0.7 },
+            ]}
             accessibilityLabel="Helpful"
             accessibilityRole="button"
           >
@@ -162,18 +189,27 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
           </Pressable>
           <Pressable
             onPress={() => setFeedback("down")}
-            style={({ pressed }: any) => [styles.messageActionButton, feedback === "down" && styles.feedbackActive, pressed && { opacity: 0.7 }]}
+            style={({ pressed }: { pressed: boolean }) => [
+              styles.messageActionButton,
+              feedback === "down" && styles.feedbackActive,
+              pressed && { opacity: 0.7 },
+            ]}
             accessibilityLabel="Not helpful"
             accessibilityRole="button"
           >
-            <ThumbsDown size={14} color={feedback === "down" ? colors.purpleGlow : colors.textMuted} />
+            <ThumbsDown
+              size={14}
+              color={feedback === "down" ? colors.purpleGlow : colors.textMuted}
+            />
           </Pressable>
         </View>
       )}
       {verses && verses.length > 0 && (
         <>
           <View style={styles.verseSeparator} />
-          <Text style={styles.verseCountLabel}>{verses.length} verse{verses.length !== 1 ? "s" : ""} found</Text>
+          <Text style={styles.verseCountLabel}>
+            {verses.length} verse{verses.length !== 1 ? "s" : ""} found
+          </Text>
           <View style={styles.versesContainer}>
             {verses.map((v, i) => (
               <VerseCard key={`${v.book_id}-${v.chapter}-${v.verse}`} verse={v} index={i} />

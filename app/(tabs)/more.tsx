@@ -50,10 +50,7 @@ function ConversationItem({
 
   const handleRename = async () => {
     if (!editTitle.trim()) return;
-    await supabase
-      .from("conversations")
-      .update({ title: editTitle.trim() })
-      .eq("id", item.id);
+    await supabase.from("conversations").update({ title: editTitle.trim() }).eq("id", item.id);
     queryClient.invalidateQueries({ queryKey: ["conversations"] });
     setIsEditing(false);
   };
@@ -69,7 +66,7 @@ function ConversationItem({
         onPressOut={() => {
           scale.value = withSpring(1);
         }}
-        style={({ hovered }: any) => [
+        style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
           styles.conversationRow,
           hovered && styles.conversationRowHovered,
         ]}
@@ -99,7 +96,10 @@ function ConversationItem({
           </View>
           <Pressable
             onPress={() => setIsEditing(true)}
-            style={({ hovered }: any) => [styles.editButton, hovered && styles.editButtonHovered]}
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+              styles.editButton,
+              hovered && styles.editButtonHovered,
+            ]}
             accessibilityLabel="Rename conversation"
             accessibilityRole="button"
           >
@@ -174,7 +174,7 @@ export default function MoreScreen() {
       <View style={styles.actionsSection}>
         <Pressable
           onPress={handleNewChat}
-          style={({ hovered }: any) => [
+          style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
             styles.newChatButton,
             hovered && styles.newChatButtonHovered,
           ]}
@@ -202,9 +202,7 @@ export default function MoreScreen() {
         <View style={styles.emptyContainer}>
           <Sparkles size={20} color={colors.textGhost} />
           <Text style={styles.emptyTitle}>No conversations yet</Text>
-          <Text style={styles.emptySubtitle}>
-            Your chat history will appear here
-          </Text>
+          <Text style={styles.emptySubtitle}>Your chat history will appear here</Text>
         </View>
       ) : (
         <FlatList

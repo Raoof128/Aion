@@ -4,7 +4,12 @@ import { ActivityIndicator, View, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { useFonts, Inter_400Regular, Inter_500Medium, Inter_700Bold } from "@expo-google-fonts/inter";
+import {
+  useFonts,
+  Inter_400Regular,
+  Inter_500Medium,
+  Inter_700Bold,
+} from "@expo-google-fonts/inter";
 import {
   PlayfairDisplay_400Regular,
   PlayfairDisplay_400Regular_Italic,
@@ -14,6 +19,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { supabase } from "../lib/supabase";
 import { Onboarding } from "../components/Onboarding";
 import { colors } from "../lib/theme";
+
+import { SettingsProvider } from "../lib/settings";
 
 const queryClient = new QueryClient();
 
@@ -69,21 +76,26 @@ export default function RootLayout() {
   }
 
   return (
-    <QueryClientProvider client={queryClient}>
-      <GestureHandlerRootView style={styles.root}>
-        <Stack
-          screenOptions={{
-            headerShown: false,
-            contentStyle: { backgroundColor: colors.void },
-            animation: "slide_from_right",
-          }}
-        >
-          <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }} />
-          <Stack.Screen name="chat/[id]" options={{ headerShown: false, animation: "slide_from_bottom" }} />
-          <Stack.Screen name="reader" options={{ headerShown: false }} />
-        </Stack>
-      </GestureHandlerRootView>
-    </QueryClientProvider>
+    <SettingsProvider>
+      <QueryClientProvider client={queryClient}>
+        <GestureHandlerRootView style={styles.root}>
+          <Stack
+            screenOptions={{
+              headerShown: false,
+              contentStyle: { backgroundColor: colors.void },
+              animation: "slide_from_right",
+            }}
+          >
+            <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }} />
+            <Stack.Screen
+              name="chat/[id]"
+              options={{ headerShown: false, animation: "slide_from_bottom" }}
+            />
+            <Stack.Screen name="reader" options={{ headerShown: false }} />
+          </Stack>
+        </GestureHandlerRootView>
+      </QueryClientProvider>
+    </SettingsProvider>
   );
 }
 

@@ -21,7 +21,9 @@ export async function speak(text: string): Promise<void> {
     const utterance = new SpeechSynthesisUtterance(clean);
     utterance.rate = 0.9;
     utterance.pitch = 1.0;
-    utterance.onend = () => { isSpeaking = false; };
+    utterance.onend = () => {
+      isSpeaking = false;
+    };
     window.speechSynthesis.speak(utterance);
     isSpeaking = true;
   } else {
@@ -29,8 +31,12 @@ export async function speak(text: string): Promise<void> {
     Speech.speak(clean, {
       rate: 0.9,
       pitch: 1.0,
-      onDone: () => { isSpeaking = false; },
-      onStopped: () => { isSpeaking = false; },
+      onDone: () => {
+        isSpeaking = false;
+      },
+      onStopped: () => {
+        isSpeaking = false;
+      },
     });
   }
 }

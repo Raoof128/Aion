@@ -18,7 +18,27 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const toggleVoiceInput = () => {
     if (Platform.OS !== "web") return;
 
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    interface SpeechRecognitionEvent {
+      results: ArrayLike<ArrayLike<{ transcript: string }>>;
+    }
+
+    interface SpeechRecognitionInstance {
+      continuous: boolean;
+      interimResults: boolean;
+      lang: string;
+      onresult: ((event: SpeechRecognitionEvent) => void) | null;
+      onerror: (() => void) | null;
+      onend: (() => void) | null;
+      start: () => void;
+    }
+
+    const globalWindow = window as unknown as {
+      SpeechRecognition?: new () => SpeechRecognitionInstance;
+      webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
+    };
+
+    const SpeechRecognition =
+      globalWindow.SpeechRecognition || globalWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
 
     if (isListening) {
@@ -31,7 +51,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     recognition.interimResults = false;
     recognition.lang = "en-US";
 
-    recognition.onresult = (event: any) => {
+    recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setText((prev) => prev + (prev ? " " : "") + transcript);
       setIsListening(false);
@@ -63,7 +83,13 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
   return (
     <View style={styles.wrapper}>
-      <View style={[styles.container, disabled && styles.containerDisabled, isFocused && styles.containerFocused]}>
+      <View
+        style={[
+          styles.container,
+          disabled && styles.containerDisabled,
+          isFocused && styles.containerFocused,
+        ]}
+      >
         <View style={styles.inputCol}>
           <TextInput
             style={styles.input}
@@ -76,10 +102,17 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             onBlur={() => setIsFocused(false)}
             multiline
             editable={!disabled}
+            maxLength={500}
             accessibilityLabel="Message input"
           />
           {text.length > 0 && (
-            <Text style={[styles.charCount, text.length > 450 && styles.charCountWarn, text.length > 500 && styles.charCountError]}>
+            <Text
+              style={[
+                styles.charCount,
+                text.length > 450 && styles.charCountWarn,
+                text.length > 500 && styles.charCountError,
+              ]}
+            >
               {text.length}/500
             </Text>
           )}
@@ -91,16 +124,30 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             accessibilityLabel={isListening ? "Stop listening" : "Voice input"}
             accessibilityRole="button"
           >
-            {isListening ? <MicOff size={16} color="#DC2626" /> : <Mic size={16} color={colors.textGhost} />}
+            {isListening ? (
+              <MicOff size={16} color="#DC2626" />
+            ) : (
+              <Mic size={16} color={colors.textGhost} />
+            )}
           </Pressable>
         )}
-        <Animated.View style={[styles.sendButton, canSend ? styles.sendActive : styles.sendInactive, sendAnimStyle]}>
+        <Animated.View
+          style={[
+            styles.sendButton,
+            canSend ? styles.sendActive : styles.sendInactive,
+            sendAnimStyle,
+          ]}
+        >
           <Pressable
             onPress={handleSend}
-            onPressIn={() => { sendScale.value = withSpring(0.85); }}
-            onPressOut={() => { sendScale.value = withSpring(1); }}
+            onPressIn={() => {
+              sendScale.value = withSpring(0.85);
+            }}
+            onPressOut={() => {
+              sendScale.value = withSpring(1);
+            }}
             disabled={!canSend}
-            style={({ hovered }: any) => [
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
               styles.sendButtonInner,
               hovered && canSend && styles.sendButtonInnerHovered,
             ]}

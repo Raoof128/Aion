@@ -1,9 +1,34 @@
 import { useEffect } from "react";
-import { View, Text, ScrollView, KeyboardAvoidingView, Platform, StyleSheet, Pressable } from "react-native";
+import {
+  View,
+  Text,
+  ScrollView,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+  Pressable,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import Animated, { FadeInDown, FadeIn, useAnimatedStyle, useSharedValue, withRepeat, withTiming, Easing } from "react-native-reanimated";
-import { Search, Brain, Flame, Sparkle, Bird, Zap, BookOpen, ChevronRight} from "lucide-react-native";
+import Animated, {
+  FadeInDown,
+  FadeIn,
+  useAnimatedStyle,
+  useSharedValue,
+  withRepeat,
+  withTiming,
+  Easing,
+} from "react-native-reanimated";
+import {
+  Search,
+  Brain,
+  Flame,
+  Sparkle,
+  Bird,
+  Zap,
+  BookOpen,
+  ChevronRight,
+} from "lucide-react-native";
 import { PromptPill } from "../../components/PromptPill";
 import { ChatInput } from "../../components/ChatInput";
 import { colors, fonts } from "../../lib/theme";
@@ -35,9 +60,9 @@ export default function HomeScreen() {
     breathe.value = withRepeat(
       withTiming(1, { duration: 3000, easing: Easing.inOut(Easing.sin) }),
       -1,
-      true
+      true,
     );
-  }, []);
+  }, [breathe]);
 
   const breatheStyle = useAnimatedStyle(() => ({
     shadowOpacity: breathe.value,
@@ -61,12 +86,13 @@ export default function HomeScreen() {
         {/* Subtle background glow orb behind the logo area */}
         <View style={styles.glowOrb} />
 
-        <ScrollView style={styles.scrollContainer} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          style={styles.scrollContainer}
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+        >
           {/* Time-based greeting */}
-          <Animated.Text
-            entering={FadeIn.duration(400).delay(0)}
-            style={styles.greeting}
-          >
+          <Animated.Text entering={FadeIn.duration(400).delay(0)} style={styles.greeting}>
             {getGreeting()}
           </Animated.Text>
 
@@ -86,10 +112,7 @@ export default function HomeScreen() {
           />
 
           {/* Tagline */}
-          <Animated.Text
-            entering={FadeIn.duration(400).delay(600)}
-            style={styles.tagline}
-          >
+          <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
             "Seek, and you shall find."
           </Animated.Text>
 
@@ -102,13 +125,18 @@ export default function HomeScreen() {
           >
             <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
             <Text style={styles.votdContent}>"{votd.content}"</Text>
-            <Text style={styles.votdRef}>— {votd.book_name} {votd.chapter}:{votd.verse}</Text>
+            <Text style={styles.votdRef}>
+              — {votd.book_name} {votd.chapter}:{votd.verse}
+            </Text>
           </Animated.View>
 
           {/* Read Bible Button */}
           <Pressable
             onPress={() => router.push("/read")}
-            style={({ hovered }: any) => [styles.readerButton, hovered && styles.readerButtonHovered]}
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+              styles.readerButton,
+              hovered && styles.readerButtonHovered,
+            ]}
             accessibilityLabel="Open Bible Reader"
             accessibilityRole="button"
           >

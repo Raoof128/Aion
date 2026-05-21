@@ -5,14 +5,20 @@ import { Sparkles, BookOpen, MessageCircle, Menu } from "lucide-react-native";
 import Animated, { FadeIn } from "react-native-reanimated";
 import { colors } from "../../lib/theme";
 
-function TabIcon({ Icon, label, focused }: { Icon: React.ElementType; label: string; focused: boolean }) {
+function TabIcon({
+  Icon,
+  label,
+  focused,
+}: {
+  Icon: React.ElementType;
+  label: string;
+  focused: boolean;
+}) {
   return (
     <View style={styles.tabItem}>
       <Icon size={22} color={focused ? colors.purpleGlow : colors.textGhost} />
       <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>{label}</Text>
-      {focused && (
-        <Animated.View entering={FadeIn.duration(200)} style={styles.tabDot} />
-      )}
+      {focused && <Animated.View entering={FadeIn.duration(200)} style={styles.tabDot} />}
     </View>
   );
 }
@@ -39,18 +45,14 @@ export default function TabsLayout() {
         name="index"
         options={{
           tabBarAccessibilityLabel: "Home tab",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={Sparkles} label="Home" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Sparkles} label="Home" focused={focused} />,
         }}
       />
       <Tabs.Screen
         name="read"
         options={{
           tabBarAccessibilityLabel: "Read tab",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={BookOpen} label="Read" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon Icon={BookOpen} label="Read" focused={focused} />,
         }}
       />
       <Tabs.Screen
@@ -66,9 +68,7 @@ export default function TabsLayout() {
         name="more"
         options={{
           tabBarAccessibilityLabel: "More tab",
-          tabBarIcon: ({ focused }) => (
-            <TabIcon Icon={Menu} label="More" focused={focused} />
-          ),
+          tabBarIcon: ({ focused }) => <TabIcon Icon={Menu} label="More" focused={focused} />,
         }}
       />
     </Tabs>

@@ -1,7 +1,14 @@
 import { useState } from "react";
 import { View, Text, Pressable, Platform, StyleSheet, Share } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeIn, FadeInLeft, useAnimatedStyle, useSharedValue, withSequence, withTiming } from "react-native-reanimated";
+import Animated, {
+  FadeIn,
+  FadeInLeft,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { colors, fonts } from "../lib/theme";
 import type { Verse } from "../lib/types";
 
@@ -24,7 +31,7 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
   const triggerFlash = () => {
     flashOpacity.value = withSequence(
       withTiming(1, { duration: 100 }),
-      withTiming(0, { duration: 300 })
+      withTiming(0, { duration: 300 }),
     );
   };
 
@@ -63,7 +70,9 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
 
   return (
     <Animated.View
-      entering={FadeInLeft.delay(index * 100).duration(400).springify()}
+      entering={FadeInLeft.delay(index * 100)
+        .duration(400)
+        .springify()}
       style={styles.card}
       accessible={true}
       accessibilityLabel={`${reference}: ${verse.content}`}
@@ -74,7 +83,9 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
       <Animated.View style={flashStyle}>
         <View style={styles.header}>
           <View style={styles.verseBadge}>
-            <Text style={styles.verseBadgeText}>{verse.chapter}:{verse.verse}</Text>
+            <Text style={styles.verseBadgeText}>
+              {verse.chapter}:{verse.verse}
+            </Text>
           </View>
           <Text style={styles.reference}>{reference}</Text>
         </View>
@@ -91,7 +102,11 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
             "{expanded || !isLong ? verse.content : verse.content.slice(0, 150) + "..."}"
           </Text>
           {isLong && (
-            <Animated.Text entering={FadeIn.duration(200)} key={expanded ? "less" : "more"} style={styles.expandToggle}>
+            <Animated.Text
+              entering={FadeIn.duration(200)}
+              key={expanded ? "less" : "more"}
+              style={styles.expandToggle}
+            >
               {expanded ? "Show less" : "Show more"}
             </Animated.Text>
           )}
@@ -100,7 +115,10 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
         <View style={styles.actions}>
           <Pressable
             onPress={handleCopy}
-            style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+              styles.actionButton,
+              hovered && styles.actionButtonHovered,
+            ]}
             accessibilityLabel={copied ? "Copied to clipboard" : "Copy verse"}
             accessibilityHint="Copies this verse reference and text to the clipboard"
             accessibilityRole="button"
@@ -111,7 +129,10 @@ export function VerseCard({ verse, index = 0 }: VerseCardProps) {
           </Pressable>
           <Pressable
             onPress={handleShare}
-            style={({ hovered }: any) => [styles.actionButton, hovered && styles.actionButtonHovered]}
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+              styles.actionButton,
+              hovered && styles.actionButtonHovered,
+            ]}
             accessibilityLabel="Share verse"
             accessibilityHint="Opens the share sheet to share this verse"
             accessibilityRole="button"

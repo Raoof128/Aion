@@ -1,23 +1,12 @@
 import { useState, useCallback } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { ChevronLeft } from "lucide-react-native";
 import { colors, fonts } from "../../lib/theme";
-import {
-  OT_BOOKS,
-  NT_BOOKS,
-  BibleBook,
-} from "../../lib/bible-data";
+import { OT_BOOKS, NT_BOOKS, BibleBook } from "../../lib/bible-data";
 
 type Testament = "OT" | "NT";
 
@@ -38,7 +27,7 @@ export default function BookListScreen() {
       triggerHaptic();
       router.push(`/reader/${book.id}`);
     },
-    [router]
+    [router],
   );
 
   const handleTabPress = useCallback((tab: Testament) => {
@@ -53,7 +42,7 @@ export default function BookListScreen() {
         style={styles.bookCardWrapper}
       >
         <Pressable
-          style={({ pressed, hovered }: any) => [
+          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
             styles.bookCard,
             hovered && styles.bookCardHovered,
             pressed && styles.bookCardPressed,
@@ -71,7 +60,7 @@ export default function BookListScreen() {
         </Pressable>
       </Animated.View>
     ),
-    [handleBookPress]
+    [handleBookPress],
   );
 
   const keyExtractor = useCallback((item: BibleBook) => item.id, []);
@@ -82,7 +71,10 @@ export default function BookListScreen() {
         {/* Header */}
         <View style={styles.header}>
           <Pressable
-            onPress={() => { triggerHaptic(); router.back(); }}
+            onPress={() => {
+              triggerHaptic();
+              router.back();
+            }}
             style={styles.backButton}
             accessibilityLabel="Go back"
             accessibilityRole="button"
@@ -108,12 +100,7 @@ export default function BookListScreen() {
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === "OT" }}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "OT" && styles.tabTextActive,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "OT" && styles.tabTextActive]}>
               Old Testament (39)
             </Text>
           </Pressable>
@@ -124,12 +111,7 @@ export default function BookListScreen() {
             accessibilityRole="tab"
             accessibilityState={{ selected: activeTab === "NT" }}
           >
-            <Text
-              style={[
-                styles.tabText,
-                activeTab === "NT" && styles.tabTextActive,
-              ]}
-            >
+            <Text style={[styles.tabText, activeTab === "NT" && styles.tabTextActive]}>
               New Testament (27)
             </Text>
           </Pressable>

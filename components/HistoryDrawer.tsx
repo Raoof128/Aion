@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { View, Text, FlatList, Pressable, Alert, ActivityIndicator, Platform, StyleSheet, TextInput } from "react-native";
+import {
+  View,
+  Text,
+  FlatList,
+  Pressable,
+  Alert,
+  ActivityIndicator,
+  Platform,
+  StyleSheet,
+  TextInput,
+} from "react-native";
 import * as Haptics from "expo-haptics";
 import { Pencil, Sparkles } from "lucide-react-native";
 import { useRouter } from "expo-router";
@@ -11,7 +21,12 @@ import { colors, fonts } from "../lib/theme";
 import { timeAgo } from "../lib/utils";
 import type { Conversation } from "../lib/types";
 
-function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
+function ConversationItem({
+  item,
+  onOpen,
+  onDelete,
+  timeAgo,
+}: {
   item: Conversation;
   onOpen: (id: string) => void;
   onDelete: (id: string) => void;
@@ -38,9 +53,16 @@ function ConversationItem({ item, onOpen, onDelete, timeAgo }: {
       <Pressable
         onPress={() => !isEditing && onOpen(item.id)}
         onLongPress={() => !isEditing && onDelete(item.id)}
-        onPressIn={() => { if (!isEditing) scale.value = withSpring(0.98); }}
-        onPressOut={() => { scale.value = withSpring(1); }}
-        style={({ hovered }: any) => [styles.conversationRow, hovered && styles.conversationRowHovered]}
+        onPressIn={() => {
+          if (!isEditing) scale.value = withSpring(0.98);
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1);
+        }}
+        style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+          styles.conversationRow,
+          hovered && styles.conversationRowHovered,
+        ]}
         accessibilityLabel={`${item.title || "Untitled"}, ${timeAgo}`}
         accessibilityRole="button"
         accessibilityHint="Tap to open, long press to delete"
@@ -132,7 +154,10 @@ export function HistoryDrawer(props: DrawerContentComponentProps) {
 
       <Pressable
         onPress={handleNewChat}
-        style={({ hovered }: any) => [styles.newChatButton, hovered && styles.newChatButtonHovered]}
+        style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+          styles.newChatButton,
+          hovered && styles.newChatButtonHovered,
+        ]}
         accessibilityLabel="Start new chat"
         accessibilityRole="button"
       >

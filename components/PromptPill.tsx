@@ -1,6 +1,11 @@
 import { Pressable, Text, Platform, StyleSheet } from "react-native";
 import * as Haptics from "expo-haptics";
-import Animated, { FadeInUp, useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
+import Animated, {
+  FadeInUp,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { ChevronRight } from "lucide-react-native";
 import { colors, fonts } from "../lib/theme";
 
@@ -26,14 +31,20 @@ export function PromptPill({ Icon, label, onPress, index }: PromptPillProps) {
 
   return (
     <Animated.View
-      entering={FadeInUp.delay((index ?? 0) * 80).duration(300).springify()}
+      entering={FadeInUp.delay((index ?? 0) * 80)
+        .duration(300)
+        .springify()}
       style={animStyle}
     >
       <Pressable
         onPress={handlePress}
-        onPressIn={() => { scale.value = withSpring(0.97); }}
-        onPressOut={() => { scale.value = withSpring(1); }}
-        style={({ pressed, hovered }: any) => [
+        onPressIn={() => {
+          scale.value = withSpring(0.97);
+        }}
+        onPressOut={() => {
+          scale.value = withSpring(1);
+        }}
+        style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
           styles.pill,
           hovered && styles.pillHovered,
           pressed && styles.pillPressed,
@@ -41,7 +52,7 @@ export function PromptPill({ Icon, label, onPress, index }: PromptPillProps) {
         accessibilityLabel={label}
         accessibilityRole="button"
       >
-        {({ hovered }: any) => (
+        {({ hovered }: { pressed: boolean; hovered?: boolean }) => (
           <>
             <Icon size={16} color={colors.purpleGlow} />
             <Text style={[styles.label, hovered && styles.labelHovered]}>{label}</Text>

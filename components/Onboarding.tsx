@@ -7,7 +7,6 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Sparkles, Search, BookOpen } from "lucide-react-native";
 import { colors } from "../lib/theme";
 
-
 const SLIDES = [
   {
     Icon: Sparkles,
@@ -47,7 +46,12 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 
   return (
     <SafeAreaView style={styles.container}>
-      <Animated.View key={step} entering={FadeInRight.duration(300)} exiting={FadeOutLeft.duration(200)} style={styles.slide}>
+      <Animated.View
+        key={step}
+        entering={FadeInRight.duration(300)}
+        exiting={FadeOutLeft.duration(200)}
+        style={styles.slide}
+      >
         <slide.Icon size={48} color={colors.purpleGlow} />
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.subtitle}>{slide.subtitle}</Text>
@@ -70,9 +74,7 @@ export function Onboarding({ onComplete }: OnboardingProps) {
           accessibilityRole="button"
           accessibilityLabel={step < SLIDES.length - 1 ? "Next" : "Get Started"}
         >
-          <Text style={styles.buttonText}>
-            {step < SLIDES.length - 1 ? "Next" : "Get Started"}
-          </Text>
+          <Text style={styles.buttonText}>{step < SLIDES.length - 1 ? "Next" : "Get Started"}</Text>
         </Pressable>
 
         {step < SLIDES.length - 1 && (
@@ -95,16 +97,44 @@ export function Onboarding({ onComplete }: OnboardingProps) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.void, justifyContent: "center", alignItems: "center", padding: 32 },
+  container: {
+    flex: 1,
+    backgroundColor: colors.void,
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 32,
+  },
   slide: { alignItems: "center", maxWidth: 320 },
   icon: { marginBottom: 24 },
-  title: { color: colors.textPrimary, fontSize: 28, fontWeight: "200", letterSpacing: 2, textAlign: "center", marginBottom: 16 },
+  title: {
+    color: colors.textPrimary,
+    fontSize: 28,
+    fontWeight: "200",
+    letterSpacing: 2,
+    textAlign: "center",
+    marginBottom: 16,
+  },
   subtitle: { color: colors.textMuted, fontSize: 15, lineHeight: 24, textAlign: "center" },
   footer: { position: "absolute", bottom: 60, alignItems: "center", width: "100%" },
   dots: { flexDirection: "row", marginBottom: 24, gap: 8 },
   dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: colors.glassBorder },
-  dotActive: { backgroundColor: colors.purple, shadowColor: colors.purple, shadowOffset: { width: 0, height: 0 }, shadowOpacity: 0.8, shadowRadius: 6 },
-  button: { backgroundColor: colors.purple, borderRadius: 16, paddingHorizontal: 40, paddingVertical: 14, shadowColor: colors.purple, shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.4, shadowRadius: 12 },
+  dotActive: {
+    backgroundColor: colors.purple,
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 6,
+  },
+  button: {
+    backgroundColor: colors.purple,
+    borderRadius: 16,
+    paddingHorizontal: 40,
+    paddingVertical: 14,
+    shadowColor: colors.purple,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+  },
   buttonText: { color: colors.white, fontSize: 16, fontWeight: "600", letterSpacing: 1 },
   skipButton: { marginTop: 16 },
   skipText: { color: colors.textGhost, fontSize: 13 },

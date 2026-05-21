@@ -1,5 +1,14 @@
-import { useEffect, useRef, useState } from "react";
-import { View, Text, FlatList, KeyboardAvoidingView, Platform, Pressable, StyleSheet, Share } from "react-native";
+import { useEffect, useRef, useState, useCallback } from "react";
+import {
+  View,
+  Text,
+  FlatList,
+  KeyboardAvoidingView,
+  Platform,
+  Pressable,
+  StyleSheet,
+  Share,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, { FadeIn, FadeInUp, FadeOut } from "react-native-reanimated";
@@ -20,11 +29,7 @@ interface DisplayMessage {
   timestamp: string;
 }
 
-const FOLLOW_UPS = [
-  "Tell me more about this",
-  "Find similar verses",
-  "Explain in simpler terms",
-];
+const FOLLOW_UPS = ["Tell me more about this", "Find similar verses", "Explain in simpler terms"];
 
 export default function ChatScreen() {
   const { id, initialMessage } = useLocalSearchParams<{
@@ -45,28 +50,7 @@ export default function ChatScreen() {
 
   const isNewChat = id === "new" || id.startsWith("new-");
 
-  useEffect(() => {
-    setMessages([]);
-    hasSentInitial.current = false;
-    reset();
-
-    if (!isNewChat) {
-      loadMessages(id);
-    }
-  }, [id]);
-
-  useEffect(() => {
-    if (error) setErrorDismissed(false);
-  }, [error]);
-
-  useEffect(() => {
-    if (initialMessage && !hasSentInitial.current) {
-      hasSentInitial.current = true;
-      handleSend(initialMessage);
-    }
-  }, [initialMessage]);
-
-  async function loadMessages(convId: string) {
+  const loadMessages = useCallback(async (convId: string) => {
     const { data, error } = await supabase
       .from("messages")
       .select("*")
@@ -85,27 +69,59 @@ export default function ChatScreen() {
           role: m.role,
           content: m.content,
           verses: m.verses,
-          timestamp: new Date(m.created_at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+          timestamp: new Date(m.created_at).toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+          }),
         })),
       );
     }
-  }
+  }, []);
 
-  const handleSend = async (text: string) => {
-    const userMsg: DisplayMessage = {
-      id: `user-${Date.now()}`,
-      role: "user",
-      content: text,
-      timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-    };
-    setMessages((prev) => [...prev, userMsg]);
+  const handleSend = useCallback(
+    async (text: string) => {
+      const userMsg: DisplayMessage = {
+        id: `user-${Date.now()}`,
+        role: "user",
+        content: text,
+        timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+      };
+      setMessages((prev) => [...prev, userMsg]);
 
-    const convId = !isNewChat ? id : conversationId;
-    await sendMessage(text, convId);
-  };
+      const convId = !isNewChat ? id : conversationId;
+      await sendMessage(text, convId);
+    },
+    [isNewChat, id, conversationId, sendMessage],
+  );
 
   useEffect(() => {
-    if (!isStreaming && streamingText) {
+    setMessages([]);
+    hasSentInitial.current = false;
+    reset();
+
+    if (!isNewChat) {
+      loadMessages(id);
+    }
+  }, [id, isNewChat, reset, loadMessages]);
+
+  useEffect(() => {
+    if (error) setErrorDismissed(false);
+  }, [error]);
+
+  useEffect(() => {
+    if (initialMessage && !hasSentInitial.current) {
+      hasSentInitial.current = true;
+      handleSend(initialMessage);
+    }
+  }, [initialMessage, handleSend]);
+
+  const wasStreaming = useRef(false);
+
+  useEffect(() => {
+    if (isStreaming) {
+      wasStreaming.current = true;
+    } else if (wasStreaming.current && streamingText) {
+      wasStreaming.current = false;
       const assistantMsg: DisplayMessage = {
         id: `assistant-${Date.now()}`,
         role: "assistant",
@@ -115,15 +131,15 @@ export default function ChatScreen() {
       };
       setMessages((prev) => [...prev, assistantMsg]);
     }
-  }, [isStreaming]);
+  }, [isStreaming, streamingText, verses]);
 
   const handleRegenerate = async () => {
     if (messages.length < 2) return;
     // Find the last user message
-    const lastUserMsg = [...messages].reverse().find(m => m.role === "user");
+    const lastUserMsg = [...messages].reverse().find((m) => m.role === "user");
     if (!lastUserMsg) return;
     // Remove last assistant message
-    setMessages(prev => prev.slice(0, -1));
+    setMessages((prev) => prev.slice(0, -1));
     // Re-send
     const convId = !isNewChat ? id : conversationId;
     await sendMessage(lastUserMsg.content, convId);
@@ -137,7 +153,9 @@ export default function ChatScreen() {
         const role = m.role === "user" ? "You" : "Aion";
         let msg = `${role}: ${m.content}`;
         if (m.verses && m.verses.length > 0) {
-          const refs = m.verses.map(v => `  📖 ${v.book_name} ${v.chapter}:${v.verse} — "${v.content}"`).join("\n");
+          const refs = m.verses
+            .map((v) => `  📖 ${v.book_name} ${v.chapter}:${v.verse} — "${v.content}"`)
+            .join("\n");
           msg += "\n" + refs;
         }
         return msg;
@@ -173,7 +191,10 @@ export default function ChatScreen() {
             if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
             router.back();
           }}
-          style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
+          style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+            styles.headerButton,
+            hovered && styles.headerButtonHovered,
+          ]}
           accessibilityLabel="Go back"
           accessibilityRole="button"
         >
@@ -188,7 +209,10 @@ export default function ChatScreen() {
         </View>
         <Pressable
           onPress={handleExport}
-          style={({ hovered }: any) => [styles.headerButton, hovered && styles.headerButtonHovered]}
+          style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+            styles.headerButton,
+            hovered && styles.headerButtonHovered,
+          ]}
           accessibilityLabel="Export conversation"
           accessibilityRole="button"
         >
@@ -247,10 +271,11 @@ export default function ChatScreen() {
                   <Animated.View key={text} entering={FadeInUp.delay(i * 80).duration(200)}>
                     <Pressable
                       onPress={() => {
-                        if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        if (Platform.OS !== "web")
+                          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                         handleSend(text);
                       }}
-                      style={({ pressed, hovered }: any) => [
+                      style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
                         styles.followUpChip,
                         hovered && styles.followUpChipHovered,
                         pressed && styles.followUpChipPressed,
@@ -281,7 +306,11 @@ export default function ChatScreen() {
         )}
 
         {showScrollButton && (
-          <Animated.View entering={FadeIn.duration(200)} exiting={FadeOut.duration(200)} style={styles.scrollToBottomWrapper}>
+          <Animated.View
+            entering={FadeIn.duration(200)}
+            exiting={FadeOut.duration(200)}
+            style={styles.scrollToBottomWrapper}
+          >
             <Pressable
               onPress={() => {
                 if (Platform.OS !== "web") Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);

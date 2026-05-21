@@ -84,27 +84,164 @@ export const NT_BOOKS = BIBLE_BOOKS.filter((b) => b.testament === "NT");
 
 // Verse of the Day pool — curated popular verses
 export const VOTD_POOL = [
-  { book_id: "PSA", book_name: "Psalms", chapter: 46, verse: 10, content: "Be still, and know that I am God; I will be exalted among the nations, I will be exalted over the earth." },
-  { book_id: "PRO", book_name: "Proverbs", chapter: 3, verse: 5, content: "Trust in the LORD with all your heart, and lean not on your own understanding." },
-  { book_id: "ISA", book_name: "Isaiah", chapter: 41, verse: 10, content: "Do not fear, for I am with you; do not be afraid, for I am your God. I will strengthen you; I will surely help you; I will uphold you with My righteous right hand." },
-  { book_id: "PHP", book_name: "Philippians", chapter: 4, verse: 13, content: "I can do all things through Christ who gives me strength." },
-  { book_id: "JER", book_name: "Jeremiah", chapter: 29, verse: 11, content: "For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, to give you a future and a hope." },
-  { book_id: "ROM", book_name: "Romans", chapter: 8, verse: 28, content: "And we know that God works all things together for the good of those who love Him, who are called according to His purpose." },
-  { book_id: "PSA", book_name: "Psalms", chapter: 23, verse: 1, content: "The LORD is my shepherd; I shall not want." },
-  { book_id: "JHN", book_name: "John", chapter: 3, verse: 16, content: "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life." },
-  { book_id: "MAT", book_name: "Matthew", chapter: 11, verse: 28, content: "Come to Me, all you who are weary and burdened, and I will give you rest." },
-  { book_id: "PSA", book_name: "Psalms", chapter: 119, verse: 105, content: "Your word is a lamp to my feet and a light to my path." },
-  { book_id: "ISA", book_name: "Isaiah", chapter: 40, verse: 31, content: "But those who wait upon the LORD will renew their strength; they will mount up with wings like eagles; they will run and not grow weary, they will walk and not faint." },
-  { book_id: "ROM", book_name: "Romans", chapter: 12, verse: 2, content: "Do not be conformed to this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what is the good, pleasing, and perfect will of God." },
-  { book_id: "GAL", book_name: "Galatians", chapter: 5, verse: 22, content: "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faithfulness," },
-  { book_id: "HEB", book_name: "Hebrews", chapter: 11, verse: 1, content: "Now faith is the assurance of what we hope for and the certainty of what we do not see." },
-  { book_id: "PSA", book_name: "Psalms", chapter: 37, verse: 4, content: "Delight yourself in the LORD, and He will give you the desires of your heart." },
-  { book_id: "ECC", book_name: "Ecclesiastes", chapter: 3, verse: 1, content: "To everything there is a season, and a time for every purpose under heaven." },
-  { book_id: "1CO", book_name: "1 Corinthians", chapter: 13, verse: 4, content: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud." },
-  { book_id: "JOS", book_name: "Joshua", chapter: 1, verse: 9, content: "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go." },
-  { book_id: "PRO", book_name: "Proverbs", chapter: 16, verse: 3, content: "Commit your works to the LORD and your plans will be achieved." },
-  { book_id: "2TI", book_name: "2 Timothy", chapter: 1, verse: 7, content: "For God has not given us a spirit of fear, but of power, love, and self-discipline." },
-  { book_id: "PSA", book_name: "Psalms", chapter: 91, verse: 1, content: "He who dwells in the shelter of the Most High will abide in the shadow of the Almighty." },
+  {
+    book_id: "PSA",
+    book_name: "Psalms",
+    chapter: 46,
+    verse: 10,
+    content:
+      "Be still, and know that I am God; I will be exalted among the nations, I will be exalted over the earth.",
+  },
+  {
+    book_id: "PRO",
+    book_name: "Proverbs",
+    chapter: 3,
+    verse: 5,
+    content: "Trust in the LORD with all your heart, and lean not on your own understanding.",
+  },
+  {
+    book_id: "ISA",
+    book_name: "Isaiah",
+    chapter: 41,
+    verse: 10,
+    content:
+      "Do not fear, for I am with you; do not be afraid, for I am your God. I will strengthen you; I will surely help you; I will uphold you with My righteous right hand.",
+  },
+  {
+    book_id: "PHP",
+    book_name: "Philippians",
+    chapter: 4,
+    verse: 13,
+    content: "I can do all things through Christ who gives me strength.",
+  },
+  {
+    book_id: "JER",
+    book_name: "Jeremiah",
+    chapter: 29,
+    verse: 11,
+    content:
+      "For I know the plans I have for you, declares the LORD, plans to prosper you and not to harm you, to give you a future and a hope.",
+  },
+  {
+    book_id: "ROM",
+    book_name: "Romans",
+    chapter: 8,
+    verse: 28,
+    content:
+      "And we know that God works all things together for the good of those who love Him, who are called according to His purpose.",
+  },
+  {
+    book_id: "PSA",
+    book_name: "Psalms",
+    chapter: 23,
+    verse: 1,
+    content: "The LORD is my shepherd; I shall not want.",
+  },
+  {
+    book_id: "JHN",
+    book_name: "John",
+    chapter: 3,
+    verse: 16,
+    content:
+      "For God so loved the world that He gave His one and only Son, that everyone who believes in Him shall not perish but have eternal life.",
+  },
+  {
+    book_id: "MAT",
+    book_name: "Matthew",
+    chapter: 11,
+    verse: 28,
+    content: "Come to Me, all you who are weary and burdened, and I will give you rest.",
+  },
+  {
+    book_id: "PSA",
+    book_name: "Psalms",
+    chapter: 119,
+    verse: 105,
+    content: "Your word is a lamp to my feet and a light to my path.",
+  },
+  {
+    book_id: "ISA",
+    book_name: "Isaiah",
+    chapter: 40,
+    verse: 31,
+    content:
+      "But those who wait upon the LORD will renew their strength; they will mount up with wings like eagles; they will run and not grow weary, they will walk and not faint.",
+  },
+  {
+    book_id: "ROM",
+    book_name: "Romans",
+    chapter: 12,
+    verse: 2,
+    content:
+      "Do not be conformed to this world, but be transformed by the renewing of your mind. Then you will be able to test and approve what is the good, pleasing, and perfect will of God.",
+  },
+  {
+    book_id: "GAL",
+    book_name: "Galatians",
+    chapter: 5,
+    verse: 22,
+    content:
+      "But the fruit of the Spirit is love, joy, peace, patience, kindness, goodness, faithfulness,",
+  },
+  {
+    book_id: "HEB",
+    book_name: "Hebrews",
+    chapter: 11,
+    verse: 1,
+    content:
+      "Now faith is the assurance of what we hope for and the certainty of what we do not see.",
+  },
+  {
+    book_id: "PSA",
+    book_name: "Psalms",
+    chapter: 37,
+    verse: 4,
+    content: "Delight yourself in the LORD, and He will give you the desires of your heart.",
+  },
+  {
+    book_id: "ECC",
+    book_name: "Ecclesiastes",
+    chapter: 3,
+    verse: 1,
+    content: "To everything there is a season, and a time for every purpose under heaven.",
+  },
+  {
+    book_id: "1CO",
+    book_name: "1 Corinthians",
+    chapter: 13,
+    verse: 4,
+    content: "Love is patient, love is kind. It does not envy, it does not boast, it is not proud.",
+  },
+  {
+    book_id: "JOS",
+    book_name: "Joshua",
+    chapter: 1,
+    verse: 9,
+    content:
+      "Have I not commanded you? Be strong and courageous. Do not be afraid; do not be discouraged, for the LORD your God will be with you wherever you go.",
+  },
+  {
+    book_id: "PRO",
+    book_name: "Proverbs",
+    chapter: 16,
+    verse: 3,
+    content: "Commit your works to the LORD and your plans will be achieved.",
+  },
+  {
+    book_id: "2TI",
+    book_name: "2 Timothy",
+    chapter: 1,
+    verse: 7,
+    content: "For God has not given us a spirit of fear, but of power, love, and self-discipline.",
+  },
+  {
+    book_id: "PSA",
+    book_name: "Psalms",
+    chapter: 91,
+    verse: 1,
+    content:
+      "He who dwells in the shelter of the Most High will abide in the shadow of the Almighty.",
+  },
 ];
 
 export function getVerseOfTheDay() {

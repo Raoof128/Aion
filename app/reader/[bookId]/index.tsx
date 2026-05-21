@@ -1,12 +1,5 @@
 import { useMemo, useCallback } from "react";
-import {
-  View,
-  Text,
-  FlatList,
-  Pressable,
-  StyleSheet,
-  Platform,
-} from "react-native";
+import { View, Text, FlatList, Pressable, StyleSheet, Platform } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, { FadeIn, FadeInUp } from "react-native-reanimated";
@@ -25,10 +18,7 @@ export default function ChapterListScreen() {
   const router = useRouter();
   const { bookId } = useLocalSearchParams<{ bookId: string }>();
 
-  const book = useMemo(
-    () => BIBLE_BOOKS.find((b) => b.id === bookId),
-    [bookId]
-  );
+  const book = useMemo(() => BIBLE_BOOKS.find((b) => b.id === bookId), [bookId]);
 
   const chapters = useMemo(() => {
     if (!book) return [];
@@ -40,7 +30,7 @@ export default function ChapterListScreen() {
       triggerHaptic();
       router.push(`/reader/${bookId}/${chapter}`);
     },
-    [router, bookId]
+    [router, bookId],
   );
 
   const handleBack = useCallback(() => {
@@ -50,11 +40,9 @@ export default function ChapterListScreen() {
 
   const renderChapter = useCallback(
     ({ item, index }: { item: number; index: number }) => (
-      <Animated.View
-        entering={FadeInUp.delay(Math.min(index * 15, 500)).duration(200)}
-      >
+      <Animated.View entering={FadeInUp.delay(Math.min(index * 15, 500)).duration(200)}>
         <Pressable
-          style={({ pressed, hovered }: any) => [
+          style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
             styles.chapterCell,
             hovered && styles.chapterCellHovered,
             pressed && styles.chapterCellPressed,
@@ -67,7 +55,7 @@ export default function ChapterListScreen() {
         </Pressable>
       </Animated.View>
     ),
-    [handleChapterPress]
+    [handleChapterPress],
   );
 
   const keyExtractor = useCallback((item: number) => String(item), []);
@@ -89,18 +77,14 @@ export default function ChapterListScreen() {
         <View style={styles.header}>
           <Pressable
             onPress={handleBack}
-            style={({ hovered }: any) => [
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
               styles.backButton,
               hovered && styles.backButtonHovered,
             ]}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={colors.textPrimary}
-            />
+            <Ionicons name="chevron-back" size={24} color={colors.textPrimary} />
           </Pressable>
           <View style={styles.headerCenter}>
             <Text style={styles.headerTitle} numberOfLines={1}>

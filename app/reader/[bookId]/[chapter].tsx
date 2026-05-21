@@ -8,16 +8,19 @@ import {
   StyleSheet,
   Platform,
   Share,
+  DimensionValue,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
 import { Ionicons } from "@expo/vector-icons";
-import { Bookmark, BookmarkCheck, Copy, Share2, Sparkles} from "lucide-react-native";
+import { Bookmark, BookmarkCheck, Copy, Share2, Sparkles } from "lucide-react-native";
 import { colors, fonts } from "../../../lib/theme";
 import { BIBLE_BOOKS } from "../../../lib/bible-data";
 import { supabase } from "../../../lib/supabase";
+import { useSettings, fontScale, lightColors } from "../../../lib/settings";
+import { SettingsSheet } from "../../../components/SettingsSheet";
 
 interface Verse {
   verse: number;
@@ -46,16 +49,77 @@ export default function ChapterReaderScreen() {
   const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
   const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
   const [bookmarkFeedback, setBookmarkFeedback] = useState<number | null>(null);
+  const [settingsVisible, setSettingsVisible] = useState(false);
+
+  const { theme, fontSize } = useSettings();
+  const scale = fontScale(fontSize);
+
+  const activeColors = useMemo(() => {
+    if (theme === "light") {
+      return {
+        ...colors,
+        ...lightColors,
+      };
+    }
+    return colors;
+  }, [theme]);
+
+  const dynamicStyles = useMemo(() => {
+    return StyleSheet.create({
+      container: {
+        backgroundColor: activeColors.obsidian,
+      },
+      header: {
+        borderBottomColor: activeColors.glassBorder,
+      },
+      headerTitle: {
+        color: activeColors.textPrimary,
+      },
+      progressBarBg: {
+        backgroundColor: activeColors.glass,
+      },
+      errorText: {
+        color: activeColors.textMuted,
+      },
+      retryButton: {
+        backgroundColor: activeColors.glass,
+        borderColor: activeColors.purpleBorder,
+      },
+      headingText: {
+        color: activeColors.textSecondary,
+      },
+      verseNumber: {
+        color: activeColors.purpleGlow,
+      },
+      verseContent: {
+        color: activeColors.textPrimary,
+      },
+      bottomButton: {
+        backgroundColor: activeColors.glass,
+        borderColor: activeColors.glassBorder,
+      },
+      bottomButtonText: {
+        color: activeColors.textPrimary,
+      },
+      verseLineSelected: {
+        backgroundColor: activeColors.purpleMist,
+      },
+      verseActionBtn: {
+        backgroundColor: activeColors.glass,
+        borderColor: activeColors.glassBorder,
+      },
+      verseActionText: {
+        color: activeColors.textSecondary,
+      },
+    });
+  }, [activeColors]);
 
   const scrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
 
   const chapterNum = Number(chapter);
 
-  const book = useMemo(
-    () => BIBLE_BOOKS.find((b) => b.id === bookId),
-    [bookId]
-  );
+  const book = useMemo(() => BIBLE_BOOKS.find((b) => b.id === bookId), [bookId]);
 
   const totalChapters = book?.chapters ?? 0;
   const hasPrev = chapterNum > 1;
@@ -157,15 +221,16 @@ export default function ChapterReaderScreen() {
           return next;
         });
       } else {
-        await supabase
-          .from("user_verse_data")
-          .upsert({
+        await supabase.from("user_verse_data").upsert(
+          {
             user_id: userId,
             book_id: bookId,
             chapter: chapterNum,
             verse: v.verse,
             is_bookmarked: true,
-          }, { onConflict: "user_id,book_id,chapter,verse" });
+          },
+          { onConflict: "user_id,book_id,chapter,verse" },
+        );
         setBookmarkedVerses((prev) => new Set(prev).add(v.verse));
       }
 
@@ -197,36 +262,32 @@ export default function ChapterReaderScreen() {
       const target = dir === "prev" ? chapterNum - 1 : chapterNum + 1;
       router.replace(`/reader/${bookId}/${target}`);
     },
-    [router, bookId, chapterNum]
+    [router, bookId, chapterNum],
   );
 
   const headerTitle = book ? `${book.name} ${chapter}` : `Chapter ${chapter}`;
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
+    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={["top"]}>
       <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
         {/* Header */}
-        <View style={styles.header}>
+        <View style={[styles.header, dynamicStyles.header]}>
           <Pressable
             onPress={handleBack}
-            style={({ hovered }: any) => [
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
               styles.headerButton,
               hovered && styles.headerButtonHovered,
             ]}
             accessibilityLabel="Go back"
             accessibilityRole="button"
           >
-            <Ionicons
-              name="chevron-back"
-              size={24}
-              color={colors.textPrimary}
-            />
+            <Ionicons name="chevron-back" size={24} color={activeColors.textPrimary} />
           </Pressable>
 
           <View style={styles.headerNav}>
             <Pressable
               onPress={() => navigateChapter("prev")}
-              style={({ hovered }: any) => [
+              style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
                 styles.navArrow,
                 hovered && styles.navArrowHovered,
                 !hasPrev && styles.navArrowDisabled,
@@ -238,17 +299,17 @@ export default function ChapterReaderScreen() {
               <Ionicons
                 name="chevron-back"
                 size={18}
-                color={hasPrev ? colors.textSecondary : colors.textGhost}
+                color={hasPrev ? activeColors.textSecondary : activeColors.textGhost}
               />
             </Pressable>
 
-            <Text style={styles.headerTitle} numberOfLines={1}>
+            <Text style={[styles.headerTitle, dynamicStyles.headerTitle]} numberOfLines={1}>
               {headerTitle}
             </Text>
 
             <Pressable
               onPress={() => navigateChapter("next")}
-              style={({ hovered }: any) => [
+              style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
                 styles.navArrow,
                 hovered && styles.navArrowHovered,
                 !hasNext && styles.navArrowDisabled,
@@ -260,18 +321,36 @@ export default function ChapterReaderScreen() {
               <Ionicons
                 name="chevron-forward"
                 size={18}
-                color={hasNext ? colors.textSecondary : colors.textGhost}
+                color={hasNext ? activeColors.textSecondary : activeColors.textGhost}
               />
             </Pressable>
           </View>
 
-          {/* Spacer to balance back button */}
-          <View style={styles.headerButton} />
+          {/* Settings Button */}
+          <Pressable
+            onPress={() => {
+              triggerHaptic();
+              setSettingsVisible(true);
+            }}
+            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+              styles.headerButton,
+              hovered && styles.headerButtonHovered,
+            ]}
+            accessibilityLabel="Open settings"
+            accessibilityRole="button"
+          >
+            <Ionicons name="settings-outline" size={22} color={activeColors.textPrimary} />
+          </Pressable>
         </View>
 
         {/* Reading progress bar */}
-        <View style={styles.progressBarBg}>
-          <View style={[styles.progressBarFill, { width: `${scrollProgress * 100}%` as any }]} />
+        <View style={[styles.progressBarBg, dynamicStyles.progressBarBg]}>
+          <View
+            style={[
+              styles.progressBarFill,
+              { width: `${scrollProgress * 100}%` as DimensionValue },
+            ]}
+          />
         </View>
 
         {/* Content */}
@@ -281,10 +360,10 @@ export default function ChapterReaderScreen() {
           </View>
         ) : error ? (
           <View style={styles.centered}>
-            <Text style={styles.errorText}>{error}</Text>
+            <Text style={[styles.errorText, dynamicStyles.errorText]}>{error}</Text>
             <Pressable
               onPress={fetchChapter}
-              style={styles.retryButton}
+              style={[styles.retryButton, dynamicStyles.retryButton]}
               accessibilityLabel="Retry loading chapter"
               accessibilityRole="button"
             >
@@ -313,9 +392,9 @@ export default function ChapterReaderScreen() {
           >
             {/* Chapter heading */}
             <View style={styles.chapterHeading}>
-              <View style={styles.headingLine} />
-              <Text style={styles.headingText}>{book?.name}</Text>
-              <View style={styles.headingLine} />
+              <View style={[styles.headingLine, { backgroundColor: activeColors.glass }]} />
+              <Text style={[styles.headingText, dynamicStyles.headingText]}>{book?.name}</Text>
+              <View style={[styles.headingLine, { backgroundColor: activeColors.glass }]} />
             </View>
             <Text style={styles.chapterNumLarge}>{chapter}</Text>
 
@@ -328,7 +407,10 @@ export default function ChapterReaderScreen() {
                     style={[
                       styles.verseLine,
                       i === 0 && styles.verseLineFirst,
-                      selectedVerse === v.verse && styles.verseLineSelected,
+                      selectedVerse === v.verse && [
+                        styles.verseLineSelected,
+                        dynamicStyles.verseLineSelected,
+                      ],
                       i > 0 && i % 5 === 0 && styles.verseLineParagraph,
                     ]}
                   >
@@ -336,12 +418,22 @@ export default function ChapterReaderScreen() {
                       {bookmarkedVerses.has(v.verse) ? (
                         <BookmarkCheck size={14} color={colors.purpleGlow} />
                       ) : (
-                        <Text style={styles.verseNumber}>{v.verse}</Text>
+                        <Text style={[styles.verseNumber, dynamicStyles.verseNumber]}>
+                          {v.verse}
+                        </Text>
                       )}
                     </View>
-                    <Text style={styles.verseContent}>
+                    <Text
+                      style={[
+                        styles.verseContent,
+                        { fontSize: 18 * scale, lineHeight: 30 * scale },
+                        dynamicStyles.verseContent,
+                      ]}
+                    >
                       {v.content}
-                      {copyFeedback === v.verse && <Text style={styles.copiedBadge}> ✓ Copied</Text>}
+                      {copyFeedback === v.verse && (
+                        <Text style={styles.copiedBadge}> ✓ Copied</Text>
+                      )}
                       {bookmarkFeedback === v.verse && (
                         <Text style={styles.copiedBadge}>
                           {bookmarkedVerses.has(v.verse) ? " ✓ Saved" : " Removed"}
@@ -352,53 +444,86 @@ export default function ChapterReaderScreen() {
                   {selectedVerse === v.verse && (
                     <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
                       <Pressable
-                        onPress={(e) => { e.stopPropagation(); handleVerseCopy(v); }}
-                        style={styles.verseActionBtn}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleVerseCopy(v);
+                        }}
+                        style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
                         accessibilityLabel="Copy verse"
                         accessibilityRole="button"
                       >
                         <View style={styles.verseActionRow}>
-                          <Copy size={12} color={colors.textSecondary} />
-                          <Text style={styles.verseActionText}> Copy</Text>
+                          <Copy size={12} color={activeColors.textSecondary} />
+                          <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
+                            {" "}
+                            Copy
+                          </Text>
                         </View>
                       </Pressable>
                       <Pressable
-                        onPress={(e) => { e.stopPropagation(); handleVerseBookmark(v); }}
-                        style={[styles.verseActionBtn, bookmarkedVerses.has(v.verse) && styles.verseActionActive]}
-                        accessibilityLabel={bookmarkedVerses.has(v.verse) ? "Remove bookmark" : "Bookmark verse"}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleVerseBookmark(v);
+                        }}
+                        style={[
+                          styles.verseActionBtn,
+                          dynamicStyles.verseActionBtn,
+                          bookmarkedVerses.has(v.verse) && styles.verseActionActive,
+                        ]}
+                        accessibilityLabel={
+                          bookmarkedVerses.has(v.verse) ? "Remove bookmark" : "Bookmark verse"
+                        }
                         accessibilityRole="button"
                       >
                         <View style={styles.verseActionRow}>
                           {bookmarkedVerses.has(v.verse) ? (
                             <BookmarkCheck size={12} color={colors.purpleGlow} />
                           ) : (
-                            <Bookmark size={12} color={colors.textSecondary} />
+                            <Bookmark size={12} color={activeColors.textSecondary} />
                           )}
-                          <Text style={[styles.verseActionText, bookmarkedVerses.has(v.verse) && styles.verseActionActiveText]}>
+                          <Text
+                            style={[
+                              styles.verseActionText,
+                              dynamicStyles.verseActionText,
+                              bookmarkedVerses.has(v.verse) && styles.verseActionActiveText,
+                            ]}
+                          >
                             {bookmarkedVerses.has(v.verse) ? " Saved" : " Bookmark"}
                           </Text>
                         </View>
                       </Pressable>
                       <Pressable
-                        onPress={(e) => { e.stopPropagation(); handleVerseShare(v); }}
-                        style={styles.verseActionBtn}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleVerseShare(v);
+                        }}
+                        style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
                         accessibilityLabel="Share verse"
                         accessibilityRole="button"
                       >
                         <View style={styles.verseActionRow}>
-                          <Share2 size={12} color={colors.textSecondary} />
-                          <Text style={styles.verseActionText}> Share</Text>
+                          <Share2 size={12} color={activeColors.textSecondary} />
+                          <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
+                            {" "}
+                            Share
+                          </Text>
                         </View>
                       </Pressable>
                       <Pressable
-                        onPress={(e) => { e.stopPropagation(); handleAskAion(v); }}
+                        onPress={(e) => {
+                          e.stopPropagation();
+                          handleAskAion(v);
+                        }}
                         style={[styles.verseActionBtn, styles.verseActionPrimary]}
                         accessibilityLabel="Ask Aion about this verse"
                         accessibilityRole="button"
                       >
                         <View style={styles.verseActionRow}>
                           <Sparkles size={12} color={colors.purpleGlow} />
-                          <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}> Ask Aion</Text>
+                          <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>
+                            {" "}
+                            Ask Aion
+                          </Text>
                         </View>
                       </Pressable>
                     </Animated.View>
@@ -408,16 +533,17 @@ export default function ChapterReaderScreen() {
             </View>
 
             {/* Bottom navigation */}
-            <View style={styles.bottomNav}>
-              <Text style={styles.chapterIndicator}>
+            <View style={[styles.bottomNav, { borderTopColor: activeColors.glassBorder }]}>
+              <Text style={[styles.chapterIndicator, { color: activeColors.textGhost }]}>
                 Chapter {chapterNum} of {totalChapters}
               </Text>
 
               <View style={styles.bottomButtons}>
                 <Pressable
                   onPress={() => navigateChapter("prev")}
-                  style={({ pressed, hovered }: any) => [
+                  style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
                     styles.bottomButton,
+                    dynamicStyles.bottomButton,
                     hovered && styles.bottomButtonHovered,
                     !hasPrev && styles.bottomButtonDisabled,
                     pressed && hasPrev && styles.bottomButtonPressed,
@@ -429,11 +555,12 @@ export default function ChapterReaderScreen() {
                   <Ionicons
                     name="chevron-back"
                     size={16}
-                    color={hasPrev ? colors.textPrimary : colors.textGhost}
+                    color={hasPrev ? activeColors.textPrimary : activeColors.textGhost}
                   />
                   <Text
                     style={[
                       styles.bottomButtonText,
+                      dynamicStyles.bottomButtonText,
                       !hasPrev && styles.bottomButtonTextDisabled,
                     ]}
                   >
@@ -443,8 +570,9 @@ export default function ChapterReaderScreen() {
 
                 <Pressable
                   onPress={() => navigateChapter("next")}
-                  style={({ pressed, hovered }: any) => [
+                  style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
                     styles.bottomButton,
+                    dynamicStyles.bottomButton,
                     hovered && styles.bottomButtonHovered,
                     !hasNext && styles.bottomButtonDisabled,
                     pressed && hasNext && styles.bottomButtonPressed,
@@ -456,6 +584,7 @@ export default function ChapterReaderScreen() {
                   <Text
                     style={[
                       styles.bottomButtonText,
+                      dynamicStyles.bottomButtonText,
                       !hasNext && styles.bottomButtonTextDisabled,
                     ]}
                   >
@@ -464,7 +593,7 @@ export default function ChapterReaderScreen() {
                   <Ionicons
                     name="chevron-forward"
                     size={16}
-                    color={hasNext ? colors.textPrimary : colors.textGhost}
+                    color={hasNext ? activeColors.textPrimary : activeColors.textGhost}
                   />
                 </Pressable>
               </View>
@@ -472,6 +601,8 @@ export default function ChapterReaderScreen() {
           </ScrollView>
         )}
       </Animated.View>
+
+      {settingsVisible && <SettingsSheet onClose={() => setSettingsVisible(false)} />}
     </SafeAreaView>
   );
 }
