@@ -55,6 +55,12 @@ export const colors = {
 
   // Selection
   selection: "rgba(138, 43, 226, 0.20)",
+
+  // Amber / Gold (Gutenberg Bible luxury accent)
+  amber: "#D97706",
+  amberGlow: "#F59E0B",
+  amberMist: "rgba(217, 119, 6, 0.08)",
+  amberBorder: "rgba(217, 119, 6, 0.18)",
 } as const;
 
 // Font families — loaded in _layout.tsx

@@ -85,8 +85,9 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
-        {/* Subtle background glow orb behind the logo area */}
-        <View style={styles.glowOrb} />
+        {/* Ambient background glows */}
+        <View style={styles.glowOrbPurple} />
+        <View style={styles.glowOrbAmber} />
 
         <ScrollView
           style={styles.scrollContainer}
@@ -142,7 +143,10 @@ export default function HomeScreen() {
             accessibilityRole="summary"
             accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
           >
-            <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
+            <View style={styles.votdHeaderRow}>
+              <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
+              <Sparkle size={10} color={colors.amberGlow} />
+            </View>
             <Text style={styles.votdContent}>"{votd.content}"</Text>
             <Text style={styles.votdRef}>
               — {votd.book_name} {votd.chapter}:{votd.verse}
@@ -152,14 +156,15 @@ export default function HomeScreen() {
           {/* Read Bible Button */}
           <Pressable
             onPress={() => router.push("/read")}
-            style={({ hovered }: { pressed: boolean; hovered?: boolean }) => [
+            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
               styles.readerButton,
               hovered && styles.readerButtonHovered,
+              pressed && styles.readerButtonPressed,
             ]}
             accessibilityLabel="Open Bible Reader"
             accessibilityRole="button"
           >
-            <BookOpen size={18} color={colors.purpleGlow} />
+            <BookOpen size={18} color={colors.amberGlow} style={styles.readerIcon} />
             <Text style={styles.readerButtonText}>Read the Bible</Text>
             <ChevronRight size={18} color={colors.textGhost} />
           </Pressable>
@@ -202,17 +207,30 @@ const styles = StyleSheet.create({
   flex: {
     flex: 1,
   },
-  glowOrb: {
+  glowOrbPurple: {
     position: "absolute",
-    width: 200,
-    height: 200,
-    borderRadius: 100,
-    backgroundColor: "rgba(138, 43, 226, 0.04)",
-    top: "30%",
-    alignSelf: "center",
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: "rgba(138, 43, 226, 0.02)",
+    top: "20%",
+    left: "10%",
     shadowColor: colors.purple,
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
+    shadowRadius: 80,
+  },
+  glowOrbAmber: {
+    position: "absolute",
+    width: 250,
+    height: 250,
+    borderRadius: 125,
+    backgroundColor: "rgba(217, 119, 6, 0.02)",
+    top: "35%",
+    right: "10%",
+    shadowColor: colors.amber,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.08,
     shadowRadius: 80,
   },
   scrollContainer: {
@@ -291,20 +309,29 @@ const styles = StyleSheet.create({
   votdCard: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: "rgba(138, 43, 226, 0.06)",
+    backgroundColor: colors.amberMist,
     borderWidth: 1,
-    borderColor: "rgba(138, 43, 226, 0.15)",
+    borderColor: colors.amberBorder,
     borderRadius: 16,
     padding: 20,
     marginBottom: 16,
+    shadowColor: colors.amber,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+  },
+  votdHeaderRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    marginBottom: 10,
   },
   votdLabel: {
-    color: colors.purpleGlow,
+    color: colors.amberGlow,
     fontSize: 10,
     fontFamily: fonts.uiBold,
     fontWeight: "700",
     letterSpacing: 2,
-    marginBottom: 10,
   },
   votdContent: {
     color: colors.textPrimary,
@@ -334,15 +361,21 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   readerButtonHovered: {
-    backgroundColor: "rgba(138, 43, 226, 0.06)",
-    borderColor: "rgba(138, 43, 226, 0.20)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: colors.purpleBorder,
+  },
+  readerButtonPressed: {
+    backgroundColor: colors.purpleMist,
+    borderColor: colors.purpleBorder,
+  },
+  readerIcon: {
+    marginRight: 12,
   },
   readerButtonText: {
     flex: 1,
     color: colors.textPrimary,
     fontSize: 15,
     fontFamily: fonts.uiMedium,
-    marginLeft: 12,
   },
   warningCard: {
     width: "100%",

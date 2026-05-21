@@ -400,136 +400,186 @@ export default function ChapterReaderScreen() {
 
             {/* Verse text — elegant flowing layout with paragraph grouping */}
             <View style={styles.verseBlock}>
-              {verses.map((v, i) => (
-                <View key={v.verse}>
-                  <Pressable
-                    onPress={() => setSelectedVerse(selectedVerse === v.verse ? null : v.verse)}
-                    style={[
-                      styles.verseLine,
-                      i === 0 && styles.verseLineFirst,
-                      selectedVerse === v.verse && [
-                        styles.verseLineSelected,
-                        dynamicStyles.verseLineSelected,
-                      ],
-                      i > 0 && i % 5 === 0 && styles.verseLineParagraph,
-                    ]}
-                  >
-                    <View style={styles.verseNumberContainer}>
-                      {bookmarkedVerses.has(v.verse) ? (
-                        <BookmarkCheck size={14} color={colors.purpleGlow} />
-                      ) : (
-                        <Text style={[styles.verseNumber, dynamicStyles.verseNumber]}>
-                          {v.verse}
-                        </Text>
-                      )}
-                    </View>
-                    <Text
+              {verses.map((v, i) => {
+                const isFirstVerse = i === 0;
+                
+                // Gutenberg drop cap extraction
+                let dropCap = "";
+                let remaining = v.content;
+                if (isFirstVerse && v.content.trim().length > 0) {
+                  const trimmed = v.content.trim();
+                  if (trimmed.startsWith('"') || trimmed.startsWith('“') || trimmed.startsWith('\'') || trimmed.startsWith('‘')) {
+                    dropCap = trimmed.slice(0, 2);
+                    remaining = trimmed.slice(2);
+                  } else {
+                    dropCap = trimmed.charAt(0);
+                    remaining = trimmed.slice(1);
+                  }
+                }
+
+                return (
+                  <View key={v.verse}>
+                    <Pressable
+                      onPress={() => setSelectedVerse(selectedVerse === v.verse ? null : v.verse)}
                       style={[
-                        styles.verseContent,
-                        { fontSize: 18 * scale, lineHeight: 30 * scale },
-                        dynamicStyles.verseContent,
+                        styles.verseLine,
+                        isFirstVerse && styles.verseLineFirst,
+                        selectedVerse === v.verse && [
+                          styles.verseLineSelected,
+                          dynamicStyles.verseLineSelected,
+                        ],
+                        i > 0 && i % 5 === 0 && styles.verseLineParagraph,
                       ]}
                     >
-                      {v.content}
-                      {copyFeedback === v.verse && (
-                        <Text style={styles.copiedBadge}> ✓ Copied</Text>
-                      )}
-                      {bookmarkFeedback === v.verse && (
-                        <Text style={styles.copiedBadge}>
-                          {bookmarkedVerses.has(v.verse) ? " ✓ Saved" : " Removed"}
-                        </Text>
-                      )}
-                    </Text>
-                  </Pressable>
-                  {selectedVerse === v.verse && (
-                    <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleVerseCopy(v);
-                        }}
-                        style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
-                        accessibilityLabel="Copy verse"
-                        accessibilityRole="button"
-                      >
-                        <View style={styles.verseActionRow}>
-                          <Copy size={12} color={activeColors.textSecondary} />
-                          <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
-                            {" "}
-                            Copy
+                      <View style={styles.verseNumberContainer}>
+                        {bookmarkedVerses.has(v.verse) ? (
+                          <BookmarkCheck size={14} color={colors.purpleGlow} />
+                        ) : (
+                          <Text style={[styles.verseNumber, dynamicStyles.verseNumber]}>
+                            {v.verse}
                           </Text>
-                        </View>
-                      </Pressable>
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleVerseBookmark(v);
-                        }}
-                        style={[
-                          styles.verseActionBtn,
-                          dynamicStyles.verseActionBtn,
-                          bookmarkedVerses.has(v.verse) && styles.verseActionActive,
-                        ]}
-                        accessibilityLabel={
-                          bookmarkedVerses.has(v.verse) ? "Remove bookmark" : "Bookmark verse"
-                        }
-                        accessibilityRole="button"
-                      >
-                        <View style={styles.verseActionRow}>
-                          {bookmarkedVerses.has(v.verse) ? (
-                            <BookmarkCheck size={12} color={colors.purpleGlow} />
-                          ) : (
-                            <Bookmark size={12} color={activeColors.textSecondary} />
-                          )}
+                        )}
+                      </View>
+                      
+                      {isFirstVerse ? (
+                        <Text
+                          style={[
+                            styles.verseContent,
+                            { fontSize: 18 * scale, lineHeight: 30 * scale },
+                            dynamicStyles.verseContent,
+                          ]}
+                        >
                           <Text
                             style={[
-                              styles.verseActionText,
-                              dynamicStyles.verseActionText,
-                              bookmarkedVerses.has(v.verse) && styles.verseActionActiveText,
+                              styles.dropCapText,
+                              {
+                                fontSize: 40 * scale,
+                                color: theme === "light" ? colors.amber : colors.amberGlow,
+                              },
                             ]}
                           >
-                            {bookmarkedVerses.has(v.verse) ? " Saved" : " Bookmark"}
+                            {dropCap}
                           </Text>
-                        </View>
-                      </Pressable>
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleVerseShare(v);
-                        }}
-                        style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
-                        accessibilityLabel="Share verse"
-                        accessibilityRole="button"
-                      >
-                        <View style={styles.verseActionRow}>
-                          <Share2 size={12} color={activeColors.textSecondary} />
-                          <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
-                            {" "}
-                            Share
-                          </Text>
-                        </View>
-                      </Pressable>
-                      <Pressable
-                        onPress={(e) => {
-                          e.stopPropagation();
-                          handleAskAion(v);
-                        }}
-                        style={[styles.verseActionBtn, styles.verseActionPrimary]}
-                        accessibilityLabel="Ask Aion about this verse"
-                        accessibilityRole="button"
-                      >
-                        <View style={styles.verseActionRow}>
-                          <Sparkles size={12} color={colors.purpleGlow} />
-                          <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>
-                            {" "}
-                            Ask Aion
-                          </Text>
-                        </View>
-                      </Pressable>
-                    </Animated.View>
-                  )}
-                </View>
-              ))}
+                          {remaining}
+                          {copyFeedback === v.verse && (
+                            <Text style={styles.copiedBadge}> ✓ Copied</Text>
+                          )}
+                          {bookmarkFeedback === v.verse && (
+                            <Text style={styles.copiedBadge}>
+                              {bookmarkedVerses.has(v.verse) ? " ✓ Saved" : " Removed"}
+                            </Text>
+                          )}
+                        </Text>
+                      ) : (
+                        <Text
+                          style={[
+                            styles.verseContent,
+                            { fontSize: 18 * scale, lineHeight: 30 * scale },
+                            dynamicStyles.verseContent,
+                          ]}
+                        >
+                          {v.content}
+                          {copyFeedback === v.verse && (
+                            <Text style={styles.copiedBadge}> ✓ Copied</Text>
+                          )}
+                          {bookmarkFeedback === v.verse && (
+                            <Text style={styles.copiedBadge}>
+                              {bookmarkedVerses.has(v.verse) ? " ✓ Saved" : " Removed"}
+                            </Text>
+                          )}
+                        </Text>
+                      )}
+                    </Pressable>
+                    {selectedVerse === v.verse && (
+                      <Animated.View entering={FadeIn.duration(150)} style={styles.verseActions}>
+                        <Pressable
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleVerseCopy(v);
+                          }}
+                          style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
+                          accessibilityLabel="Copy verse"
+                          accessibilityRole="button"
+                        >
+                          <View style={styles.verseActionRow}>
+                            <Copy size={12} color={activeColors.textSecondary} />
+                            <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
+                              {" "}
+                              Copy
+                            </Text>
+                          </View>
+                        </Pressable>
+                        <Pressable
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleVerseBookmark(v);
+                          }}
+                          style={[
+                            styles.verseActionBtn,
+                            dynamicStyles.verseActionBtn,
+                            bookmarkedVerses.has(v.verse) && styles.verseActionActive,
+                          ]}
+                          accessibilityLabel={
+                            bookmarkedVerses.has(v.verse) ? "Remove bookmark" : "Bookmark verse"
+                          }
+                          accessibilityRole="button"
+                        >
+                          <View style={styles.verseActionRow}>
+                            {bookmarkedVerses.has(v.verse) ? (
+                              <BookmarkCheck size={12} color={colors.purpleGlow} />
+                            ) : (
+                              <Bookmark size={12} color={activeColors.textSecondary} />
+                            )}
+                            <Text
+                              style={[
+                                styles.verseActionText,
+                                dynamicStyles.verseActionText,
+                                bookmarkedVerses.has(v.verse) && styles.verseActionActiveText,
+                              ]}
+                            >
+                              {bookmarkedVerses.has(v.verse) ? " Saved" : " Bookmark"}
+                            </Text>
+                          </View>
+                        </Pressable>
+                        <Pressable
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleVerseShare(v);
+                          }}
+                          style={[styles.verseActionBtn, dynamicStyles.verseActionBtn]}
+                          accessibilityLabel="Share verse"
+                          accessibilityRole="button"
+                        >
+                          <View style={styles.verseActionRow}>
+                            <Share2 size={12} color={activeColors.textSecondary} />
+                            <Text style={[styles.verseActionText, dynamicStyles.verseActionText]}>
+                              {" "}
+                              Share
+                            </Text>
+                          </View>
+                        </Pressable>
+                        <Pressable
+                          onPress={(e) => {
+                            e.stopPropagation();
+                            handleAskAion(v);
+                          }}
+                          style={[styles.verseActionBtn, styles.verseActionPrimary]}
+                          accessibilityLabel="Ask Aion about this verse"
+                          accessibilityRole="button"
+                        >
+                          <View style={styles.verseActionRow}>
+                            <Sparkles size={12} color={colors.purpleGlow} />
+                            <Text style={[styles.verseActionText, styles.verseActionPrimaryText]}>
+                              {" "}
+                              Ask Aion
+                            </Text>
+                          </View>
+                        </Pressable>
+                      </Animated.View>
+                    )}
+                  </View>
+                );
+              })}
             </View>
 
             {/* Bottom navigation */}
@@ -810,10 +860,13 @@ const styles = StyleSheet.create({
     color: colors.textGhost,
   },
   verseLineSelected: {
-    backgroundColor: colors.purpleMist,
-    borderRadius: 8,
-    marginHorizontal: -4,
-    paddingHorizontal: 8,
+    backgroundColor: "rgba(217, 119, 6, 0.05)",
+    borderColor: "rgba(217, 119, 6, 0.25)",
+    borderWidth: 1,
+    borderRadius: 10,
+    marginHorizontal: -6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
   },
   verseLineParagraph: {
     marginTop: 16,
@@ -821,26 +874,36 @@ const styles = StyleSheet.create({
   verseActions: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 6,
-    paddingVertical: 8,
-    paddingHorizontal: 4,
-    marginBottom: 4,
+    gap: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    marginTop: 8,
+    marginBottom: 12,
+    backgroundColor: "rgba(255, 255, 255, 0.04)",
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.glassBorder,
+    shadowColor: colors.void,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.1,
+    shadowRadius: 6,
   },
   verseActionBtn: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
     borderRadius: 8,
     backgroundColor: colors.glass,
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
   verseActionPrimary: {
-    backgroundColor: colors.purpleMist,
-    borderColor: colors.purpleAccent,
+    backgroundColor: "rgba(138, 43, 226, 0.10)",
+    borderColor: "rgba(138, 43, 226, 0.30)",
   },
   verseActionRow: {
     flexDirection: "row",
     alignItems: "center",
+    gap: 4,
   },
   verseActionText: {
     color: colors.textSecondary,
@@ -848,6 +911,7 @@ const styles = StyleSheet.create({
   },
   verseActionPrimaryText: {
     color: colors.purpleGlow,
+    fontWeight: "600",
   },
   copiedBadge: {
     color: colors.purpleGlow,
@@ -860,5 +924,9 @@ const styles = StyleSheet.create({
   },
   verseActionActiveText: {
     color: colors.purpleGlow,
+  },
+  dropCapText: {
+    fontFamily: fonts.verse,
+    fontWeight: "700",
   },
 });

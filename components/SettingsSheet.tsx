@@ -142,8 +142,8 @@ const styles = StyleSheet.create({
     borderColor: colors.glassBorder,
   },
   optionActive: {
-    backgroundColor: colors.purpleMist,
-    borderColor: colors.purpleBorder,
+    backgroundColor: colors.amberMist,
+    borderColor: colors.amberBorder,
   },
   optionIcon: {
     fontSize: 20,
@@ -155,7 +155,7 @@ const styles = StyleSheet.create({
     fontWeight: "500",
   },
   optionTextActive: {
-    color: colors.purpleGlow,
+    color: colors.amberGlow,
   },
   fontPreview: {
     color: colors.textPrimary,
@@ -170,7 +170,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   previewRef: {
-    color: colors.purpleGlow,
+    color: colors.amberGlow,
     fontSize: 10,
     fontWeight: "700",
     letterSpacing: 2,
@@ -182,13 +182,13 @@ const styles = StyleSheet.create({
     lineHeight: 26,
   },
   doneButton: {
-    backgroundColor: colors.purple,
+    backgroundColor: colors.amber,
     borderRadius: 14,
     paddingVertical: 14,
     alignItems: "center",
-    shadowColor: colors.purple,
+    shadowColor: colors.amber,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
   },
   doneText: {

@@ -11,6 +11,18 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** UI/UX Premium Enhancements
+- **Summary:** Applied luxury gold/amber and glassmorphic UI/UX enhancements across Aion. Introduced dual breathing purple/amber ambient glows on the Home screen, styled the Verse of the Day (VOTD) card with glowing amber borders, refined search text focus indicators, added Gutenberg-style large initial drop caps for the first verse of scripture chapters, polished selected verse highlights with gold borders, upgraded the selected verse actions panel with a glassmorphic toolbar, and updated Settings active options and buttons to match the luxury amber Gutenberg aesthetic.
+- **Files Changed:**
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - Upgraded with dual ambient glows, luxury gold VOTD cards, and polished button interactions.
+  - [app/(tabs)/read.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/read.tsx) - Upgraded search bar focus indicators and book grid card states.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Implemented Gutenberg initial drop caps, luxury gold selected verse border highlights, and redesigned the glassmorphic actions toolbar.
+  - [components/SettingsSheet.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/SettingsSheet.tsx) - Re-styled option active indicators and action button to use the new amber themes.
+- **Verification:** Ran `npm run lint` and `npm run type-check`, both completed successfully with 0 warnings or errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Expo Router Layout and Supabase UX Warning
 - **Summary:** Resolved the Expo Router nested layout warning `[Layout children]: No route named "reader" exists in nested children` by creating a nested navigation layout wrapper (`app/reader/_layout.tsx`). Also improved user onboarding UX by detecting placeholder/unconfigured Supabase environment variables in `lib/supabase.ts` and showing a modern warning banner on the Home screen guiding the user on how to update their `.env` file.
 - **Files Changed:**
