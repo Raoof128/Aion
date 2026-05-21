@@ -11,6 +11,17 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Expo Router Layout and Supabase UX Warning
+- **Summary:** Resolved the Expo Router nested layout warning `[Layout children]: No route named "reader" exists in nested children` by creating a nested navigation layout wrapper (`app/reader/_layout.tsx`). Also improved user onboarding UX by detecting placeholder/unconfigured Supabase environment variables in `lib/supabase.ts` and showing a modern warning banner on the Home screen guiding the user on how to update their `.env` file.
+- **Files Changed:**
+  - [app/reader/_layout.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/_layout.tsx) - Created nested Stack router layout wrapper.
+  - [lib/supabase.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/lib/supabase.ts) - Exported `isSupabaseConfigured` helper checking for default placeholder values.
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - Added amber-colored alert warning banner when Supabase setup is required.
+- **Verification:** Ran `npm run lint` and `npm run type-check`, both completed successfully with 0 errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Backend IDOR Security Fix
 - **Summary:** Performed a backend security audit and fixed an Insecure Direct Object Reference (IDOR) vulnerability in the chat Supabase Edge Function (`supabase/functions/chat/index.ts`). The function now validates the UUID format of incoming `conversation_id` and verifies that the authenticated user owns the conversation before updating it or inserting new messages, preventing users from altering others' conversations.
 - **Files Changed:**

@@ -28,11 +28,13 @@ import {
   Zap,
   BookOpen,
   ChevronRight,
+  AlertTriangle,
 } from "lucide-react-native";
 import { PromptPill } from "../../components/PromptPill";
 import { ChatInput } from "../../components/ChatInput";
 import { colors, fonts } from "../../lib/theme";
 import { getVerseOfTheDay } from "../../lib/bible-data";
+import { isSupabaseConfigured } from "../../lib/supabase";
 
 const PROMPT_SUGGESTIONS = [
   { Icon: Search, label: "Find verses with the number 444" },
@@ -115,6 +117,23 @@ export default function HomeScreen() {
           <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
             "Seek, and you shall find."
           </Animated.Text>
+
+          {/* Supabase Warning Banner */}
+          {!isSupabaseConfigured && (
+            <Animated.View
+              entering={FadeInDown.duration(400).delay(650)}
+              style={styles.warningCard}
+              accessibilityRole="alert"
+            >
+              <View style={styles.warningHeader}>
+                <AlertTriangle size={14} color={colors.warning} />
+                <Text style={styles.warningLabel}>Database Setup Required</Text>
+              </View>
+              <Text style={styles.warningContent}>
+                Please update your <Text style={styles.codeText}>.env</Text> file in the project root with your actual Supabase URL and Anon Key, then restart the Expo server.
+              </Text>
+            </Animated.View>
+          )}
 
           {/* Verse of the Day */}
           <Animated.View
@@ -324,5 +343,40 @@ const styles = StyleSheet.create({
     fontSize: 15,
     fontFamily: fonts.uiMedium,
     marginLeft: 12,
+  },
+  warningCard: {
+    width: "100%",
+    maxWidth: 420,
+    backgroundColor: colors.warningBg,
+    borderWidth: 1,
+    borderColor: "rgba(245, 158, 11, 0.25)",
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  warningHeader: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    marginBottom: 8,
+  },
+  warningLabel: {
+    color: colors.warning,
+    fontSize: 11,
+    fontFamily: fonts.uiBold,
+    letterSpacing: 1.5,
+    textTransform: "uppercase",
+  },
+  warningContent: {
+    color: colors.textPrimary,
+    fontSize: 13,
+    fontFamily: fonts.ui,
+    lineHeight: 18,
+    opacity: 0.9,
+  },
+  codeText: {
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    fontWeight: "700",
+    color: colors.warning,
   },
 });
