@@ -9,11 +9,12 @@
     "web": "expo start --web",
     "desktop": "tauri dev",
     "desktop:build": "tauri build",
-    "lint": "eslint app/ components/ lib/",
-    "lint:fix": "eslint app/ components/ lib/ --fix",
-    "format": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts'",
-    "format:check": "prettier --check 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts'",
-    "type-check": "npx tsc --noEmit"
+    "lint": "eslint app/ components/ lib/ tests/",
+    "lint:fix": "eslint app/ components/ lib/ tests/ --fix",
+    "format": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts'",
+    "format:check": "prettier --check 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts'",
+    "type-check": "npx tsc --noEmit",
+    "test": "tsx --test tests/**/*.test.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
@@ -62,6 +63,7 @@
     "eslint-plugin-react-hooks": "^7.1.1",
     "nativewind": "^4.2.4",
     "prettier": "^3.8.3",
+    "tsx": "^4.19.3",
     "typescript": "~5.9.2"
   },
   "overrides": {

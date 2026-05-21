@@ -131,7 +131,8 @@ export default function HomeScreen() {
                 <Text style={styles.warningLabel}>Database Setup Required</Text>
               </View>
               <Text style={styles.warningContent}>
-                Please update your <Text style={styles.codeText}>.env</Text> file in the project root with your actual Supabase URL and Anon Key, then restart the Expo server.
+                Please update your <Text style={styles.codeText}>.env</Text> file in the project
+                root with your actual Supabase URL and Anon Key, then restart the Expo server.
               </Text>
             </Animated.View>
           )}

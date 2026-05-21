@@ -402,13 +402,18 @@ export default function ChapterReaderScreen() {
             <View style={styles.verseBlock}>
               {verses.map((v, i) => {
                 const isFirstVerse = i === 0;
-                
+
                 // Gutenberg drop cap extraction
                 let dropCap = "";
                 let remaining = v.content;
                 if (isFirstVerse && v.content.trim().length > 0) {
                   const trimmed = v.content.trim();
-                  if (trimmed.startsWith('"') || trimmed.startsWith('“') || trimmed.startsWith('\'') || trimmed.startsWith('‘')) {
+                  if (
+                    trimmed.startsWith('"') ||
+                    trimmed.startsWith("“") ||
+                    trimmed.startsWith("'") ||
+                    trimmed.startsWith("‘")
+                  ) {
                     dropCap = trimmed.slice(0, 2);
                     remaining = trimmed.slice(2);
                   } else {
@@ -440,7 +445,7 @@ export default function ChapterReaderScreen() {
                           </Text>
                         )}
                       </View>
-                      
+
                       {isFirstVerse ? (
                         <Text
                           style={[

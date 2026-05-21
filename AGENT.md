@@ -11,6 +11,29 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Expansion of Test Suite (TTS & Notifications)
+- **Summary:** Added comprehensive unit and integration test coverage for notifications and text-to-speech modules. Verified AsyncStorage storage access toggles, day-of-year verse rotation logic, HTML5 web notification emission structures, custom markdown regex cleaning (stripping bold, italic, headers, and links), and web/native TTS engine hook dispatches.
+- **Files Changed:**
+  - [tests/notifications.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/notifications.test.ts) - Unit tests verifying storage checks, calendar-index rotation, and mock Notification object parameters.
+  - [tests/tts.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/tts.test.ts) - Unit tests verifying Markdown cleaning regex filters and web/native synthesizers.
+- **Verification:** Ran `npm test` executing 15 checks across 6 suites cleanly. Lint and type check tasks run with 0 errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Native Test Suite Implementation
+- **Summary:** Configured a lightweight TypeScript-ready native test runner using Node's `node:test` and `tsx`. Created comprehensive unit test coverage for core business logic, including Bible metadata validation, daily verse rotation, user setting scales, Supabase environment checks, and timestamp formatting utilities.
+- **Files Changed:**
+  - [package.json](file:///Users/raoof.r12/Desktop/Raouf/Aion/package.json) - Configured `"test"`, `"lint"`, and `"format"` scripts to include the `tests` directory and added `tsx` dependency.
+  - [tests/bible-data.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/bible-data.test.ts) - Unit tests for Bible books data structure, OT/NT division, and VOTD rotation.
+  - [tests/settings.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/settings.test.ts) - Unit tests validating font size scales and theme configurations.
+  - [tests/supabase.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/supabase.test.ts) - Integration tests for Supabase configuration environment variable checks.
+  - [tests/utils.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/utils.test.ts) - Unit tests for the relative timeago formatting utility.
+- **Verification:** Ran `npm test`, `npm run lint`, and `npm run type-check`. All 8 tests passed successfully, and linting/type-checking completed with 0 errors.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** UI/UX Premium Enhancements
 - **Summary:** Applied luxury gold/amber and glassmorphic UI/UX enhancements across Aion. Introduced dual breathing purple/amber ambient glows on the Home screen, styled the Verse of the Day (VOTD) card with glowing amber borders, refined search text focus indicators, added Gutenberg-style large initial drop caps for the first verse of scripture chapters, polished selected verse highlights with gold borders, upgraded the selected verse actions panel with a glassmorphic toolbar, and updated Settings active options and buttons to match the luxury amber Gutenberg aesthetic.
 - **Files Changed:**
