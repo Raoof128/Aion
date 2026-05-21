@@ -11,6 +11,15 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** CI/CD Test Pipeline Integration
+- **Summary:** Integrated the native testing pipeline into the GitHub Actions CI workflow to run tests automatically on all push and pull requests.
+- **Files Changed:**
+  - [.github/workflows/ci.yml](file:///Users/raoof.r12/Desktop/Raouf/Aion/.github/workflows/ci.yml) - Added `Run Tests` step executing `npm test`.
+- **Verification:** Verified YAML schema structure and local tests execution.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Expansion of Test Suite (TTS & Notifications)
 - **Summary:** Added comprehensive unit and integration test coverage for notifications and text-to-speech modules. Verified AsyncStorage storage access toggles, day-of-year verse rotation logic, HTML5 web notification emission structures, custom markdown regex cleaning (stripping bold, italic, headers, and links), and web/native TTS engine hook dispatches.
 - **Files Changed:**
