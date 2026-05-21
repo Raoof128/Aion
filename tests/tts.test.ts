@@ -58,14 +58,18 @@ describe("Text to Speech (TTS) Module", () => {
     mockPlatformOS = "web";
     mockWebSpeak.mock.resetCalls();
 
-    const sampleMarkdown = "# Heading\n**Bold Text** and *Italic* with a [Link Description](https://link.com).\n\nParagraph 2.";
+    const sampleMarkdown =
+      "# Heading\n**Bold Text** and *Italic* with a [Link Description](https://link.com).\n\nParagraph 2.";
     // Let's call speak with Markdown content
     const speakPromise = speak(sampleMarkdown);
 
     assert.equal(mockWebSpeak.mock.callCount(), 1, "Should call window.speechSynthesis.speak");
     const utterance = mockWebSpeak.mock.calls[0].arguments[0];
 
-    assert.ok(utterance instanceof (global as any).SpeechSynthesisUtterance, "Should pass an instance of SpeechSynthesisUtterance");
+    assert.ok(
+      utterance instanceof (global as any).SpeechSynthesisUtterance,
+      "Should pass an instance of SpeechSynthesisUtterance",
+    );
     // Assert markdown cleanup:
     // "# Heading" -> " Heading" or similar, bold ** removed, italic * removed, link format replaced by text inside brackets
     const cleanedText = utterance.text;
@@ -90,7 +94,11 @@ describe("Text to Speech (TTS) Module", () => {
     mockWebCancel.mock.resetCalls();
 
     stopSpeaking();
-    assert.equal(mockWebCancel.mock.callCount(), 1, "Should invoke window.speechSynthesis.cancel() on web");
+    assert.equal(
+      mockWebCancel.mock.callCount(),
+      1,
+      "Should invoke window.speechSynthesis.cancel() on web",
+    );
     assert.equal(getIsSpeaking(), false, "isSpeaking state must toggle to false");
   });
 
@@ -99,8 +107,16 @@ describe("Text to Speech (TTS) Module", () => {
     mockExpoSpeak.mock.resetCalls();
 
     await speak("Simple verse speak");
-    assert.equal(mockExpoSpeak.mock.callCount(), 1, "Should call native expo-speech speak function");
-    assert.equal(mockExpoSpeak.mock.calls[0].arguments[0], "Simple verse speak", "Should speak plain clean text");
+    assert.equal(
+      mockExpoSpeak.mock.callCount(),
+      1,
+      "Should call native expo-speech speak function",
+    );
+    assert.equal(
+      mockExpoSpeak.mock.calls[0].arguments[0],
+      "Simple verse speak",
+      "Should speak plain clean text",
+    );
     assert.equal(getIsSpeaking(), true, "isSpeaking state must be true");
 
     // Call stop

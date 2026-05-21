@@ -44,7 +44,10 @@ const mockNotificationCalls: any[] = [];
 class MockNotification {
   static permission = "default";
   static requestPermission = mockRequestPermission;
-  constructor(public title: string, public options: any) {
+  constructor(
+    public title: string,
+    public options: any,
+  ) {
     mockNotificationCalls.push({ title, options });
   }
 }
@@ -126,7 +129,11 @@ describe("Notifications Module", () => {
     assert.equal(mockNotificationCalls.length, 1, "Should instantiate a Notification on web");
 
     const callArgs = mockNotificationCalls[0];
-    assert.match(callArgs.title, /^Aion — /, "Notification title should match the Aion namespace prefix");
+    assert.match(
+      callArgs.title,
+      /^Aion — /,
+      "Notification title should match the Aion namespace prefix",
+    );
     assert.ok(callArgs.options.body, "Notification body should contain verse text");
   });
 

@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Prettier Formatting Alignment
+- **Summary:** Ran Prettier on newly added test modules to resolve style format checker failures.
+- **Files Changed:**
+  - [tests/notifications.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/notifications.test.ts) - Formatted constructor signatures and assertion arguments.
+  - [tests/tts.test.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/tests/tts.test.ts) - Formatted long strings, constructor checks, and assertion structures.
+- **Verification:** Ran `npm run format:check` resulting in successfully formatted verification status.
+- **Follow-ups:** None.
+
+### 2026-05-21 (Australia/Sydney)
+**Raouf:**
 - **Scope:** CI/CD Test Pipeline Integration
 - **Summary:** Integrated the native testing pipeline into the GitHub Actions CI workflow to run tests automatically on all push and pull requests.
 - **Files Changed:**
