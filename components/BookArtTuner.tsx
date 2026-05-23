@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import {
   View,
   Text,
@@ -27,10 +27,22 @@ interface BookArtTunerProps {
   onClose: () => void;
 }
 
-const PREVIEW_SIZE = { width: 280, height: 180 };
+const PREVIEW_WIDTH = 280;
+const PREVIEW_MAX_HEIGHT = 280;
 const PREVIEW_BASE_SCALE = 1.3;
 
 export function BookArtTuner({ bookId, bookName, imageSource, onClose }: BookArtTunerProps) {
+  const previewHeight = useMemo(() => {
+    try {
+      const resolved = Image.resolveAssetSource(imageSource);
+      if (resolved && resolved.width > 0 && resolved.height > 0) {
+        const h = (PREVIEW_WIDTH * resolved.height) / resolved.width;
+        return Math.min(h, PREVIEW_MAX_HEIGHT);
+      }
+    } catch {}
+    return PREVIEW_MAX_HEIGHT;
+  }, [imageSource]);
+
   const [settings, setSettings] = useState<BookBgSettings>(() => getBgSettingsSync(bookId));
   const settingsRef = useRef(settings);
   settingsRef.current = settings;
@@ -92,7 +104,10 @@ export function BookArtTuner({ bookId, bookName, imageSource, onClose }: BookArt
         <Text style={styles.subtitle}>{bookName}</Text>
 
         <View style={styles.previewContainer}>
-          <View style={styles.previewCrop} {...panResponder.panHandlers}>
+          <View
+            style={[styles.previewCrop, { height: previewHeight }]}
+            {...panResponder.panHandlers}
+          >
             <View
               style={[
                 styles.previewImageWrap,
@@ -207,8 +222,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   previewCrop: {
-    width: PREVIEW_SIZE.width,
-    height: PREVIEW_SIZE.height,
+    width: PREVIEW_WIDTH,
     borderRadius: 12,
     overflow: "hidden",
     backgroundColor: colors.void,

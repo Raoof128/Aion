@@ -11,6 +11,21 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** BookBackground Aspect-Ratio Fit + Image Asset Cleanup
+- **Summary:** Rewrote BookBackground to render photos without cropping — uses `Image.resolveAssetSource` to get natural dimensions and fits them within the screen (`Math.min(screenW/photoW, screenH/photoH)`) with centered layout. Void background fills remaining space. Characters/faces no longer cut off. Updated BookArtTuner preview container to match photo's aspect ratio via resolved asset dimensions. Replaced and reorganized all background image assets to correct aspect ratios across books.
+- **Final Image State:**
+  - 1122×1402 (4:5): Genesis, Exodus, Leviticus, Numbers
+  - 941×1672 (9:16): Deuteronomy, Joshua, Main_menue
+  - 1672×941 (landscape): Judges
+- **Files Changed:**
+  - [components/BookBackground.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookBackground.tsx) - Rewritten: no longer uses `StyleSheet.absoluteFill` for cover crop. Reads photo dimensions via `Image.resolveAssetSource`, calculates fit within screen, centers photo with void background. Uses `useWindowDimensions` for responsive sizing.
+  - [components/BookArtTuner.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookArtTuner.tsx) - Preview container now matches photo aspect ratio using `Image.resolveAssetSource` dimensions, capped at 280px wide with 280px max height.
+  - [assets/*.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/) - Multiple asset replacements for Numbers and Judges.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book Art Tuner — Draggable Preview Over Sliders
 - **Summary:** Replaced X/Y Position sliders in the Book Art Tuner with a proper draggable preview — like smartphone wallpaper positioning. Preview container (280x180, overflow hidden) renders image at 1.3x base scale so it always extends beyond the viewport. Uses plain React state + PanResponder (no Animated.Value) for clean single-source-of-truth reactivity — state is the only source, drag updates state via setSettings, view re-renders reactively. PanResponder tracks cumulative position: dragStart stored on grant, state updated on every move frame via setSettings functional updater, positionX/Y saved to AsyncStorage only on release. Added `getBgSettingsSync` to lib for synchronous initial state from cache — no flash/glitch on mount. Scale and overlay remain as sliders.
 - **Files Changed:**
