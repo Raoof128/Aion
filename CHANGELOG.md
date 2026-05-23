@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Numbers Background Image Addition
+- **Summary:** Added custom background image support for Numbers chapters in the reader, following the same pattern as Genesis, Exodus, and Leviticus. Copied Numbers.png to assets/, added `isNumbers` book ID check (NUM/numbers), and included the require() call in bgImageSource.
+- **Files Changed:**
+  - [assets/Numbers.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Numbers.png) - Added Numbers background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isNumbers` check, included Numbers in `isCustomBg`, and added require() for Numbers.png in bgImageSource.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Leviticus Background Image Addition
 - **Summary:** Added custom background image support for Leviticus chapters in the reader, following the same pattern as the existing Genesis and Exodus backgrounds. Copied the user's Leviticus.png to assets/, added `isLeviticus` book ID check (LEV/leviticus), and included the require() call in the bgImageSource useMemo.
 - **Files Changed:**
