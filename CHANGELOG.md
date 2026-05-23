@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book Art Tuner — Draggable Preview Over Sliders
+- **Summary:** Replaced X/Y Position sliders in the Book Art Tuner with a proper draggable preview — like smartphone wallpaper positioning. Preview container (280x180, overflow hidden) renders image at 1.3x base scale so it always extends beyond the viewport. Uses plain React state + PanResponder (no Animated.Value) for clean single-source-of-truth reactivity — state is the only source, drag updates state via setSettings, view re-renders reactively. PanResponder tracks cumulative position: dragStart stored on grant, state updated on every move frame via setSettings functional updater, positionX/Y saved to AsyncStorage only on release. Added `getBgSettingsSync` to lib for synchronous initial state from cache — no flash/glitch on mount. Scale and overlay remain as sliders.
+- **Files Changed:**
+  - [components/BookArtTuner.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookArtTuner.tsx) - Rewritten: removed Animated.Value, uses plain state + PanResponder. Image at 1.3x PREVIEW_BASE_SCALE inside overflow-hidden crop. Initial state from getBgSettingsSync for no-flash mount. Drag updates state reactively.
+  - [lib/bookBackgroundSettings.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/lib/bookBackgroundSettings.ts) - Added `getBgSettingsSync(bookId)` for synchronous cache read.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Passed `bgImageSource` as `imageSource` prop to BookArtTuner.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Judges Background Image Addition
 - **Summary:** Added custom background image support for Judges chapters in the reader. Copied Judges.png to assets/, added `isJudges` book ID check (JDG/judges), and included the require() call in bgImageSource.
 - **Files Changed:**
@@ -18,7 +29,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
-- **Scope:** Joshua Background Image Addition
+- **Scope:** Book Art Tuner — Dev Mode Background Adjuster
+- **Summary:** Implemented a developer "Book Art Tuner" that allows per-book background image adjustment directly from the app UI without editing code. Long-press any book title in the chapter reader for 800ms to open the tuner. Includes sliders for Y Position (-300 to 300), X Position (-150 to 150), Scale (0.8-1.8), and Dark Overlay (0-80%). Settings persist via AsyncStorage per book, load automatically, and update live while dragging sliders. Architecture: `lib/bookBackgroundSettings.ts` (defaults + storage), `components/BookBackground.tsx` (renders image with transform + overlay + gradient), `components/BookArtTuner.tsx` (bottom sheet with sliders). Replaced the old inline ImageBackground in the chapter reader with the BookBackground component. Installed `@react-native-community/slider` for cross-platform slider support.
+- **Files Changed:**
+  - [lib/bookBackgroundSettings.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/lib/bookBackgroundSettings.ts) - Created — BookBgSettings type, defaults, AsyncStorage load/save/reset with in-memory cache.
+  - [components/BookBackground.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookBackground.tsx) - Created — renders background image with transform (translateX/Y, scale), dark overlay, and LinearGradient.
+  - [components/BookArtTuner.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookArtTuner.tsx) - Created — bottom sheet with sliders for position, scale, overlay. Live preview on drag. Save/reset controls.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Replaced inline ImageBackground + LinearGradient with BookBackground component. Added long-press on header title to open BookArtTuner. Added tunerVisible state. Removed unused imports (ImageBackground, LinearGradient, useWindowDimensions) and unused styles.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Judges Background Image Addition
 - **Summary:** Added custom background image support for Joshua chapters in the reader. Copied Joshua.png to assets/, added `isJoshua` book ID check (JOS/joshua), and included the require() call in bgImageSource.
 - **Files Changed:**
   - [assets/Joshua.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Joshua.png) - Added Joshua background image asset.

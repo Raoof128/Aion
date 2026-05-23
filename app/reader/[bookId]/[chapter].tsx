@@ -9,14 +9,13 @@ import {
   Platform,
   Share,
   DimensionValue,
-  ImageBackground,
-  useWindowDimensions,
 } from "react-native";
-import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { BookBackground } from "../../../components/BookBackground";
+import { BookArtTuner } from "../../../components/BookArtTuner";
 import { Ionicons } from "@expo/vector-icons";
 import { Bookmark, BookmarkCheck, Copy, Share2, Sparkles } from "lucide-react-native";
 import { colors, fonts } from "../../../lib/theme";
@@ -44,18 +43,8 @@ export default function ChapterReaderScreen() {
     chapter: string;
   }>();
 
-  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
-  const isLandscape = windowWidth > windowHeight;
-
-  const [verses, setVerses] = useState<Verse[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [scrollProgress, setScrollProgress] = useState(0);
-  const [copyFeedback, setCopyFeedback] = useState<number | null>(null);
-  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
-  const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
-  const [bookmarkFeedback, setBookmarkFeedback] = useState<number | null>(null);
   const [settingsVisible, setSettingsVisible] = useState(false);
+  const [tunerVisible, setTunerVisible] = useState(false);
 
   const { theme, fontSize } = useSettings();
   const scale = fontScale(fontSize);
@@ -119,6 +108,15 @@ export default function ChapterReaderScreen() {
       },
     });
   }, [activeColors]);
+
+  const [verses, setVerses] = useState<Verse[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [scrollProgress, setScrollProgress] = useState(0);
+  const [copyFeedback, setCopyFeedback] = useState<number | null>(null);
+  const [selectedVerse, setSelectedVerse] = useState<number | null>(null);
+  const [bookmarkedVerses, setBookmarkedVerses] = useState<Set<number>>(new Set());
+  const [bookmarkFeedback, setBookmarkFeedback] = useState<number | null>(null);
 
   const scrollRef = useRef<ScrollView>(null);
   const lastScrollY = useRef(0);
@@ -354,9 +352,15 @@ export default function ChapterReaderScreen() {
               />
             </Pressable>
 
-            <Text style={[styles.headerTitle, dynamicStyles.headerTitle]} numberOfLines={1}>
-              {headerTitle}
-            </Text>
+            <Pressable
+              onLongPress={() => setTunerVisible(true)}
+              delayLongPress={800}
+              style={styles.headerTitlePressable}
+            >
+              <Text style={[styles.headerTitle, dynamicStyles.headerTitle]} numberOfLines={1}>
+                {headerTitle}
+              </Text>
+            </Pressable>
 
             <Pressable
               onPress={() => navigateChapter("next")}
@@ -709,30 +713,22 @@ export default function ChapterReaderScreen() {
       </Animated.View>
 
       {settingsVisible && <SettingsSheet onClose={() => setSettingsVisible(false)} />}
+      {tunerVisible && book && (
+        <BookArtTuner
+          bookId={book.id}
+          bookName={book.name}
+          imageSource={bgImageSource}
+          onClose={() => setTunerVisible(false)}
+        />
+      )}
     </SafeAreaView>
   );
 
   if (isCustomBg && bgImageSource) {
     return (
-      <View style={styles.backgroundImageContainer}>
-        <ImageBackground
-          source={bgImageSource}
-          style={styles.backgroundImage}
-          resizeMode="cover"
-          imageStyle={
-            {
-              objectPosition: Platform.OS === "web" && isLandscape ? "center top" : "center center",
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any
-          }
-        >
-          <LinearGradient
-            colors={["rgba(10, 10, 12, 0.45)", "rgba(10, 10, 12, 0.95)"]}
-            style={StyleSheet.absoluteFillObject}
-          />
-          {readerContent}
-        </ImageBackground>
-      </View>
+      <BookBackground bookId={book?.id ?? ""} imageSource={bgImageSource}>
+        {readerContent}
+      </BookBackground>
     );
   }
 
@@ -740,10 +736,6 @@ export default function ChapterReaderScreen() {
 }
 
 const styles = StyleSheet.create({
-  backgroundImageContainer: {
-    flex: 1,
-    backgroundColor: colors.obsidian,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.obsidian,
@@ -751,10 +743,10 @@ const styles = StyleSheet.create({
   transparentBg: {
     backgroundColor: "transparent",
   },
-  backgroundImage: {
+  headerTitlePressable: {
     flex: 1,
-    width: "100%",
-    height: "100%",
+    alignItems: "center",
+    justifyContent: "center",
   },
   inner: {
     flex: 1,
