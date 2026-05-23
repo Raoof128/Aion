@@ -8,6 +8,36 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Image Background Tuning — Reverted to cover, explored alternatives
+- **Summary:** Tested blurred underlay (looked bad), `contain` (left black bars), and dynamic contain-on-landscape (also left bars). Final: back to `resizeMode="cover"` — fills the screen fully on all devices. The gradient overlay masks edges and the zoom is standard for background images.
+- **Files Changed:**
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - Reverted to `resizeMode="cover"`, removed blur underlay and dynamic mode.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Reverted to `resizeMode="cover"`, removed blur underlay and dynamic mode.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Blurred Underlay Background — Full-Screen Without Cropping
+- **Summary:** Replaced the single `ImageBackground` with `resizeMode="cover"` approach (which zoomed/cropped images on wide screens) with a dual-layer blurred underlay system. The bottom layer renders the image in `cover` with `blurRadius={20}` to fill the entire screen with a soft blurred version. The top layer uses `ImageBackground` with `resizeMode="contain"` to show the sharp image fully visible and never cropped. The `LinearGradient` overlay masks both layers seamlessly. Applied to both the main menu (`app/(tabs)/index.tsx`) and chapter reader (`app/reader/[bookId]/[chapter].tsx`). The photo always shows in full without distortion on any screen size.
+- **Files Changed:**
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - Added `Image` import; added blurred underlay `Image` layer; changed top `ImageBackground` to `resizeMode="contain"`; added `blurredUnderlay` style.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `Image` import; added blurred underlay `Image` layer; changed top `ImageBackground` to `resizeMode="contain"`; added `blurredUnderlay` style.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Deuteronomy Background Image Addition
+- **Summary:** Added custom background image support for Deuteronomy chapters in the reader, following the same pattern as previous books. Copied Deuteronomy.png to assets/, added `isDeuteronomy` book ID check (DEU/deuteronomy), and included the require() call in bgImageSource.
+- **Files Changed:**
+  - [assets/Deuteronomy.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Deuteronomy.png) - Added Deuteronomy background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isDeuteronomy` check, included Deuteronomy in `isCustomBg`, and added require() for Deuteronomy.png in bgImageSource.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Numbers Background Image Addition
 - **Summary:** Added custom background image support for Numbers chapters in the reader, following the same pattern as Genesis, Exodus, and Leviticus. Copied Numbers.png to assets/, added `isNumbers` book ID check (NUM/numbers), and included the require() call in bgImageSource.
 - **Files Changed:**
