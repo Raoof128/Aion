@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Leviticus Background Image Addition
+- **Summary:** Added custom background image support for Leviticus chapters in the reader, following the same pattern as the existing Genesis and Exodus backgrounds. Copied the user's Leviticus.png to assets/, added `isLeviticus` book ID check (LEV/leviticus), and included the require() call in the bgImageSource useMemo.
+- **Files Changed:**
+  - [assets/Leviticus.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Leviticus.png) - Added Leviticus background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isLeviticus` check, included Leviticus in `isCustomBg`, and added require() for Leviticus.png in bgImageSource.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Full-Screen Web Background Alignment and Gradient Masks
 - **Summary:** Replaced the centered background containment and blurred sidebars on widescreen web displays with an edge-to-edge full-bleed background layout. Resolved the widescreen background zooming issue by using cover scaling paired with a dynamic `objectPosition: "center top"` style on landscape web viewports. This ensures that the focal top portion of the illustrations remains fully visible and uncropped. Added a luxurious vertical `LinearGradient` overlay that fades the illustration smoothly from a light mask at the top into the solid obsidian dark background at the bottom. Removed the redundant blurred background image layer on web, simplifying the container hierarchy.
 - **Files Changed:**

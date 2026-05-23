@@ -275,7 +275,8 @@ export default function ChapterReaderScreen() {
 
   const isGenesis = bookId?.toUpperCase() === "GEN" || bookId?.toLowerCase() === "genesis";
   const isExodus = bookId?.toUpperCase() === "EXO" || bookId?.toLowerCase() === "exodus";
-  const isCustomBg = isGenesis || isExodus;
+  const isLeviticus = bookId?.toUpperCase() === "LEV" || bookId?.toLowerCase() === "leviticus";
+  const isCustomBg = isGenesis || isExodus || isLeviticus;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -286,8 +287,12 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/Exodus.png");
     }
+    if (isLeviticus) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Leviticus.png");
+    }
     return null;
-  }, [isGenesis, isExodus]);
+  }, [isGenesis, isExodus, isLeviticus]);
 
   const readerContent = (
     <SafeAreaView
