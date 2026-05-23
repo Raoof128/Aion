@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Ruth + 1 Samuel Background Image Additions
+- **Summary:** Added custom background images for Ruth and 1 Samuel chapters. Both images are 1448×1086. Added `isRuth` and `is1Samuel` checks with corresponding `require()` calls in bgImageSource.
+- **Files Changed:**
+  - [assets/Ruth.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Ruth.png) - Added Ruth background image asset.
+  - [assets/1Samuel.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/1Samuel.png) - Added 1 Samuel background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isRuth` (RUT) and `is1Samuel` (1SA) checks, included in `isCustomBg`, added require() calls.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** BookBackground Aspect-Ratio Fit + Image Asset Cleanup
 - **Summary:** Rewrote BookBackground to render photos without cropping — uses `Image.resolveAssetSource` to get natural dimensions and fits them within the screen (`Math.min(screenW/photoW, screenH/photoH)`) with centered layout. Void background fills remaining space. Characters/faces no longer cut off. Updated BookArtTuner preview container to match photo's aspect ratio via resolved asset dimensions. Replaced and reorganized all background image assets to correct aspect ratios across books.
 - **Final Image State:**

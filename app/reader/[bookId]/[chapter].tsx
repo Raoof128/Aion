@@ -278,8 +278,18 @@ export default function ChapterReaderScreen() {
   const isDeuteronomy = bookId?.toUpperCase() === "DEU" || bookId?.toLowerCase() === "deuteronomy";
   const isJoshua = bookId?.toUpperCase() === "JOS" || bookId?.toLowerCase() === "joshua";
   const isJudges = bookId?.toUpperCase() === "JDG" || bookId?.toLowerCase() === "judges";
+  const isRuth = bookId?.toUpperCase() === "RUT" || bookId?.toLowerCase() === "ruth";
+  const is1Samuel = bookId?.toUpperCase() === "1SA" || bookId?.toLowerCase() === "1 samuel";
   const isCustomBg =
-    isGenesis || isExodus || isLeviticus || isNumbers || isDeuteronomy || isJoshua || isJudges;
+    isGenesis ||
+    isExodus ||
+    isLeviticus ||
+    isNumbers ||
+    isDeuteronomy ||
+    isJoshua ||
+    isJudges ||
+    isRuth ||
+    is1Samuel;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -310,8 +320,26 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/Judges.png");
     }
+    if (isRuth) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Ruth.png");
+    }
+    if (is1Samuel) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/1Samuel.png");
+    }
     return null;
-  }, [isGenesis, isExodus, isLeviticus, isNumbers, isDeuteronomy, isJoshua, isJudges]);
+  }, [
+    isGenesis,
+    isExodus,
+    isLeviticus,
+    isNumbers,
+    isDeuteronomy,
+    isJoshua,
+    isJudges,
+    isRuth,
+    is1Samuel,
+  ]);
 
   const readerContent = (
     <SafeAreaView
