@@ -10,7 +10,9 @@ import {
   Share,
   DimensionValue,
   ImageBackground,
+  useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
 import Animated, { FadeIn } from "react-native-reanimated";
@@ -41,6 +43,9 @@ export default function ChapterReaderScreen() {
     bookId: string;
     chapter: string;
   }>();
+
+  const { width: windowWidth, height: windowHeight } = useWindowDimensions();
+  const isLandscape = windowWidth > windowHeight;
 
   const [verses, setVerses] = useState<Verse[]>([]);
   const [loading, setLoading] = useState(true);
@@ -269,10 +274,24 @@ export default function ChapterReaderScreen() {
   const headerTitle = book ? `${book.name} ${chapter}` : `Chapter ${chapter}`;
 
   const isGenesis = bookId?.toUpperCase() === "GEN" || bookId?.toLowerCase() === "genesis";
+  const isExodus = bookId?.toUpperCase() === "EXO" || bookId?.toLowerCase() === "exodus";
+  const isCustomBg = isGenesis || isExodus;
+
+  const bgImageSource = useMemo(() => {
+    if (isGenesis) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Genesis.png");
+    }
+    if (isExodus) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Exodus.png");
+    }
+    return null;
+  }, [isGenesis, isExodus]);
 
   const readerContent = (
     <SafeAreaView
-      style={[styles.container, dynamicStyles.container, isGenesis && styles.transparentBg]}
+      style={[styles.container, dynamicStyles.container, isCustomBg && styles.transparentBg]}
       edges={["top"]}
     >
       <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
@@ -667,17 +686,27 @@ export default function ChapterReaderScreen() {
     </SafeAreaView>
   );
 
-  if (isGenesis) {
+  if (isCustomBg && bgImageSource) {
     return (
-      <ImageBackground
-        // eslint-disable-next-line @typescript-eslint/no-require-imports
-        source={require("../../../assets/Genesis.png")}
-        style={styles.backgroundImage}
-        resizeMode="cover"
-      >
-        <View style={styles.backgroundOverlay} />
-        {readerContent}
-      </ImageBackground>
+      <View style={styles.backgroundImageContainer}>
+        <ImageBackground
+          source={bgImageSource}
+          style={styles.backgroundImage}
+          resizeMode="cover"
+          imageStyle={
+            {
+              objectPosition: Platform.OS === "web" && isLandscape ? "center top" : "center center",
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            } as any
+          }
+        >
+          <LinearGradient
+            colors={["rgba(10, 10, 12, 0.45)", "rgba(10, 10, 12, 0.95)"]}
+            style={StyleSheet.absoluteFillObject}
+          />
+          {readerContent}
+        </ImageBackground>
+      </View>
     );
   }
 
@@ -685,6 +714,10 @@ export default function ChapterReaderScreen() {
 }
 
 const styles = StyleSheet.create({
+  backgroundImageContainer: {
+    flex: 1,
+    backgroundColor: colors.obsidian,
+  },
   container: {
     flex: 1,
     backgroundColor: colors.obsidian,
@@ -697,10 +730,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  backgroundOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 10, 12, 0.75)", // 75% dark overlay mask for high contrast reader text
-  },
   inner: {
     flex: 1,
   },
@@ -712,6 +741,14 @@ const styles = StyleSheet.create({
     paddingBottom: 12,
     borderBottomWidth: 1,
     borderBottomColor: colors.glassBorder,
+    width: "100%",
+    ...Platform.select({
+      web: {
+        maxWidth: 680,
+        alignSelf: "center",
+      },
+      default: {},
+    }),
   },
   headerButton: {
     width: 40,
@@ -789,6 +826,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingTop: 28,
     paddingBottom: 80,
+    width: "100%",
+    ...Platform.select({
+      web: {
+        maxWidth: 680,
+        alignSelf: "center",
+      },
+      default: {},
+    }),
   },
   chapterHeading: {
     flexDirection: "row",

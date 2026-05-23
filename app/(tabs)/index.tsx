@@ -8,7 +8,9 @@ import {
   StyleSheet,
   Pressable,
   ImageBackground,
+  useWindowDimensions,
 } from "react-native";
+import { LinearGradient } from "expo-linear-gradient";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import Animated, {
@@ -55,6 +57,9 @@ function getGreeting(): string {
 
 export default function HomeScreen() {
   const router = useRouter();
+  const { width, height } = useWindowDimensions();
+  const isLandscape = width > height;
+
   const votd = getVerseOfTheDay();
 
   const breathe = useSharedValue(0.5);
@@ -81,137 +86,154 @@ export default function HomeScreen() {
   };
 
   return (
-    <ImageBackground
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      source={require("../../assets/Main_menue.png")}
-      style={styles.backgroundImage}
-      resizeMode="cover"
-    >
-      {/* Dark tint overlay to ensure all text remains highly readable */}
-      <View style={styles.backgroundOverlay} />
+    <View style={styles.backgroundImageContainer}>
+      <ImageBackground
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        source={require("../../assets/Main_menue.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+        imageStyle={
+          {
+            objectPosition: Platform.OS === "web" && isLandscape ? "center top" : "center center",
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          } as any
+        }
+      >
+        {/* Dark tint gradient overlay to ensure all text remains highly readable while preserving artwork */}
+        <LinearGradient
+          colors={["rgba(10, 10, 12, 0.45)", "rgba(10, 10, 12, 0.92)"]}
+          style={StyleSheet.absoluteFillObject}
+        />
 
-      <SafeAreaView style={styles.container} edges={["top"]}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === "ios" ? "padding" : undefined}
-          style={styles.flex}
-        >
-          {/* Ambient background glows */}
-          <View style={styles.glowOrbPurple} />
-          <View style={styles.glowOrbAmber} />
-
-          <ScrollView
-            style={styles.scrollContainer}
-            contentContainerStyle={styles.scrollContent}
-            showsVerticalScrollIndicator={false}
+        <SafeAreaView style={styles.container} edges={["top"]}>
+          <KeyboardAvoidingView
+            behavior={Platform.OS === "ios" ? "padding" : undefined}
+            style={styles.flex}
           >
-            {/* Time-based greeting */}
-            <Animated.Text entering={FadeIn.duration(400).delay(0)} style={styles.greeting}>
-              {getGreeting()}
-            </Animated.Text>
+            {/* Ambient background glows */}
+            <View style={styles.glowOrbPurple} />
+            <View style={styles.glowOrbAmber} />
 
-            {/* Logo */}
-            <Animated.Text
-              entering={FadeInDown.duration(600).delay(100)}
-              style={styles.logo}
-              accessibilityRole="header"
+            <ScrollView
+              style={styles.scrollContainer}
+              contentContainerStyle={styles.scrollContent}
+              showsVerticalScrollIndicator={false}
             >
-              A I O N
-            </Animated.Text>
+              {/* Time-based greeting */}
+              <Animated.Text entering={FadeIn.duration(400).delay(0)} style={styles.greeting}>
+                {getGreeting()}
+              </Animated.Text>
 
-            {/* Divider */}
-            <Animated.View
-              entering={FadeIn.duration(400).delay(400)}
-              style={[styles.divider, breatheStyle]}
-            />
-
-            {/* Tagline */}
-            <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
-              "Seek, and you shall find."
-            </Animated.Text>
-
-            {/* Supabase Warning Banner */}
-            {!isSupabaseConfigured && (
-              <Animated.View
-                entering={FadeInDown.duration(400).delay(650)}
-                style={styles.warningCard}
-                accessibilityRole="alert"
+              {/* Logo */}
+              <Animated.Text
+                entering={FadeInDown.duration(600).delay(100)}
+                style={styles.logo}
+                accessibilityRole="header"
               >
-                <View style={styles.warningHeader}>
-                  <AlertTriangle size={14} color={colors.warning} />
-                  <Text style={styles.warningLabel}>Database Setup Required</Text>
+                A I O N
+              </Animated.Text>
+
+              {/* Divider */}
+              <Animated.View
+                entering={FadeIn.duration(400).delay(400)}
+                style={[styles.divider, breatheStyle]}
+              />
+
+              {/* Tagline */}
+              <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
+                "Seek, and you shall find."
+              </Animated.Text>
+
+              {/* Supabase Warning Banner */}
+              {!isSupabaseConfigured && (
+                <Animated.View
+                  entering={FadeInDown.duration(400).delay(650)}
+                  style={styles.warningCard}
+                  accessibilityRole="alert"
+                >
+                  <View style={styles.warningHeader}>
+                    <AlertTriangle size={14} color={colors.warning} />
+                    <Text style={styles.warningLabel}>Database Setup Required</Text>
+                  </View>
+                  <Text style={styles.warningContent}>
+                    Please update your <Text style={styles.codeText}>.env</Text> file in the project
+                    root with your actual Supabase URL and Anon Key, then restart the Expo server.
+                  </Text>
+                </Animated.View>
+              )}
+
+              {/* Verse of the Day */}
+              <Animated.View
+                entering={FadeIn.duration(400).delay(700)}
+                style={styles.votdCard}
+                accessibilityRole="summary"
+                accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
+              >
+                <View style={styles.votdHeaderRow}>
+                  <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
+                  <Sparkle size={10} color={colors.amberGlow} />
                 </View>
-                <Text style={styles.warningContent}>
-                  Please update your <Text style={styles.codeText}>.env</Text> file in the project
-                  root with your actual Supabase URL and Anon Key, then restart the Expo server.
+                <Text style={styles.votdContent}>"{votd.content}"</Text>
+                <Text style={styles.votdRef}>
+                  — {votd.book_name} {votd.chapter}:{votd.verse}
                 </Text>
               </Animated.View>
-            )}
 
-            {/* Verse of the Day */}
-            <Animated.View
-              entering={FadeIn.duration(400).delay(700)}
-              style={styles.votdCard}
-              accessibilityRole="summary"
-              accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
-            >
-              <View style={styles.votdHeaderRow}>
-                <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
-                <Sparkle size={10} color={colors.amberGlow} />
-              </View>
-              <Text style={styles.votdContent}>"{votd.content}"</Text>
-              <Text style={styles.votdRef}>
-                — {votd.book_name} {votd.chapter}:{votd.verse}
-              </Text>
-            </Animated.View>
+              {/* Read Bible Button */}
+              <Pressable
+                onPress={() => router.push("/read")}
+                style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                  styles.readerButton,
+                  hovered && styles.readerButtonHovered,
+                  pressed && styles.readerButtonPressed,
+                ]}
+                accessibilityLabel="Open Bible Reader"
+                accessibilityRole="button"
+              >
+                <BookOpen size={18} color={colors.amberGlow} style={styles.readerIcon} />
+                <Text style={styles.readerButtonText}>Read the Bible</Text>
+                <ChevronRight size={18} color={colors.textGhost} />
+              </Pressable>
 
-            {/* Read Bible Button */}
-            <Pressable
-              onPress={() => router.push("/read")}
-              style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-                styles.readerButton,
-                hovered && styles.readerButtonHovered,
-                pressed && styles.readerButtonPressed,
-              ]}
-              accessibilityLabel="Open Bible Reader"
-              accessibilityRole="button"
-            >
-              <BookOpen size={18} color={colors.amberGlow} style={styles.readerIcon} />
-              <Text style={styles.readerButtonText}>Read the Bible</Text>
-              <ChevronRight size={18} color={colors.textGhost} />
-            </Pressable>
+              {/* Suggestions */}
+              <Animated.View
+                entering={FadeInDown.duration(500).delay(800)}
+                style={styles.suggestionsSection}
+              >
+                <View style={styles.labelRow}>
+                  <View style={styles.labelLine} />
+                  <Text style={styles.suggestionsLabel}>Explore</Text>
+                  <View style={styles.labelLine} />
+                </View>
+                <View style={styles.pillGrid} accessibilityRole="list">
+                  {PROMPT_SUGGESTIONS.map((prompt, index) => (
+                    <PromptPill
+                      key={prompt.label}
+                      Icon={prompt.Icon}
+                      label={prompt.label}
+                      onPress={handleSend}
+                      index={index}
+                    />
+                  ))}
+                </View>
+              </Animated.View>
+            </ScrollView>
 
-            {/* Suggestions */}
-            <Animated.View
-              entering={FadeInDown.duration(500).delay(800)}
-              style={styles.suggestionsSection}
-            >
-              <View style={styles.labelRow}>
-                <View style={styles.labelLine} />
-                <Text style={styles.suggestionsLabel}>Explore</Text>
-                <View style={styles.labelLine} />
-              </View>
-              <View style={styles.pillGrid} accessibilityRole="list">
-                {PROMPT_SUGGESTIONS.map((prompt, index) => (
-                  <PromptPill
-                    key={prompt.label}
-                    Icon={prompt.Icon}
-                    label={prompt.label}
-                    onPress={handleSend}
-                    index={index}
-                  />
-                ))}
-              </View>
-            </Animated.View>
-          </ScrollView>
-
-          <ChatInput onSend={handleSend} />
-        </KeyboardAvoidingView>
-      </SafeAreaView>
-    </ImageBackground>
+            <View style={styles.chatInputContainer}>
+              <ChatInput onSend={handleSend} />
+            </View>
+          </KeyboardAvoidingView>
+        </SafeAreaView>
+      </ImageBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  backgroundImageContainer: {
+    flex: 1,
+    backgroundColor: colors.obsidian,
+  },
   container: {
     flex: 1,
     backgroundColor: "transparent",
@@ -221,9 +243,15 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
   },
-  backgroundOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    backgroundColor: "rgba(10, 10, 12, 0.65)", // Dark obsidian overlay mask
+  chatInputContainer: {
+    width: "100%",
+    ...Platform.select({
+      web: {
+        maxWidth: 600,
+        alignSelf: "center",
+      },
+      default: {},
+    }),
   },
   flex: {
     flex: 1,
