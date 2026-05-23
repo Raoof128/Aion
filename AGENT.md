@@ -11,6 +11,16 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Joshua Background Image Addition
+- **Summary:** Added custom background image support for Joshua chapters in the reader. Copied Joshua.png to assets/, added `isJoshua` book ID check (JOS/joshua), and included the require() call in bgImageSource.
+- **Files Changed:**
+  - [assets/Joshua.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Joshua.png) - Added Joshua background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isJoshua` check, included Joshua in `isCustomBg`, and added require() for Joshua.png in bgImageSource.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Image Background Tuning — Reverted to cover, explored alternatives
 - **Summary:** Tested blurred underlay (looked bad), `contain` (left black bars), and dynamic contain-on-landscape (also left bars). Final: back to `resizeMode="cover"` — fills the screen fully on all devices. The gradient overlay masks edges and the zoom is standard for background images.
 - **Files Changed:**

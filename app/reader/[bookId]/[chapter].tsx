@@ -278,7 +278,8 @@ export default function ChapterReaderScreen() {
   const isLeviticus = bookId?.toUpperCase() === "LEV" || bookId?.toLowerCase() === "leviticus";
   const isNumbers = bookId?.toUpperCase() === "NUM" || bookId?.toLowerCase() === "numbers";
   const isDeuteronomy = bookId?.toUpperCase() === "DEU" || bookId?.toLowerCase() === "deuteronomy";
-  const isCustomBg = isGenesis || isExodus || isLeviticus || isNumbers || isDeuteronomy;
+  const isJoshua = bookId?.toUpperCase() === "JOS" || bookId?.toLowerCase() === "joshua";
+  const isCustomBg = isGenesis || isExodus || isLeviticus || isNumbers || isDeuteronomy || isJoshua;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -301,8 +302,12 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/Deuteronomy.png");
     }
+    if (isJoshua) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Joshua.png");
+    }
     return null;
-  }, [isGenesis, isExodus, isLeviticus, isNumbers, isDeuteronomy]);
+  }, [isGenesis, isExodus, isLeviticus, isNumbers, isDeuteronomy, isJoshua]);
 
   const readerContent = (
     <SafeAreaView
