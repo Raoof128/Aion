@@ -9,6 +9,7 @@ import {
   Platform,
   Share,
   DimensionValue,
+  ImageBackground,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
@@ -267,8 +268,13 @@ export default function ChapterReaderScreen() {
 
   const headerTitle = book ? `${book.name} ${chapter}` : `Chapter ${chapter}`;
 
-  return (
-    <SafeAreaView style={[styles.container, dynamicStyles.container]} edges={["top"]}>
+  const isGenesis = bookId?.toUpperCase() === "GEN" || bookId?.toLowerCase() === "genesis";
+
+  const readerContent = (
+    <SafeAreaView
+      style={[styles.container, dynamicStyles.container, isGenesis && styles.transparentBg]}
+      edges={["top"]}
+    >
       <Animated.View entering={FadeIn.duration(400)} style={styles.inner}>
         {/* Header */}
         <View style={[styles.header, dynamicStyles.header]}>
@@ -660,12 +666,40 @@ export default function ChapterReaderScreen() {
       {settingsVisible && <SettingsSheet onClose={() => setSettingsVisible(false)} />}
     </SafeAreaView>
   );
+
+  if (isGenesis) {
+    return (
+      <ImageBackground
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
+        source={require("../../../assets/Genesis.png")}
+        style={styles.backgroundImage}
+        resizeMode="cover"
+      >
+        <View style={styles.backgroundOverlay} />
+        {readerContent}
+      </ImageBackground>
+    );
+  }
+
+  return readerContent;
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.obsidian,
+  },
+  transparentBg: {
+    backgroundColor: "transparent",
+  },
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 10, 12, 0.75)", // 75% dark overlay mask for high contrast reader text
   },
   inner: {
     flex: 1,
