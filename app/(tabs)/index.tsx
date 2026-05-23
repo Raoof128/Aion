@@ -7,6 +7,7 @@ import {
   Platform,
   StyleSheet,
   Pressable,
+  ImageBackground,
 } from "react-native";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -80,130 +81,149 @@ export default function HomeScreen() {
   };
 
   return (
-    <SafeAreaView style={styles.container} edges={["top"]}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.flex}
-      >
-        {/* Ambient background glows */}
-        <View style={styles.glowOrbPurple} />
-        <View style={styles.glowOrbAmber} />
+    <ImageBackground
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      source={require("../../assets/Main_menue.png")}
+      style={styles.backgroundImage}
+      resizeMode="cover"
+    >
+      {/* Dark tint overlay to ensure all text remains highly readable */}
+      <View style={styles.backgroundOverlay} />
 
-        <ScrollView
-          style={styles.scrollContainer}
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+      <SafeAreaView style={styles.container} edges={["top"]}>
+        <KeyboardAvoidingView
+          behavior={Platform.OS === "ios" ? "padding" : undefined}
+          style={styles.flex}
         >
-          {/* Time-based greeting */}
-          <Animated.Text entering={FadeIn.duration(400).delay(0)} style={styles.greeting}>
-            {getGreeting()}
-          </Animated.Text>
+          {/* Ambient background glows */}
+          <View style={styles.glowOrbPurple} />
+          <View style={styles.glowOrbAmber} />
 
-          {/* Logo */}
-          <Animated.Text
-            entering={FadeInDown.duration(600).delay(100)}
-            style={styles.logo}
-            accessibilityRole="header"
+          <ScrollView
+            style={styles.scrollContainer}
+            contentContainerStyle={styles.scrollContent}
+            showsVerticalScrollIndicator={false}
           >
-            A I O N
-          </Animated.Text>
+            {/* Time-based greeting */}
+            <Animated.Text entering={FadeIn.duration(400).delay(0)} style={styles.greeting}>
+              {getGreeting()}
+            </Animated.Text>
 
-          {/* Divider */}
-          <Animated.View
-            entering={FadeIn.duration(400).delay(400)}
-            style={[styles.divider, breatheStyle]}
-          />
-
-          {/* Tagline */}
-          <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
-            "Seek, and you shall find."
-          </Animated.Text>
-
-          {/* Supabase Warning Banner */}
-          {!isSupabaseConfigured && (
-            <Animated.View
-              entering={FadeInDown.duration(400).delay(650)}
-              style={styles.warningCard}
-              accessibilityRole="alert"
+            {/* Logo */}
+            <Animated.Text
+              entering={FadeInDown.duration(600).delay(100)}
+              style={styles.logo}
+              accessibilityRole="header"
             >
-              <View style={styles.warningHeader}>
-                <AlertTriangle size={14} color={colors.warning} />
-                <Text style={styles.warningLabel}>Database Setup Required</Text>
+              A I O N
+            </Animated.Text>
+
+            {/* Divider */}
+            <Animated.View
+              entering={FadeIn.duration(400).delay(400)}
+              style={[styles.divider, breatheStyle]}
+            />
+
+            {/* Tagline */}
+            <Animated.Text entering={FadeIn.duration(400).delay(600)} style={styles.tagline}>
+              "Seek, and you shall find."
+            </Animated.Text>
+
+            {/* Supabase Warning Banner */}
+            {!isSupabaseConfigured && (
+              <Animated.View
+                entering={FadeInDown.duration(400).delay(650)}
+                style={styles.warningCard}
+                accessibilityRole="alert"
+              >
+                <View style={styles.warningHeader}>
+                  <AlertTriangle size={14} color={colors.warning} />
+                  <Text style={styles.warningLabel}>Database Setup Required</Text>
+                </View>
+                <Text style={styles.warningContent}>
+                  Please update your <Text style={styles.codeText}>.env</Text> file in the project
+                  root with your actual Supabase URL and Anon Key, then restart the Expo server.
+                </Text>
+              </Animated.View>
+            )}
+
+            {/* Verse of the Day */}
+            <Animated.View
+              entering={FadeIn.duration(400).delay(700)}
+              style={styles.votdCard}
+              accessibilityRole="summary"
+              accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
+            >
+              <View style={styles.votdHeaderRow}>
+                <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
+                <Sparkle size={10} color={colors.amberGlow} />
               </View>
-              <Text style={styles.warningContent}>
-                Please update your <Text style={styles.codeText}>.env</Text> file in the project
-                root with your actual Supabase URL and Anon Key, then restart the Expo server.
+              <Text style={styles.votdContent}>"{votd.content}"</Text>
+              <Text style={styles.votdRef}>
+                — {votd.book_name} {votd.chapter}:{votd.verse}
               </Text>
             </Animated.View>
-          )}
 
-          {/* Verse of the Day */}
-          <Animated.View
-            entering={FadeIn.duration(400).delay(700)}
-            style={styles.votdCard}
-            accessibilityRole="summary"
-            accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
-          >
-            <View style={styles.votdHeaderRow}>
-              <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
-              <Sparkle size={10} color={colors.amberGlow} />
-            </View>
-            <Text style={styles.votdContent}>"{votd.content}"</Text>
-            <Text style={styles.votdRef}>
-              — {votd.book_name} {votd.chapter}:{votd.verse}
-            </Text>
-          </Animated.View>
+            {/* Read Bible Button */}
+            <Pressable
+              onPress={() => router.push("/read")}
+              style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                styles.readerButton,
+                hovered && styles.readerButtonHovered,
+                pressed && styles.readerButtonPressed,
+              ]}
+              accessibilityLabel="Open Bible Reader"
+              accessibilityRole="button"
+            >
+              <BookOpen size={18} color={colors.amberGlow} style={styles.readerIcon} />
+              <Text style={styles.readerButtonText}>Read the Bible</Text>
+              <ChevronRight size={18} color={colors.textGhost} />
+            </Pressable>
 
-          {/* Read Bible Button */}
-          <Pressable
-            onPress={() => router.push("/read")}
-            style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
-              styles.readerButton,
-              hovered && styles.readerButtonHovered,
-              pressed && styles.readerButtonPressed,
-            ]}
-            accessibilityLabel="Open Bible Reader"
-            accessibilityRole="button"
-          >
-            <BookOpen size={18} color={colors.amberGlow} style={styles.readerIcon} />
-            <Text style={styles.readerButtonText}>Read the Bible</Text>
-            <ChevronRight size={18} color={colors.textGhost} />
-          </Pressable>
+            {/* Suggestions */}
+            <Animated.View
+              entering={FadeInDown.duration(500).delay(800)}
+              style={styles.suggestionsSection}
+            >
+              <View style={styles.labelRow}>
+                <View style={styles.labelLine} />
+                <Text style={styles.suggestionsLabel}>Explore</Text>
+                <View style={styles.labelLine} />
+              </View>
+              <View style={styles.pillGrid} accessibilityRole="list">
+                {PROMPT_SUGGESTIONS.map((prompt, index) => (
+                  <PromptPill
+                    key={prompt.label}
+                    Icon={prompt.Icon}
+                    label={prompt.label}
+                    onPress={handleSend}
+                    index={index}
+                  />
+                ))}
+              </View>
+            </Animated.View>
+          </ScrollView>
 
-          {/* Suggestions */}
-          <Animated.View
-            entering={FadeInDown.duration(500).delay(800)}
-            style={styles.suggestionsSection}
-          >
-            <View style={styles.labelRow}>
-              <View style={styles.labelLine} />
-              <Text style={styles.suggestionsLabel}>Explore</Text>
-              <View style={styles.labelLine} />
-            </View>
-            <View style={styles.pillGrid} accessibilityRole="list">
-              {PROMPT_SUGGESTIONS.map((prompt, index) => (
-                <PromptPill
-                  key={prompt.label}
-                  Icon={prompt.Icon}
-                  label={prompt.label}
-                  onPress={handleSend}
-                  index={index}
-                />
-              ))}
-            </View>
-          </Animated.View>
-        </ScrollView>
-
-        <ChatInput onSend={handleSend} />
-      </KeyboardAvoidingView>
-    </SafeAreaView>
+          <ChatInput onSend={handleSend} />
+        </KeyboardAvoidingView>
+      </SafeAreaView>
+    </ImageBackground>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.obsidian,
+    backgroundColor: "transparent",
+  },
+  backgroundImage: {
+    flex: 1,
+    width: "100%",
+    height: "100%",
+  },
+  backgroundOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: "rgba(10, 10, 12, 0.65)", // Dark obsidian overlay mask
   },
   flex: {
     flex: 1,
@@ -271,7 +291,7 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
   },
   tagline: {
-    color: colors.textMuted,
+    color: colors.textSecondary,
     fontSize: 13,
     fontFamily: fonts.verseItalic,
     fontStyle: "italic",
@@ -294,7 +314,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.glass,
   },
   suggestionsLabel: {
-    color: colors.textGhost,
+    color: colors.textMuted,
     fontSize: 11,
     fontFamily: fonts.uiMedium,
     letterSpacing: 3,
@@ -310,7 +330,7 @@ const styles = StyleSheet.create({
   votdCard: {
     width: "100%",
     maxWidth: 420,
-    backgroundColor: colors.amberMist,
+    backgroundColor: "rgba(17, 17, 20, 0.8)", // Solid glassmorphic dark background
     borderWidth: 1,
     borderColor: colors.amberBorder,
     borderRadius: 16,
@@ -353,7 +373,7 @@ const styles = StyleSheet.create({
     maxWidth: 420,
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.glass,
+    backgroundColor: "rgba(17, 17, 20, 0.7)", // Higher opacity glassmorphic base
     borderWidth: 1,
     borderColor: colors.glassBorder,
     borderRadius: 16,

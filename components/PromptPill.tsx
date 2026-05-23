@@ -68,7 +68,7 @@ const styles = StyleSheet.create({
   pill: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: colors.glass,
+    backgroundColor: "rgba(17, 17, 20, 0.7)", // Higher opacity glassmorphic base
     borderWidth: 1,
     borderColor: colors.glassBorder,
     borderRadius: 16,

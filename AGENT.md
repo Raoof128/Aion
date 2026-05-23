@@ -9,6 +9,19 @@ These rules govern the development of the Aion project.
 
 ## Change Log
 
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Main Menu Background & UI/UX Audit
+- **Summary:** Added user's custom main menu background image assets, resolved the Expo bundling path mismatch error by aligning the filename case and spelling in `assets/`, created a root `check.sh` quality gate script, and performed a comprehensive UI/UX contrast audit to guarantee high readability of all main menu text. Added a dark obsidian background overlay (`0.65` opacity) and upgraded prompt pills, reader buttons, input forms, and VOTD cards with higher contrast glassmorphic dark surfaces.
+- **Files Changed:**
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - Wrapped layout in `ImageBackground`, added `View` with `backgroundOverlay` styles (`0.65` opacity obsidian), changed container background to transparent, boosted tagline and suggestions label text contrast, and upgraded the VOTD card and reader button to use premium glassmorphic dark surfaces (`rgba(17, 17, 20, 0.7-0.8)`).
+  - [components/PromptPill.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/PromptPill.tsx) - Upgraded suggestion prompt pills to use the higher contrast glassmorphic dark background.
+  - [components/ChatInput.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/ChatInput.tsx) - Upgraded bottom wrapper dock to use a semi-transparent dark obsidian surface (`rgba(10, 10, 12, 0.85)`) and input box to a higher contrast glass background (`rgba(17, 17, 20, 0.5)`).
+  - [assets/Main_menue.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Main_menue.png) - Added and renamed the background image asset to resolve Expo's resolver mismatch.
+  - [check.sh](file:///Users/raoof.r12/Desktop/Raouf/Aion/check.sh) - Created root script to run format, lint, type-check, and tests sequentially.
+- **Verification:** Ran `./check.sh` executing all linter checks, formatter checks, typescript compiler checks, and the 15-test test suite cleanly.
+- **Follow-ups:** None.
+
 ### 2026-05-21 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Prettier Formatting Alignment

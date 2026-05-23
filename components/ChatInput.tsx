@@ -168,14 +168,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingBottom: 12,
     paddingTop: 12,
-    backgroundColor: colors.obsidian,
+    backgroundColor: "rgba(10, 10, 12, 0.85)", // Semi-transparent dark obsidian dock
     borderTopWidth: 1,
     borderTopColor: "rgba(255, 255, 255, 0.04)",
   },
   container: {
     flexDirection: "row",
     alignItems: "flex-end",
-    backgroundColor: colors.glass,
+    backgroundColor: "rgba(17, 17, 20, 0.5)", // Higher contrast input surface
     borderWidth: 1,
     borderColor: colors.glassBorder,
     borderRadius: 24,
