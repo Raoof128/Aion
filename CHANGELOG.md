@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Judges Background Image Addition
+- **Summary:** Added custom background image support for Judges chapters in the reader. Copied Judges.png to assets/, added `isJudges` book ID check (JDG/judges), and included the require() call in bgImageSource.
+- **Files Changed:**
+  - [assets/Judges.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Judges.png) - Added Judges background image asset.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added `isJudges` check, included Judges in `isCustomBg`, and added require() for Judges.png.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-23 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Joshua Background Image Addition
 - **Summary:** Added custom background image support for Joshua chapters in the reader. Copied Joshua.png to assets/, added `isJoshua` book ID check (JOS/joshua), and included the require() call in bgImageSource.
 - **Files Changed:**
