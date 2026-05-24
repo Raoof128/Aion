@@ -26,6 +26,19 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Added 4 new book backgrounds (Ezra, Nehemiah, Esther, Job)
+- **Summary:** Added background images for Ezra, Nehemiah, Esther, and Job. All new assets are 1672×941 (landscape). Updated reader chapter component with isEzra/isNehemiah/isEsther/isJob checks, included in isCustomBg, and added require() calls.
+- **Files Changed:**
+  - [assets/Ezra.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Ezra.png) - Added background image.
+  - [assets/Nehemiah.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Nehemiah.png) - Added background image.
+  - [assets/Esther.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Esther.png) - Added background image.
+  - [assets/Job.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Job.png) - Added background image.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added isEzra (EZR/ezra), isNehemiah (NEH/nehemiah), isEsther (EST/esther), isJob (JOB/job) checks, included in isCustomBg, added require() calls.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** BookBackground fill-height rendering fix for landscape images
 - **Summary:** Changed the photoBox sizing in BookBackground from `Math.min(screenW/photoW, screenH/photoH)` (fit entire image within screen) to `screenH / photoH` (fill screen height). This fixes landscape background images (Deuteronomy, Genesis, Exodus, Numbers, Ruth, 1Samuel) where the image was rendered tiny in the center of the screen. Now the image fills the full screen height with horizontal centering — Moses' head in Deuteronomy is properly visible. All books benefit from more prominent backgrounds.
 - **Files Changed:**

@@ -285,6 +285,10 @@ export default function ChapterReaderScreen() {
   const is2Kings = bookId?.toUpperCase() === "2KI" || bookId?.toLowerCase() === "2 kings";
   const is1Chronicles = bookId?.toUpperCase() === "1CH" || bookId?.toLowerCase() === "1 chronicles";
   const is2Chronicles = bookId?.toUpperCase() === "2CH" || bookId?.toLowerCase() === "2 chronicles";
+  const isEzra = bookId?.toUpperCase() === "EZR" || bookId?.toLowerCase() === "ezra";
+  const isNehemiah = bookId?.toUpperCase() === "NEH" || bookId?.toLowerCase() === "nehemiah";
+  const isEsther = bookId?.toUpperCase() === "EST" || bookId?.toLowerCase() === "esther";
+  const isJob = bookId?.toUpperCase() === "JOB" || bookId?.toLowerCase() === "job";
   const isCustomBg =
     isGenesis ||
     isExodus ||
@@ -299,7 +303,11 @@ export default function ChapterReaderScreen() {
     is1Kings ||
     is2Kings ||
     is1Chronicles ||
-    is2Chronicles;
+    is2Chronicles ||
+    isEzra ||
+    isNehemiah ||
+    isEsther ||
+    isJob;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -358,6 +366,22 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/2Chronicles.png");
     }
+    if (isEzra) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Ezra.png");
+    }
+    if (isNehemiah) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Nehemiah.png");
+    }
+    if (isEsther) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Esther.png");
+    }
+    if (isJob) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Job.png");
+    }
     return null;
   }, [
     isGenesis,
@@ -374,6 +398,10 @@ export default function ChapterReaderScreen() {
     is2Kings,
     is1Chronicles,
     is2Chronicles,
+    isEzra,
+    isNehemiah,
+    isEsther,
+    isJob,
   ]);
 
   const readerContent = (
