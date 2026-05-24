@@ -9,10 +9,7 @@ interface Props {
 }
 
 export function StreakCard({ streak }: Props) {
-  const studiedToday =
-    streak.last_active_date !== null && streak.last_active_date === streak.week_start
-      ? false
-      : streak.last_active_date !== null;
+  const studiedToday = streak.last_active_date !== null;
   const freezeAvailable = streak.freeze_uses_this_week < 1;
 
   return (
