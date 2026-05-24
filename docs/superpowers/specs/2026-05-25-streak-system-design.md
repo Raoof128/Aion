@@ -24,19 +24,19 @@ One row per user. Stores the current summary state.
 CREATE TABLE user_streaks (
   user_id               uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   last_active_date      date,
-  current_streak        int  DEFAULT 0,
-  longest_streak        int  DEFAULT 0,
-  freeze_uses_this_week int  DEFAULT 0,
+  current_streak        int  NOT NULL DEFAULT 0 CHECK (current_streak >= 0),
+  longest_streak        int  NOT NULL DEFAULT 0 CHECK (longest_streak >= 0),
+  freeze_uses_this_week int  NOT NULL DEFAULT 0 CHECK (freeze_uses_this_week >= 0 AND freeze_uses_this_week <= 1),
   freeze_week_start     date,
   timezone              text DEFAULT 'UTC',
   created_at            timestamptz DEFAULT now(),
   updated_at            timestamptz DEFAULT now()
 );
 
+-- Clients may only read their own row. The Edge Function (service role) owns all writes.
 ALTER TABLE user_streaks ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users manage own streak" ON user_streaks
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "users read own streak" ON user_streaks
+  FOR SELECT USING (auth.uid() = user_id);
 ```
 
 ### `user_streak_days`
@@ -54,10 +54,10 @@ CREATE TABLE user_streak_days (
   UNIQUE(user_id, local_date)
 );
 
+-- Clients may only read their own rows. The Edge Function (service role) owns all writes.
 ALTER TABLE user_streak_days ENABLE ROW LEVEL SECURITY;
-CREATE POLICY "users manage own streak days" ON user_streak_days
-  USING (auth.uid() = user_id)
-  WITH CHECK (auth.uid() = user_id);
+CREATE POLICY "users read own streak days" ON user_streak_days
+  FOR SELECT USING (auth.uid() = user_id);
 ```
 
 ### `user_streak_milestones`
@@ -90,28 +90,48 @@ POST /functions/v1/record-open
 Authorization: Bearer <anon-jwt>
 
 {
-  local_date: string; // "YYYY-MM-DD" — user's local date
-  timezone: string;   // e.g. "Australia/Sydney"
+  timezone: string; // e.g. "Australia/Sydney" — client sends timezone only
 }
 ```
 
+The client sends `timezone` only. The Edge Function derives `local_date` server-side using `now()` converted to the provided timezone. This prevents clients spoofing dates by changing device clock or timezone.
+
 ### Logic
 
-1. Fetch the user's `user_streaks` row (or initialise defaults if first open).
-2. If `last_active_date == local_date` → return early (`today_recorded: true`, no changes).
-3. Calculate `gap` = days between `last_active_date` and `local_date`.
-4. Reset freeze count if `local_date` is in a new ISO week vs `freeze_week_start`.
-5. Apply streak logic:
+All streak mutations run inside a single Postgres transaction with `SELECT ... FOR UPDATE` on the `user_streaks` row to prevent race conditions on rapid double-open.
+
+1. Compute `local_date` = `now()` converted to `timezone` (date only).
+2. Fetch the user's `user_streaks` row with `FOR UPDATE` (or initialise defaults if first open — see First Open below).
+3. If `last_active_date == local_date` → commit, return early (`today_recorded: true`, no changes).
+4. Calculate `gap` = days between `last_active_date` and `local_date`.
+5. Reset `freeze_uses_this_week` to 0 if `local_date` is in a new ISO week vs `freeze_week_start`.
+6. Apply streak logic:
    - `gap == 1` → increment `current_streak`, insert `active` row for `local_date`.
    - `gap == 2` AND `freeze_uses_this_week < 1` → use freeze:
      - Insert `frozen` row for the missed date (`local_date - 1 day`).
      - Insert `active` row for `local_date`.
      - Increment `current_streak`, increment `freeze_uses_this_week`.
-     - Set `freeze_week_start` if not already set for this week.
+     - Set `freeze_week_start` to current ISO week start if not already set for this week.
    - `gap > 2` OR (`gap == 2` AND no freeze left) → reset `current_streak` to 1, insert `active` row for `local_date`.
-6. Update `longest_streak` if `current_streak > longest_streak`.
-7. Update `last_active_date`, `updated_at`.
-8. Check if `current_streak` is 7, 30, or 100 and no row exists in `user_streak_milestones` → insert milestone row, set `milestone_unlocked` in response.
+7. Update `longest_streak` if `current_streak > longest_streak`.
+8. Update `last_active_date`, `updated_at`.
+9. Check if `current_streak` is 7, 30, or 100 and no row exists in `user_streak_milestones` → insert milestone row, set `milestone_unlocked` in response.
+10. Commit transaction.
+
+**First open (null `last_active_date`):**
+```
+current_streak = 1
+longest_streak = max(longest_streak, 1)
+insert active row for today
+set last_active_date = local_date
+```
+
+**Freeze day example:**
+```
+Saturday → active
+Sunday   → missed, freeze applied → frozen
+Monday   → active
+```
 
 **Freeze day example:**
 ```
@@ -157,7 +177,7 @@ Deep ember/amber flame. Dark backgrounds with warm gold glow accents. Spiritual 
   - "N-day streak" label
   - Longest streak secondary line
   - Freeze pill: `❄️ 1 freeze available` or `❄️ Used` (greyed)
-  - Status line: "Studied today ✓" or "Open daily to keep your streak"
+  - Status line: "Opened today ✓" or "Open daily to keep your streak"
 - Style: dark card, amber top-border accent, subtle grain texture
 
 ### `StreakSheet`
