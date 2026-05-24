@@ -9,6 +9,27 @@ These rules govern the development of the Aion project.
 
 ## Change Log
 
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Daily study streak system — Supabase-backed counter, freeze mechanic, milestone celebrations, UI
+- **Summary:** Implemented end-to-end streak tracking across 10 tasks. Three new Supabase tables (user_streaks, user_streak_days, user_streak_milestones) with RLS SELECT-only policies and a SECURITY DEFINER RPC (update_streak) that owns all writes. Deno Edge Function (record-open) validates IANA timezone server-side and derives local_date via Intl.DateTimeFormat — no client date spoofing possible. One ISO-week freeze: gap==2 with a remaining freeze bridges the missed day. Milestones at 7/30/100 days fire once via user_streak_milestones dedup table. StreakProvider wraps the root layout; uses isInitialised ref + empty dep array to prevent double recordOpen() on mount; AppState listener re-records on app resume. Four UI components: StreakBadge (fire badge in header, pulses on mount), StreakCard (large numeral, freeze pill, status line), StreakSheet (7-day calendar, milestone badges), MilestoneCelebration (full-screen overlay with amber pulse, static fallback for reduceMotion).
+- **Files Changed:**
+  - supabase/migrations/20260525000000_streak_system.sql (created) — 3 tables, RLS, update_streak RPC with REVOKE/GRANT
+  - supabase/functions/record-open/index.ts (created) — CORS, strict Bearer, timezone validation, RPC call
+  - lib/types.ts — added StreakState, RecordOpenResponse, StreakDayRecord
+  - lib/streak-helpers.ts (created) — isoWeekStart, buildWeekDays (pure, testable)
+  - lib/streak.tsx (created) — StreakProvider, useStreak, recordOpen, fetchWeekDays
+  - components/StreakBadge.tsx (created)
+  - components/StreakCard.tsx (created)
+  - components/StreakSheet.tsx (created)
+  - components/MilestoneCelebration.tsx (created)
+  - app/_layout.tsx — wrapped root with StreakProvider
+  - app/(tabs)/index.tsx — wired StreakBadge, StreakCard, StreakSheet, MilestoneCelebration
+  - tests/streak-helpers.test.ts (created) — 25 tests, 10 isoWeekStart + buildWeekDays cases
+  - package.json — added expo-localization
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 25/25 tests ✓.
+- **Follow-ups:** supabase db push (migration) and supabase functions deploy record-open require manual execution — CLI returned 403 during development (project auth issue). Deploy via Supabase dashboard or after re-authenticating CLI.
+
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Full documentation audit

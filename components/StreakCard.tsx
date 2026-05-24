@@ -48,7 +48,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     shadowColor: colors.amber,
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
   },
   topAccent: { height: 2, backgroundColor: colors.amberGlow, opacity: 0.6 },

@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Daily study streak system
+- **Summary:** End-to-end streak tracking tied to anonymous Supabase user UUID. Server derives `local_date` from client-supplied IANA timezone (no date spoofing). One ISO-week freeze bridges a single missed day. Milestones at 7, 30, 100 days fire once via a dedup table. Four UI components integrated into Home screen: fire badge in header, streak card below VOTD, bottom sheet with 7-day calendar and milestone badges, full-screen celebration overlay with reduce-motion fallback.
+- **Files Changed:**
+  - supabase/migrations/20260525000000_streak_system.sql — 3 tables + RLS + update_streak RPC
+  - supabase/functions/record-open/index.ts — Edge Function with timezone validation
+  - lib/types.ts — StreakState, RecordOpenResponse, StreakDayRecord
+  - lib/streak-helpers.ts — isoWeekStart, buildWeekDays (pure helpers, fully tested)
+  - lib/streak.tsx — StreakProvider + useStreak hook
+  - components/StreakBadge.tsx, StreakCard.tsx, StreakSheet.tsx, MilestoneCelebration.tsx
+  - app/_layout.tsx, app/(tabs)/index.tsx
+  - package.json — expo-localization added
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 25/25 tests ✓.
+- **Follow-ups:** Manual Supabase deploy required — `supabase db push` and `supabase functions deploy record-open` (CLI 403 during development).
+
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Full documentation audit

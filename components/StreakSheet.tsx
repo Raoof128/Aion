@@ -155,7 +155,12 @@ const styles = StyleSheet.create({
   legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
   legendDot: { width: 8, height: 8, borderRadius: 4 },
   legendLabel: { color: colors.textMuted, fontSize: 11, fontFamily: fonts.uiMedium },
-  statsRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 28 },
+  statsRow: {
+    flexDirection: "row",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 28,
+  },
   statBlock: { alignItems: "center", paddingHorizontal: 32 },
   statValue: { color: colors.amberGlow, fontSize: 36, fontFamily: fonts.verse },
   statLabel: {

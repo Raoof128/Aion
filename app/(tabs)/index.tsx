@@ -139,7 +139,10 @@ export default function HomeScreen() {
               >
                 <Text style={styles.logo}>A I O N</Text>
                 {streak && (
-                  <StreakBadge count={streak.current_streak} onPress={() => setSheetVisible(true)} />
+                  <StreakBadge
+                    count={streak.current_streak}
+                    onPress={() => setSheetVisible(true)}
+                  />
                 )}
               </Animated.View>
 
@@ -258,10 +261,7 @@ export default function HomeScreen() {
 
         {/* Milestone Celebration */}
         {milestoneUnlocked && (
-          <MilestoneCelebration
-            milestone={milestoneUnlocked}
-            onDismiss={dismissMilestone}
-          />
+          <MilestoneCelebration milestone={milestoneUnlocked} onDismiss={dismissMilestone} />
         )}
       </ImageBackground>
     </View>
