@@ -280,6 +280,11 @@ export default function ChapterReaderScreen() {
   const isJudges = bookId?.toUpperCase() === "JDG" || bookId?.toLowerCase() === "judges";
   const isRuth = bookId?.toUpperCase() === "RUT" || bookId?.toLowerCase() === "ruth";
   const is1Samuel = bookId?.toUpperCase() === "1SA" || bookId?.toLowerCase() === "1 samuel";
+  const is2Samuel = bookId?.toUpperCase() === "2SA" || bookId?.toLowerCase() === "2 samuel";
+  const is1Kings = bookId?.toUpperCase() === "1KI" || bookId?.toLowerCase() === "1 kings";
+  const is2Kings = bookId?.toUpperCase() === "2KI" || bookId?.toLowerCase() === "2 kings";
+  const is1Chronicles = bookId?.toUpperCase() === "1CH" || bookId?.toLowerCase() === "1 chronicles";
+  const is2Chronicles = bookId?.toUpperCase() === "2CH" || bookId?.toLowerCase() === "2 chronicles";
   const isCustomBg =
     isGenesis ||
     isExodus ||
@@ -289,7 +294,12 @@ export default function ChapterReaderScreen() {
     isJoshua ||
     isJudges ||
     isRuth ||
-    is1Samuel;
+    is1Samuel ||
+    is2Samuel ||
+    is1Kings ||
+    is2Kings ||
+    is1Chronicles ||
+    is2Chronicles;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -328,6 +338,26 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/1Samuel.png");
     }
+    if (is2Samuel) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/2Samuel.png");
+    }
+    if (is1Kings) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/1Kings.png");
+    }
+    if (is2Kings) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/2Kings.png");
+    }
+    if (is1Chronicles) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/1Chronicles.png");
+    }
+    if (is2Chronicles) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/2Chronicles.png");
+    }
     return null;
   }, [
     isGenesis,
@@ -339,6 +369,11 @@ export default function ChapterReaderScreen() {
     isJudges,
     isRuth,
     is1Samuel,
+    is2Samuel,
+    is1Kings,
+    is2Kings,
+    is1Chronicles,
+    is2Chronicles,
   ]);
 
   const readerContent = (

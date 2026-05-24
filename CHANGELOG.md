@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Added 5 new book backgrounds + Main_menue replacement (2 Samuel, 1-2 Kings, 1-2 Chronicles)
+- **Summary:** Replaced Main_menue.png and added background images for 2 Samuel, 1 Kings, 2 Kings, 1 Chronicles, and 2 Chronicles. All new assets are 1448×1086. Updated reader chapter component with is2Samuel/is1Kings/is2Kings/is1Chronicles/is2Chronicles checks, included in isCustomBg, and added require() calls.
+- **Files Changed:**
+  - [assets/Main_menue.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Main_menue.png) - Replaced with new version (1.9MB).
+  - [assets/2Samuel.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/2Samuel.png) - Added background image.
+  - [assets/1Kings.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/1Kings.png) - Added background image.
+  - [assets/2Kings.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/2Kings.png) - Added background image.
+  - [assets/1Chronicles.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/1Chronicles.png) - Added background image.
+  - [assets/2Chronicles.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/2Chronicles.png) - Added background image.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added is2Samuel (2SA/2 samuel), is1Kings (1KI/1 kings), is2Kings (2KI/2 kings), is1Chronicles (1CH/1 chronicles), is2Chronicles (2CH/2 chronicles) checks, included in isCustomBg, added require() calls.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** BookBackground fill-height rendering fix for landscape images
 - **Summary:** Changed the photoBox sizing in BookBackground from `Math.min(screenW/photoW, screenH/photoH)` (fit entire image within screen) to `screenH / photoH` (fill screen height). This fixes landscape background images (Deuteronomy, Genesis, Exodus, Numbers, Ruth, 1Samuel) where the image was rendered tiny in the center of the screen. Now the image fills the full screen height with horizontal centering — Moses' head in Deuteronomy is properly visible. All books benefit from more prominent backgrounds.
 - **Files Changed:**
