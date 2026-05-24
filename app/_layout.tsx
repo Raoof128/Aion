@@ -21,6 +21,7 @@ import { Onboarding } from "../components/Onboarding";
 import { colors } from "../lib/theme";
 
 import { SettingsProvider } from "../lib/settings";
+import { StreakProvider } from "../lib/streak";
 
 const queryClient = new QueryClient();
 
@@ -92,26 +93,28 @@ export default function RootLayout() {
   }
 
   return (
-    <SettingsProvider>
-      <QueryClientProvider client={queryClient}>
-        <GestureHandlerRootView style={styles.root}>
-          <Stack
-            screenOptions={{
-              headerShown: false,
-              contentStyle: { backgroundColor: colors.void },
-              animation: "slide_from_right",
-            }}
-          >
-            <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }} />
-            <Stack.Screen
-              name="chat/[id]"
-              options={{ headerShown: false, animation: "slide_from_bottom" }}
-            />
-            <Stack.Screen name="reader" options={{ headerShown: false }} />
-          </Stack>
-        </GestureHandlerRootView>
-      </QueryClientProvider>
-    </SettingsProvider>
+    <StreakProvider>
+      <SettingsProvider>
+        <QueryClientProvider client={queryClient}>
+          <GestureHandlerRootView style={styles.root}>
+            <Stack
+              screenOptions={{
+                headerShown: false,
+                contentStyle: { backgroundColor: colors.void },
+                animation: "slide_from_right",
+              }}
+            >
+              <Stack.Screen name="(tabs)" options={{ headerShown: false, animation: "none" }} />
+              <Stack.Screen
+                name="chat/[id]"
+                options={{ headerShown: false, animation: "slide_from_bottom" }}
+              />
+              <Stack.Screen name="reader" options={{ headerShown: false }} />
+            </Stack>
+          </GestureHandlerRootView>
+        </QueryClientProvider>
+      </SettingsProvider>
+    </StreakProvider>
   );
 }
 
