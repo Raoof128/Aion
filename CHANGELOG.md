@@ -23,6 +23,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Added 4 new book backgrounds (Isaiah, Jeremiah, Lamentations, Ezekiel)
+- **Summary:** Added background images for Isaiah, Jeremiah, Lamentations, and Ezekiel. All new assets are 1672×941 (landscape). Updated reader with isIsaiah/isJeremiah/isLamentations/isEzekiel checks, included in isCustomBg, added require() calls.
+- **Files Changed:**
+  - [assets/Isaiah.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Isaiah.png) - Added background image.
+  - [assets/Jeremiah.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Jeremiah.png) - Added background image.
+  - [assets/Lamentations.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Lamentations.png) - Added background image.
+  - [assets/Ezekiel.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Ezekiel.png) - Added background image.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added isIsaiah (ISA/isaiah), isJeremiah (JER/jeremiah), isLamentations (LAM/lamentations), isEzekiel (EZK/ezekiel) checks, included in isCustomBg, added require() calls.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Added 4 new book backgrounds (Psalms, Proverbs, Ecclesiastes, Song of Solomon)
 - **Summary:** Added background images for Psalms, Proverbs, Ecclesiastes, and Song of Solomon. All new assets are 1672×941 (landscape). Updated reader chapter component with isPsalms/isProverbs/isEcclesiastes/isSongOfSolomon checks, included in isCustomBg, and added require() calls.
 - **Files Changed:**

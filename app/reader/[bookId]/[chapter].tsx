@@ -295,6 +295,11 @@ export default function ChapterReaderScreen() {
     bookId?.toUpperCase() === "ECC" || bookId?.toLowerCase() === "ecclesiastes";
   const isSongOfSolomon =
     bookId?.toUpperCase() === "SNG" || bookId?.toLowerCase() === "song of solomon";
+  const isIsaiah = bookId?.toUpperCase() === "ISA" || bookId?.toLowerCase() === "isaiah";
+  const isJeremiah = bookId?.toUpperCase() === "JER" || bookId?.toLowerCase() === "jeremiah";
+  const isLamentations =
+    bookId?.toUpperCase() === "LAM" || bookId?.toLowerCase() === "lamentations";
+  const isEzekiel = bookId?.toUpperCase() === "EZK" || bookId?.toLowerCase() === "ezekiel";
   const isCustomBg =
     isGenesis ||
     isExodus ||
@@ -317,7 +322,11 @@ export default function ChapterReaderScreen() {
     isPsalms ||
     isProverbs ||
     isEcclesiastes ||
-    isSongOfSolomon;
+    isSongOfSolomon ||
+    isIsaiah ||
+    isJeremiah ||
+    isLamentations ||
+    isEzekiel;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -408,6 +417,22 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/SongOfSolomon.png");
     }
+    if (isIsaiah) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Isaiah.png");
+    }
+    if (isJeremiah) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Jeremiah.png");
+    }
+    if (isLamentations) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Lamentations.png");
+    }
+    if (isEzekiel) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Ezekiel.png");
+    }
     return null;
   }, [
     isGenesis,
@@ -432,6 +457,10 @@ export default function ChapterReaderScreen() {
     isProverbs,
     isEcclesiastes,
     isSongOfSolomon,
+    isIsaiah,
+    isJeremiah,
+    isLamentations,
+    isEzekiel,
   ]);
 
   const readerContent = (
