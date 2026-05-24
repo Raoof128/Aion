@@ -11,6 +11,22 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Second UI/UX audit (fresh pass) — 12 issues across 5 files
+- **Summary:** Fixed `handleBack` regression in `[chapter].tsx` (router.push → router.back); fixed SafeAreaView `edges` in chat screen; fixed Android KAV behavior; removed dead `emptyIcon` style; added `fontFamily` to 4 missing styles in chapter reader; added `accessibilityRole/Label/Hint` to verse Pressables; fixed Sparkles icon spacing in Chat tab; fixed emptyContainer double-centering in history screen; replaced hardcoded hex color with design token in ChatInput.
+- **Files Changed:** app/reader/[bookId]/[chapter].tsx, app/chat/[id].tsx, app/(tabs)/chat.tsx, app/(tabs)/more.tsx, components/ChatInput.tsx
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** NT book backgrounds unassigned; BookArtTuner no prod gate.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Full UI/UX audit — accessibility, dead code, navigation bugs, voice input fix, and reader refactor
+- **Summary:** Performed a file-by-file audit of all frontend/UI files. Fixed 7 categories of issues: (1) Refactored 26 boolean flags in reader chapter into a single `useMemo` switch; (2) Fixed voice recognition stop bug in ChatInput; (3) Fixed chapter list back nav to use router.back(); (4) Made VOTD card tappable; (5) Dynamic tab counts in book browser; (6) Full ARIA accessibility pass across SettingsSheet, ChatBubble, Onboarding; (7) Dead style cleanup in 4 components.
+- **Files Changed:** app/reader/[bookId]/[chapter].tsx, app/reader/[bookId]/index.tsx, app/(tabs)/index.tsx, app/(tabs)/read.tsx, app/(tabs)/chat.tsx, app/(tabs)/more.tsx, components/ChatInput.tsx, components/ChatBubble.tsx, components/SettingsSheet.tsx, components/Onboarding.tsx
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** NT book backgrounds not yet assigned; BookArtTuner has no prod gate.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Fix incomplete Bible verse data — flattenVerseContent bug in ingest script
 - **Summary:** Diagnosed that 38/66 Bible books had missing verses because `flattenVerseContent` in `scripts/ingest.ts` only handled plain string content items and silently dropped BSB's poetry/prose dict items (`{text: "...", poem: 1}`). Fixed the type and logic to handle both string and `{text}` object items. Created `scripts/fix-incomplete.ts` — a targeted re-ingest script that only processes the 38 affected books using upsert, preserving all existing correct data. Added `"fix"` npm script. To apply: set `scripts/.env` with `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`, then run `npm run fix` from the `scripts/` directory.
 - **Files Changed:**

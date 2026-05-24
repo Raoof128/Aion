@@ -33,7 +33,7 @@ export default function ChatTab() {
       </View>
 
       <View style={styles.content}>
-        <Sparkles size={40} color={colors.purpleDim} />
+        <Sparkles size={40} color={colors.purpleDim} style={styles.sparklesIcon} />
         <Text style={styles.title}>Ask Aion anything</Text>
         <Text style={styles.subtitle}>Get AI-powered insights grounded{"\n"}in Scripture</Text>
 
@@ -73,10 +73,10 @@ const styles = StyleSheet.create({
     fontFamily: fonts.uiBold,
   },
   content: { flex: 1, alignItems: "center", justifyContent: "center", paddingHorizontal: 32 },
-  icon: { marginBottom: 20 },
   title: {
     color: colors.textPrimary,
     fontSize: 22,
+    fontFamily: fonts.ui,
     fontWeight: "300",
     letterSpacing: 1,
     marginBottom: 8,
@@ -84,6 +84,7 @@ const styles = StyleSheet.create({
   subtitle: {
     color: colors.textMuted,
     fontSize: 14,
+    fontFamily: fonts.ui,
     textAlign: "center",
     lineHeight: 22,
     marginBottom: 32,
@@ -99,6 +100,7 @@ const styles = StyleSheet.create({
     shadowRadius: 12,
   },
   startButtonHovered: { shadowOpacity: 0.6, shadowRadius: 16 },
+  sparklesIcon: { marginBottom: 20 },
   startButtonText: {
     color: colors.white,
     fontSize: 15,

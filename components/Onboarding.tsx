@@ -5,7 +5,7 @@ import * as Haptics from "expo-haptics";
 import Animated, { FadeInRight, FadeOutLeft } from "react-native-reanimated";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Sparkles, Search, BookOpen } from "lucide-react-native";
-import { colors } from "../lib/theme";
+import { colors, fonts } from "../lib/theme";
 
 const SLIDES = [
   {
@@ -52,7 +52,9 @@ export function Onboarding({ onComplete }: OnboardingProps) {
         exiting={FadeOutLeft.duration(200)}
         style={styles.slide}
       >
-        <slide.Icon size={48} color={colors.purpleGlow} />
+        <View style={styles.icon}>
+          <slide.Icon size={48} color={colors.purpleGlow} />
+        </View>
         <Text style={styles.title}>{slide.title}</Text>
         <Text style={styles.subtitle}>{slide.subtitle}</Text>
       </Animated.View>
@@ -135,7 +137,13 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 12,
   },
-  buttonText: { color: colors.white, fontSize: 16, fontWeight: "600", letterSpacing: 1 },
+  buttonText: {
+    color: colors.white,
+    fontSize: 16,
+    fontFamily: fonts.uiBold,
+    fontWeight: "600",
+    letterSpacing: 1,
+  },
   skipButton: { marginTop: 16 },
-  skipText: { color: colors.textGhost, fontSize: 13 },
+  skipText: { color: colors.textGhost, fontSize: 13, fontFamily: fonts.ui },
 });

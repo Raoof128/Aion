@@ -165,18 +165,27 @@ export default function HomeScreen() {
               {/* Verse of the Day */}
               <Animated.View
                 entering={FadeIn.duration(400).delay(700)}
-                style={styles.votdCard}
-                accessibilityRole="summary"
-                accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}`}
+                style={{ width: "100%", maxWidth: 420 }}
               >
-                <View style={styles.votdHeaderRow}>
-                  <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
-                  <Sparkle size={10} color={colors.amberGlow} />
-                </View>
-                <Text style={styles.votdContent}>"{votd.content}"</Text>
-                <Text style={styles.votdRef}>
-                  — {votd.book_name} {votd.chapter}:{votd.verse}
-                </Text>
+                <Pressable
+                  onPress={() => router.push(`/reader/${votd.book_id}/${votd.chapter}`)}
+                  style={({ pressed, hovered }: { pressed: boolean; hovered?: boolean }) => [
+                    styles.votdCard,
+                    hovered && styles.votdCardHovered,
+                    pressed && styles.votdCardPressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={`Verse of the Day: ${votd.content} — ${votd.book_name} ${votd.chapter}:${votd.verse}. Tap to read in context.`}
+                >
+                  <View style={styles.votdHeaderRow}>
+                    <Text style={styles.votdLabel}>VERSE OF THE DAY</Text>
+                    <Sparkle size={10} color={colors.amberGlow} />
+                  </View>
+                  <Text style={styles.votdContent}>"{votd.content}"</Text>
+                  <Text style={styles.votdRef}>
+                    — {votd.book_name} {votd.chapter}:{votd.verse}
+                  </Text>
+                </Pressable>
               </Animated.View>
 
               {/* Read Bible Button */}
@@ -357,8 +366,7 @@ const styles = StyleSheet.create({
   },
   votdCard: {
     width: "100%",
-    maxWidth: 420,
-    backgroundColor: "rgba(17, 17, 20, 0.8)", // Solid glassmorphic dark background
+    backgroundColor: "rgba(17, 17, 20, 0.8)",
     borderWidth: 1,
     borderColor: colors.amberBorder,
     borderRadius: 16,
@@ -368,6 +376,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.08,
     shadowRadius: 16,
+  },
+  votdCardHovered: {
+    backgroundColor: "rgba(217, 119, 6, 0.07)",
+    borderColor: "rgba(217, 119, 6, 0.30)",
+  },
+  votdCardPressed: {
+    backgroundColor: "rgba(217, 119, 6, 0.12)",
+    borderColor: "rgba(217, 119, 6, 0.35)",
   },
   votdHeaderRow: {
     flexDirection: "row",

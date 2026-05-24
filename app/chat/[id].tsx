@@ -183,7 +183,7 @@ export default function ChatScreen() {
   ];
 
   return (
-    <SafeAreaView style={styles.container}>
+    <SafeAreaView style={styles.container} edges={["top"]}>
       {/* Header */}
       <View style={styles.header}>
         <Pressable
@@ -221,7 +221,7 @@ export default function ChatScreen() {
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : "height"}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.flex}
       >
         <FlatList
@@ -389,9 +389,6 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     paddingTop: 140,
-  },
-  emptyIcon: {
-    marginBottom: 16,
   },
   emptyTitle: {
     color: colors.textSecondary,

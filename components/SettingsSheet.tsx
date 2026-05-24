@@ -18,12 +18,15 @@ export function SettingsSheet({ onClose }: SettingsSheetProps) {
 
         <Text style={styles.title}>Settings</Text>
 
-        {/* Theme Toggle */}
+        {/* Theme Toggle — applies to the Bible reader screen only */}
         <Text style={styles.sectionLabel}>APPEARANCE</Text>
-        <View style={styles.optionRow}>
+        <View style={styles.optionRow} accessibilityRole="radiogroup">
           <Pressable
             onPress={() => setTheme("dark")}
             style={[styles.optionButton, theme === "dark" && styles.optionActive]}
+            accessibilityLabel="Dark theme"
+            accessibilityRole="radio"
+            accessibilityState={{ checked: theme === "dark" }}
           >
             <Text style={styles.optionIcon}>🌙</Text>
             <Text style={[styles.optionText, theme === "dark" && styles.optionTextActive]}>
@@ -33,6 +36,9 @@ export function SettingsSheet({ onClose }: SettingsSheetProps) {
           <Pressable
             onPress={() => setTheme("light")}
             style={[styles.optionButton, theme === "light" && styles.optionActive]}
+            accessibilityLabel="Light theme"
+            accessibilityRole="radio"
+            accessibilityState={{ checked: theme === "light" }}
           >
             <Text style={styles.optionIcon}>☀️</Text>
             <Text style={[styles.optionText, theme === "light" && styles.optionTextActive]}>
@@ -43,12 +49,15 @@ export function SettingsSheet({ onClose }: SettingsSheetProps) {
 
         {/* Font Size */}
         <Text style={styles.sectionLabel}>VERSE TEXT SIZE</Text>
-        <View style={styles.optionRow}>
+        <View style={styles.optionRow} accessibilityRole="radiogroup">
           {(["small", "medium", "large"] as const).map((size) => (
             <Pressable
               key={size}
               onPress={() => setFontSize(size)}
               style={[styles.optionButton, fontSize === size && styles.optionActive]}
+              accessibilityLabel={`${size.charAt(0).toUpperCase() + size.slice(1)} text size`}
+              accessibilityRole="radio"
+              accessibilityState={{ checked: fontSize === size }}
             >
               <Text style={[styles.fontPreview, { fontSize: 14 * fontScale(size) }]}>Aa</Text>
               <Text style={[styles.optionText, fontSize === size && styles.optionTextActive]}>
@@ -67,7 +76,12 @@ export function SettingsSheet({ onClose }: SettingsSheetProps) {
           </Text>
         </View>
 
-        <Pressable onPress={onClose} style={styles.doneButton}>
+        <Pressable
+          onPress={onClose}
+          style={styles.doneButton}
+          accessibilityLabel="Close settings"
+          accessibilityRole="button"
+        >
           <Text style={styles.doneText}>Done</Text>
         </Pressable>
       </View>

@@ -36,7 +36,11 @@ function PulsingDotItem({ delay }: { delay: number }) {
 
 function PulsingDot() {
   return (
-    <View style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 }}>
+    <View
+      style={{ flexDirection: "row", alignItems: "center", gap: 6, paddingVertical: 8 }}
+      accessible={true}
+      accessibilityLabel="Loading response"
+    >
       {[0, 1, 2].map((i) => (
         <PulsingDotItem key={i} delay={i * 150} />
       ))}
@@ -175,6 +179,7 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
               </View>
             </Pressable>
           )}
+          {/* Feedback: local visual state only — not yet persisted */}
           <Pressable
             onPress={() => setFeedback("up")}
             style={({ pressed }: { pressed: boolean }) => [
@@ -182,8 +187,9 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
               feedback === "up" && styles.feedbackActive,
               pressed && { opacity: 0.7 },
             ]}
-            accessibilityLabel="Helpful"
+            accessibilityLabel="Mark as helpful"
             accessibilityRole="button"
+            accessibilityState={{ selected: feedback === "up" }}
           >
             <ThumbsUp size={14} color={feedback === "up" ? colors.purpleGlow : colors.textMuted} />
           </Pressable>
@@ -194,8 +200,9 @@ export function ChatBubble({ role, content, verses, timestamp, onRegenerate }: C
               feedback === "down" && styles.feedbackActive,
               pressed && { opacity: 0.7 },
             ]}
-            accessibilityLabel="Not helpful"
+            accessibilityLabel="Mark as not helpful"
             accessibilityRole="button"
+            accessibilityState={{ selected: feedback === "down" }}
           >
             <ThumbsDown
               size={14}
@@ -272,13 +279,6 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: "uppercase",
   },
-  assistantText: {
-    color: colors.textPrimary,
-    fontSize: 15,
-    fontFamily: fonts.ui,
-    lineHeight: 26,
-    marginBottom: 4,
-  },
   versesContainer: {
     marginTop: 8,
     width: "100%",
@@ -330,8 +330,5 @@ const styles = StyleSheet.create({
   feedbackActive: {
     backgroundColor: colors.purpleMist,
     borderColor: colors.purpleBorder,
-  },
-  feedbackActiveText: {
-    color: colors.purpleGlow,
   },
 });

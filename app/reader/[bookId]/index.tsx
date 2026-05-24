@@ -35,7 +35,7 @@ export default function ChapterListScreen() {
 
   const handleBack = useCallback(() => {
     triggerHaptic();
-    router.push("/read");
+    router.back();
   }, [router]);
 
   const renderChapter = useCallback(

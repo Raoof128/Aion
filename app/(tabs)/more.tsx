@@ -312,15 +312,12 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: "center",
     justifyContent: "center",
-    paddingTop: 40,
-  },
-  emptyIcon: {
-    marginBottom: 8,
   },
   emptyTitle: {
     color: colors.textSecondary,
     fontSize: 14,
     fontFamily: fonts.uiMedium,
+    marginTop: 12,
     marginBottom: 4,
   },
   emptySubtitle: {

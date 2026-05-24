@@ -95,7 +95,7 @@ export default function ReadScreen() {
             accessibilityState={{ selected: activeTab === "OT" }}
           >
             <Text style={[styles.tabText, activeTab === "OT" && styles.tabTextActive]}>
-              Old Testament (39)
+              Old Testament ({OT_BOOKS.length})
             </Text>
           </Pressable>
           <Pressable
@@ -106,7 +106,7 @@ export default function ReadScreen() {
             accessibilityState={{ selected: activeTab === "NT" }}
           >
             <Text style={[styles.tabText, activeTab === "NT" && styles.tabTextActive]}>
-              New Testament (27)
+              New Testament ({NT_BOOKS.length})
             </Text>
           </Pressable>
         </View>
@@ -289,8 +289,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: 14,
     paddingVertical: 10,
   },
-  searchIcon: { marginRight: 10 },
-  searchInput: { flex: 1, color: colors.textPrimary, fontSize: 14, fontFamily: fonts.ui },
+  searchInput: {
+    flex: 1,
+    color: colors.textPrimary,
+    fontSize: 14,
+    fontFamily: fonts.ui,
+    marginLeft: 10,
+  },
   searchContainerFocused: {
     borderColor: colors.purpleGlow,
     backgroundColor: "rgba(255, 255, 255, 0.08)",

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { View, TextInput, Pressable, Text, Platform, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
@@ -10,27 +10,29 @@ interface ChatInputProps {
   disabled?: boolean;
 }
 
+interface SpeechRecognitionEvent {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+}
+
+interface SpeechRecognitionInstance {
+  continuous: boolean;
+  interimResults: boolean;
+  lang: string;
+  onresult: ((event: SpeechRecognitionEvent) => void) | null;
+  onerror: (() => void) | null;
+  onend: (() => void) | null;
+  start: () => void;
+  stop: () => void;
+}
+
 export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [text, setText] = useState("");
   const [isListening, setIsListening] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
 
   const toggleVoiceInput = () => {
     if (Platform.OS !== "web") return;
-
-    interface SpeechRecognitionEvent {
-      results: ArrayLike<ArrayLike<{ transcript: string }>>;
-    }
-
-    interface SpeechRecognitionInstance {
-      continuous: boolean;
-      interimResults: boolean;
-      lang: string;
-      onresult: ((event: SpeechRecognitionEvent) => void) | null;
-      onerror: (() => void) | null;
-      onend: (() => void) | null;
-      start: () => void;
-    }
 
     const globalWindow = window as unknown as {
       SpeechRecognition?: new () => SpeechRecognitionInstance;
@@ -42,11 +44,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     if (!SpeechRecognition) return;
 
     if (isListening) {
+      recognitionRef.current?.stop();
+      recognitionRef.current = null;
       setIsListening(false);
       return;
     }
 
     const recognition = new SpeechRecognition();
+    recognitionRef.current = recognition;
     recognition.continuous = false;
     recognition.interimResults = false;
     recognition.lang = "en-US";
@@ -54,11 +59,18 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     recognition.onresult = (event: SpeechRecognitionEvent) => {
       const transcript = event.results[0][0].transcript;
       setText((prev) => prev + (prev ? " " : "") + transcript);
+      recognitionRef.current = null;
       setIsListening(false);
     };
 
-    recognition.onerror = () => setIsListening(false);
-    recognition.onend = () => setIsListening(false);
+    recognition.onerror = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
 
     recognition.start();
     setIsListening(true);
@@ -231,7 +243,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   charCount: {
-    color: "#56566A",
+    color: colors.textGhost,
     fontSize: 9,
     textAlign: "right",
     paddingRight: 14,

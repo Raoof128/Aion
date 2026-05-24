@@ -8,6 +8,37 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Second UI/UX audit (fresh pass) — 12 issues across 5 files
+- **Summary:** Fresh-eyes audit identified and fixed: (1) `handleBack` regression in chapter reader still using `router.push` instead of `router.back()`; (2) `SafeAreaView` in chat screen missing `edges={["top"]}` — bottom inset was conflicting with `KeyboardAvoidingView`; (3) `KeyboardAvoidingView` using `behavior="height"` on Android changed to `undefined` to prevent layout jumps; (4) Dead `emptyIcon` style in chat screen removed; (5) Missing `fontFamily` on 4 styles in chapter reader (`headingText`, `chapterNumLarge`, `verseActionText`, `copiedBadge`); (6) Verse `Pressable` elements now have `accessibilityRole="button"` and `accessibilityLabel`/`accessibilityHint`; (7) Sparkles icon in Chat tab screen now has 20px bottom margin for visual breathing room; (8) `emptyContainer` in history screen had `paddingTop: 40` + `flex: 1 justifyContent: center` — double centering removed; (9) Hardcoded `"#56566A"` color in ChatInput replaced with `colors.textGhost`.
+- **Files Changed:**
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/[bookId]/[chapter].tsx) - Fixed handleBack regression (router.back()); added fontFamily to headingText, chapterNumLarge, verseActionText, copiedBadge; added accessibilityRole/Label/Hint to verse Pressables.
+  - [app/chat/[id].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/chat/[id].tsx) - Added edges={["top"]} to SafeAreaView; fixed KAV Android behavior; removed dead emptyIcon style.
+  - [app/(tabs)/chat.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/chat.tsx) - Added sparklesIcon style with marginBottom: 20 for visual spacing.
+  - [app/(tabs)/more.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/more.tsx) - Removed paddingTop: 40 from emptyContainer; added marginTop: 12 to emptyTitle.
+  - [components/ChatInput.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/ChatInput.tsx) - Replaced hardcoded color `"#56566A"` with `colors.textGhost` in charCount style.
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** NT book backgrounds (Daniel onward) still unassigned; BookArtTuner still has no production gate.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Full UI/UX audit — accessibility, dead code, navigation bugs, voice input fix, and reader refactor
+- **Summary:** Performed a file-by-file audit of all frontend/UI files. Fixed 7 categories of issues: (1) Refactored 26 boolean flags in reader chapter into a single `useMemo` switch statement with `isCustomBg = bgImageSource !== null`; (2) Fixed voice recognition stop bug in ChatInput using a `recognitionRef`; (3) Fixed `handleBack` in chapter list to use `router.back()` instead of `router.push()`; (4) Made VOTD card on home screen tappable — navigates to verse in context; (5) Fixed dynamic tab counts in book browser; (6) Added complete ARIA accessibility attributes across SettingsSheet, ChatBubble, Onboarding; (7) Removed dead/unused styles from chat, more, chatbubble, and onboarding components.
+- **Files Changed:**
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/[bookId]/[chapter].tsx) - Replaced 26 boolean flags with single switch useMemo; added isCustomBg guard for BookArtTuner; eslint-disable block around require() calls.
+  - [app/reader/[bookId]/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/[bookId]/index.tsx) - Fixed handleBack to use router.back() instead of router.push("/read").
+  - [app/(tabs)/index.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/index.tsx) - VOTD card now tappable; navigates to /reader/:book_id/:chapter.
+  - [app/(tabs)/read.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/read.tsx) - Tab counts dynamic (OT_BOOKS.length / NT_BOOKS.length); removed dead searchIcon style; added marginLeft to searchInput.
+  - [app/(tabs)/chat.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/chat.tsx) - Added fontFamily to title/subtitle; removed dead icon style.
+  - [app/(tabs)/more.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/(tabs)/more.tsx) - Removed dead emptyIcon style.
+  - [components/ChatInput.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/ChatInput.tsx) - Fixed voice recognition stop bug with recognitionRef; moved interface types outside component.
+  - [components/ChatBubble.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/ChatBubble.tsx) - Added accessible/accessibilityLabel to PulsingDot; improved feedback button labels; removed dead assistantText and feedbackActiveText styles.
+  - [components/SettingsSheet.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/SettingsSheet.tsx) - Added radiogroup/radio ARIA roles and checked states to all option buttons; added accessibilityLabel to Done button.
+  - [components/Onboarding.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/Onboarding.tsx) - Added fonts import; wrapped icon in View for correct marginBottom; added fontFamily to button/skip text.
+- **Verification:** `./check.sh` passes — 0 formatting issues, 0 ESLint errors, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** NT books (Daniel onward) not yet assigned background images; BookArtTuner is a dev-only tool (no production gate).
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Fix incomplete Bible verse data — flattenVerseContent bug in ingest script
 - **Summary:** Diagnosed that 38/66 Bible books had missing verses because `flattenVerseContent` in `scripts/ingest.ts` only handled plain string content items and silently dropped BSB's poetry/prose dict items (`{text: "...", poem: 1}`). Fixed the type and logic to handle both string and `{text}` object items. Created `scripts/fix-incomplete.ts` — a targeted re-ingest script that only processes the 38 affected books using upsert, preserving all existing correct data. Added `"fix"` npm script. To apply: set `scripts/.env` with `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`, then run `npm run fix` from the `scripts/` directory.
 - **Files Changed:**

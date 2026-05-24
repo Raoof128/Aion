@@ -256,8 +256,8 @@ export default function ChapterReaderScreen() {
 
   const handleBack = useCallback(() => {
     triggerHaptic();
-    router.push(`/reader/${bookId}`);
-  }, [router, bookId]);
+    router.back();
+  }, [router]);
 
   const navigateChapter = useCallback(
     (dir: "prev" | "next") => {
@@ -271,197 +271,68 @@ export default function ChapterReaderScreen() {
 
   const headerTitle = book ? `${book.name} ${chapter}` : `Chapter ${chapter}`;
 
-  const isGenesis = bookId?.toUpperCase() === "GEN" || bookId?.toLowerCase() === "genesis";
-  const isExodus = bookId?.toUpperCase() === "EXO" || bookId?.toLowerCase() === "exodus";
-  const isLeviticus = bookId?.toUpperCase() === "LEV" || bookId?.toLowerCase() === "leviticus";
-  const isNumbers = bookId?.toUpperCase() === "NUM" || bookId?.toLowerCase() === "numbers";
-  const isDeuteronomy = bookId?.toUpperCase() === "DEU" || bookId?.toLowerCase() === "deuteronomy";
-  const isJoshua = bookId?.toUpperCase() === "JOS" || bookId?.toLowerCase() === "joshua";
-  const isJudges = bookId?.toUpperCase() === "JDG" || bookId?.toLowerCase() === "judges";
-  const isRuth = bookId?.toUpperCase() === "RUT" || bookId?.toLowerCase() === "ruth";
-  const is1Samuel = bookId?.toUpperCase() === "1SA" || bookId?.toLowerCase() === "1 samuel";
-  const is2Samuel = bookId?.toUpperCase() === "2SA" || bookId?.toLowerCase() === "2 samuel";
-  const is1Kings = bookId?.toUpperCase() === "1KI" || bookId?.toLowerCase() === "1 kings";
-  const is2Kings = bookId?.toUpperCase() === "2KI" || bookId?.toLowerCase() === "2 kings";
-  const is1Chronicles = bookId?.toUpperCase() === "1CH" || bookId?.toLowerCase() === "1 chronicles";
-  const is2Chronicles = bookId?.toUpperCase() === "2CH" || bookId?.toLowerCase() === "2 chronicles";
-  const isEzra = bookId?.toUpperCase() === "EZR" || bookId?.toLowerCase() === "ezra";
-  const isNehemiah = bookId?.toUpperCase() === "NEH" || bookId?.toLowerCase() === "nehemiah";
-  const isEsther = bookId?.toUpperCase() === "EST" || bookId?.toLowerCase() === "esther";
-  const isJob = bookId?.toUpperCase() === "JOB" || bookId?.toLowerCase() === "job";
-  const isPsalms = bookId?.toUpperCase() === "PSA" || bookId?.toLowerCase() === "psalms";
-  const isProverbs = bookId?.toUpperCase() === "PRO" || bookId?.toLowerCase() === "proverbs";
-  const isEcclesiastes =
-    bookId?.toUpperCase() === "ECC" || bookId?.toLowerCase() === "ecclesiastes";
-  const isSongOfSolomon =
-    bookId?.toUpperCase() === "SNG" || bookId?.toLowerCase() === "song of solomon";
-  const isIsaiah = bookId?.toUpperCase() === "ISA" || bookId?.toLowerCase() === "isaiah";
-  const isJeremiah = bookId?.toUpperCase() === "JER" || bookId?.toLowerCase() === "jeremiah";
-  const isLamentations =
-    bookId?.toUpperCase() === "LAM" || bookId?.toLowerCase() === "lamentations";
-  const isEzekiel = bookId?.toUpperCase() === "EZK" || bookId?.toLowerCase() === "ezekiel";
-  const isCustomBg =
-    isGenesis ||
-    isExodus ||
-    isLeviticus ||
-    isNumbers ||
-    isDeuteronomy ||
-    isJoshua ||
-    isJudges ||
-    isRuth ||
-    is1Samuel ||
-    is2Samuel ||
-    is1Kings ||
-    is2Kings ||
-    is1Chronicles ||
-    is2Chronicles ||
-    isEzra ||
-    isNehemiah ||
-    isEsther ||
-    isJob ||
-    isPsalms ||
-    isProverbs ||
-    isEcclesiastes ||
-    isSongOfSolomon ||
-    isIsaiah ||
-    isJeremiah ||
-    isLamentations ||
-    isEzekiel;
-
+  /* eslint-disable @typescript-eslint/no-require-imports */
   const bgImageSource = useMemo(() => {
-    if (isGenesis) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Genesis.png");
+    switch (bookId?.toUpperCase()) {
+      case "GEN":
+        return require("../../../assets/Genesis.png");
+      case "EXO":
+        return require("../../../assets/Exodus.png");
+      case "LEV":
+        return require("../../../assets/Leviticus.png");
+      case "NUM":
+        return require("../../../assets/Numbers.png");
+      case "DEU":
+        return require("../../../assets/Deuteronomy.png");
+      case "JOS":
+        return require("../../../assets/Joshua.png");
+      case "JDG":
+        return require("../../../assets/Judges.png");
+      case "RUT":
+        return require("../../../assets/Ruth.png");
+      case "1SA":
+        return require("../../../assets/1Samuel.png");
+      case "2SA":
+        return require("../../../assets/2Samuel.png");
+      case "1KI":
+        return require("../../../assets/1Kings.png");
+      case "2KI":
+        return require("../../../assets/2Kings.png");
+      case "1CH":
+        return require("../../../assets/1Chronicles.png");
+      case "2CH":
+        return require("../../../assets/2Chronicles.png");
+      case "EZR":
+        return require("../../../assets/Ezra.png");
+      case "NEH":
+        return require("../../../assets/Nehemiah.png");
+      case "EST":
+        return require("../../../assets/Esther.png");
+      case "JOB":
+        return require("../../../assets/Job.png");
+      case "PSA":
+        return require("../../../assets/Psalms.png");
+      case "PRO":
+        return require("../../../assets/Proverbs.png");
+      case "ECC":
+        return require("../../../assets/Ecclesiastes.png");
+      case "SNG":
+        return require("../../../assets/SongOfSolomon.png");
+      case "ISA":
+        return require("../../../assets/Isaiah.png");
+      case "JER":
+        return require("../../../assets/Jeremiah.png");
+      case "LAM":
+        return require("../../../assets/Lamentations.png");
+      case "EZK":
+        return require("../../../assets/Ezekiel.png");
+      default:
+        return null;
     }
-    if (isExodus) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Exodus.png");
-    }
-    if (isLeviticus) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Leviticus.png");
-    }
-    if (isNumbers) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Numbers.png");
-    }
-    if (isDeuteronomy) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Deuteronomy.png");
-    }
-    if (isJoshua) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Joshua.png");
-    }
-    if (isJudges) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Judges.png");
-    }
-    if (isRuth) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Ruth.png");
-    }
-    if (is1Samuel) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/1Samuel.png");
-    }
-    if (is2Samuel) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/2Samuel.png");
-    }
-    if (is1Kings) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/1Kings.png");
-    }
-    if (is2Kings) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/2Kings.png");
-    }
-    if (is1Chronicles) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/1Chronicles.png");
-    }
-    if (is2Chronicles) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/2Chronicles.png");
-    }
-    if (isEzra) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Ezra.png");
-    }
-    if (isNehemiah) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Nehemiah.png");
-    }
-    if (isEsther) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Esther.png");
-    }
-    if (isJob) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Job.png");
-    }
-    if (isPsalms) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Psalms.png");
-    }
-    if (isProverbs) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Proverbs.png");
-    }
-    if (isEcclesiastes) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Ecclesiastes.png");
-    }
-    if (isSongOfSolomon) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/SongOfSolomon.png");
-    }
-    if (isIsaiah) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Isaiah.png");
-    }
-    if (isJeremiah) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Jeremiah.png");
-    }
-    if (isLamentations) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Lamentations.png");
-    }
-    if (isEzekiel) {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      return require("../../../assets/Ezekiel.png");
-    }
-    return null;
-  }, [
-    isGenesis,
-    isExodus,
-    isLeviticus,
-    isNumbers,
-    isDeuteronomy,
-    isJoshua,
-    isJudges,
-    isRuth,
-    is1Samuel,
-    is2Samuel,
-    is1Kings,
-    is2Kings,
-    is1Chronicles,
-    is2Chronicles,
-    isEzra,
-    isNehemiah,
-    isEsther,
-    isJob,
-    isPsalms,
-    isProverbs,
-    isEcclesiastes,
-    isSongOfSolomon,
-    isIsaiah,
-    isJeremiah,
-    isLamentations,
-    isEzekiel,
-  ]);
+  }, [bookId]);
+  /* eslint-enable @typescript-eslint/no-require-imports */
+
+  const isCustomBg = bgImageSource !== null;
 
   const readerContent = (
     <SafeAreaView
@@ -503,7 +374,7 @@ export default function ChapterReaderScreen() {
             </Pressable>
 
             <Pressable
-              onLongPress={() => setTunerVisible(true)}
+              onLongPress={isCustomBg ? () => setTunerVisible(true) : undefined}
               delayLongPress={800}
               style={styles.headerTitlePressable}
             >
@@ -640,6 +511,9 @@ export default function ChapterReaderScreen() {
                         ],
                         i > 0 && i % 5 === 0 && styles.verseLineParagraph,
                       ]}
+                      accessibilityLabel={`Verse ${v.verse}`}
+                      accessibilityRole="button"
+                      accessibilityHint="Tap for options"
                     >
                       <View style={styles.verseNumberContainer}>
                         {bookmarkedVerses.has(v.verse) ? (
@@ -863,7 +737,7 @@ export default function ChapterReaderScreen() {
       </Animated.View>
 
       {settingsVisible && <SettingsSheet onClose={() => setSettingsVisible(false)} />}
-      {tunerVisible && book && (
+      {tunerVisible && book && isCustomBg && bgImageSource && (
         <BookArtTuner
           bookId={book.id}
           bookName={book.name}
@@ -1016,6 +890,7 @@ const styles = StyleSheet.create({
   headingText: {
     color: colors.textSecondary,
     fontSize: 11,
+    fontFamily: fonts.uiBold,
     fontWeight: "700",
     letterSpacing: 3,
     textTransform: "uppercase",
@@ -1024,6 +899,7 @@ const styles = StyleSheet.create({
   chapterNumLarge: {
     color: colors.purpleGlow,
     fontSize: 48,
+    fontFamily: fonts.ui,
     fontWeight: "200",
     textAlign: "center",
     marginBottom: 32,
@@ -1160,6 +1036,7 @@ const styles = StyleSheet.create({
   verseActionText: {
     color: colors.textSecondary,
     fontSize: 12,
+    fontFamily: fonts.uiMedium,
   },
   verseActionPrimaryText: {
     color: colors.purpleGlow,
@@ -1168,6 +1045,7 @@ const styles = StyleSheet.create({
   copiedBadge: {
     color: colors.purpleGlow,
     fontSize: 12,
+    fontFamily: fonts.verseItalic,
     fontStyle: "italic",
   },
   verseActionActive: {
