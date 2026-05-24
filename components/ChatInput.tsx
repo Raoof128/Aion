@@ -2,8 +2,11 @@ import { useState, useRef } from "react";
 import { View, TextInput, Pressable, Text, Platform, StyleSheet } from "react-native";
 import Animated, { useAnimatedStyle, useSharedValue, withSpring } from "react-native-reanimated";
 import * as Haptics from "expo-haptics";
+import { useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import { ArrowUp, Mic, MicOff } from "lucide-react-native";
 import { colors, fonts } from "../lib/theme";
+
+const OPENAI_KEY = process.env.EXPO_PUBLIC_OPENAI_KEY || "";
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -30,15 +33,14 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
   const [isListening, setIsListening] = useState(false);
   const [isFocused, setIsFocused] = useState(false);
   const recognitionRef = useRef<SpeechRecognitionInstance | null>(null);
+  const audioRecorder = useAudioRecorder(RecordingPresets.HIGH_QUALITY);
 
-  const toggleVoiceInput = () => {
-    if (Platform.OS !== "web") return;
-
+  // Web: use browser Web Speech API
+  const toggleVoiceWeb = () => {
     const globalWindow = window as unknown as {
       SpeechRecognition?: new () => SpeechRecognitionInstance;
       webkitSpeechRecognition?: new () => SpeechRecognitionInstance;
     };
-
     const SpeechRecognition =
       globalWindow.SpeechRecognition || globalWindow.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
@@ -62,7 +64,6 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       recognitionRef.current = null;
       setIsListening(false);
     };
-
     recognition.onerror = () => {
       recognitionRef.current = null;
       setIsListening(false);
@@ -74,6 +75,54 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
 
     recognition.start();
     setIsListening(true);
+  };
+
+  // Native: record with expo-audio, transcribe with OpenAI Whisper
+  const toggleVoiceNative = async () => {
+    if (isListening) {
+      audioRecorder.stop();
+      setIsListening(false);
+
+      const uri = audioRecorder.uri;
+      if (!uri) return;
+
+      try {
+        const formData = new FormData();
+        formData.append("file", { uri, name: "audio.m4a", type: "audio/m4a" } as unknown as Blob);
+        formData.append("model", "whisper-1");
+
+        const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${OPENAI_KEY}` },
+          body: formData,
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          if (data.text) {
+            setText((prev) => prev + (prev ? " " : "") + data.text);
+          }
+        }
+      } catch {
+        // Silently ignore transcription errors
+      }
+      return;
+    }
+
+    const status = await AudioModule.requestRecordingPermissionsAsync();
+    if (!status.granted) return;
+
+    await audioRecorder.prepareToRecordAsync();
+    audioRecorder.record();
+    setIsListening(true);
+  };
+
+  const toggleVoiceInput = () => {
+    if (Platform.OS === "web") {
+      toggleVoiceWeb();
+    } else {
+      toggleVoiceNative();
+    }
   };
 
   const handleSend = () => {
@@ -129,20 +178,18 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
             </Text>
           )}
         </View>
-        {Platform.OS === "web" && (
-          <Pressable
-            onPress={toggleVoiceInput}
-            style={[styles.micButton, isListening && styles.micButtonActive]}
-            accessibilityLabel={isListening ? "Stop listening" : "Voice input"}
-            accessibilityRole="button"
-          >
-            {isListening ? (
-              <MicOff size={16} color="#DC2626" />
-            ) : (
-              <Mic size={16} color={colors.textGhost} />
-            )}
-          </Pressable>
-        )}
+        <Pressable
+          onPress={toggleVoiceInput}
+          style={[styles.micButton, isListening && styles.micButtonActive]}
+          accessibilityLabel={isListening ? "Stop listening" : "Voice input"}
+          accessibilityRole="button"
+        >
+          {isListening ? (
+            <MicOff size={16} color="#DC2626" />
+          ) : (
+            <Mic size={16} color={colors.textGhost} />
+          )}
+        </Pressable>
         <Animated.View
           style={[
             styles.sendButton,

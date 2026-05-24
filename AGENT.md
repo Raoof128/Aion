@@ -11,6 +11,14 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Cross-platform voice-to-text
+- **Summary:** Voice input was web-only. Now cross-platform: web uses Web Speech API, native uses expo-audio + OpenAI Whisper. Mic button visible on all platforms. EXPO_PUBLIC_OPENAI_KEY added to .env.
+- **Files Changed:** components/ChatInput.tsx, .env
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** Add NSMicrophoneUsageDescription to app.json before App Store build.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Storage optimization — halfvec migration + IVFFlat index + CLI deployment
 - **Summary:** Free tier storage crisis resolved. Cast bible_verses.embedding to halfvec(1536), rebuilt HNSW→IVFFlat (lists=50). Deployed via Supabase CLI using PAT (titanfall1380@gmail.com account owns the project, ref: eynemyseadlkbzwtzrry). Both migrations pushed, Edge Function deployed, search verified working.
 - **Files Changed:** supabase/migrations/20260524000001_optimize_embeddings.sql

@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Cross-platform voice-to-text — native support via expo-audio + OpenAI Whisper
+- **Summary:** Voice input was web-only (hidden on iOS/Android). Replaced with a cross-platform implementation: web continues to use the browser Web Speech API; native (iOS/Android) now records audio with `expo-audio` and transcribes via OpenAI Whisper API. Mic button is now visible and functional on all platforms. Added `EXPO_PUBLIC_OPENAI_KEY` to `.env` for client-side Whisper access.
+- **Files Changed:**
+  - [components/ChatInput.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/ChatInput.tsx) - Split voice logic into `toggleVoiceWeb` / `toggleVoiceNative`; removed `Platform.OS === "web"` guard on mic button; added `expo-audio` recording + Whisper transcription.
+  - [.env](file:///Users/raoof.r12/Desktop/Raouf/Aion/.env) - Added `EXPO_PUBLIC_OPENAI_KEY`.
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** Add microphone permission description strings to `app.json` before App Store submission.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Storage optimization + full deployment via Supabase CLI
 - **Summary:** Supabase free tier (500 MB) was nearly full — 31,086 bible_verses rows with `vector(1536)` embeddings + HNSW index was consuming ~400–500 MB. Fix: (1) cast `embedding` column from `vector(1536)` to `halfvec(1536)` — cuts per-row storage from 6 KB to 3 KB (~50% savings, no data loss, no re-ingestion); (2) replaced HNSW index with IVFFlat (lists=50) — significantly smaller index footprint. Also deployed updated Edge Function and confirmed `search_verses` returns correct results with new column type.
 - **Files Changed:**

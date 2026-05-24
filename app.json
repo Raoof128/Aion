@@ -15,21 +15,26 @@
     },
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.aion.app"
+      "bundleIdentifier": "com.aion.app",
+      "infoPlist": {
+        "NSMicrophoneUsageDescription": "Used for voice-to-text input"
+      }
     },
     "android": {
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.aion.app"
+      "package": "com.aion.app",
+      "permissions": ["android.permission.RECORD_AUDIO"]
     },
     "web": {
       "bundler": "metro",
       "favicon": "./assets/favicon.png"
     },
     "plugins": [
-      "expo-router"
+      "expo-router",
+      "expo-audio"
     ]
   }
 }
