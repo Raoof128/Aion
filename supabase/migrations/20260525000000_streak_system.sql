@@ -90,7 +90,8 @@ BEGIN
       'freeze_uses_this_week', v_row.freeze_uses_this_week,
       'local_date',            p_local_date::text,
       'week_start',            p_week_start::text,
-      'today_recorded',        true
+      'today_recorded',        false,
+      'rejected_stale_date',   true
     );
   END IF;
 
@@ -133,7 +134,9 @@ BEGIN
 
   v_gap := p_local_date - v_row.last_active_date;
 
-  -- Reset freeze count when entering a new ISO week
+  -- Reset freeze count on new ISO week. Intentional: the freeze budget is per-week,
+  -- not keyed to the missed day's week. A gap that straddles two weeks correctly
+  -- gets the new week's freeze allowance applied.
   IF v_row.freeze_week_start IS NULL OR v_row.freeze_week_start < p_week_start THEN
     v_row.freeze_uses_this_week := 0;
     v_row.freeze_week_start := p_week_start;
