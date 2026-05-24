@@ -6,6 +6,27 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** BookBackground fill-height rendering fix for landscape images
+- **Summary:** Changed the photoBox sizing in BookBackground from `Math.min(screenW/photoW, screenH/photoH)` (fit entire image within screen) to `screenH / photoH` (fill screen height). This fixes landscape background images (Deuteronomy, Genesis, Exodus, Numbers, Ruth, 1Samuel) where the image was rendered tiny in the center of the screen. Now the image fills the full screen height with horizontal centering — Moses' head in Deuteronomy is properly visible. All books benefit from more prominent backgrounds.
+- **Files Changed:**
+  - [components/BookBackground.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/components/BookBackground.tsx) - Changed `fit` calculation from "fit within screen" to "fill screen height" so background images span the full vertical space.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Book Background Image Replacements (Genesis, Exodus, Numbers, Deuteronomy)
+- **Summary:** Replaced background images for Genesis, Exodus, Numbers, and Deuteronomy with improved versions from Aion_Replacement directory.
+- **Files Changed:**
+  - [assets/Genesis.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Genesis.png) - Replaced with improved version (2.7MB).
+  - [assets/Exodus.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Exodus.png) - Replaced with improved version (2.7MB).
+  - [assets/Numbers.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Numbers.png) - Replaced with improved version (2.6MB).
+  - [assets/Deuteronomy.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Deuteronomy.png) - Replaced with improved version (2.5MB).
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
 ### 2026-05-23 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Ruth + 1 Samuel Background Image Additions

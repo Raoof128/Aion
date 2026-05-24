@@ -18,7 +18,7 @@ export function BookBackground({ bookId, imageSource, children }: BookBackground
     try {
       const resolved = Image.resolveAssetSource(imageSource);
       if (resolved && resolved.width > 0 && resolved.height > 0) {
-        const fit = Math.min(screenW / resolved.width, screenH / resolved.height);
+        const fit = screenH / resolved.height;
         return {
           width: resolved.width * fit,
           height: resolved.height * fit,
