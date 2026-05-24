@@ -289,6 +289,12 @@ export default function ChapterReaderScreen() {
   const isNehemiah = bookId?.toUpperCase() === "NEH" || bookId?.toLowerCase() === "nehemiah";
   const isEsther = bookId?.toUpperCase() === "EST" || bookId?.toLowerCase() === "esther";
   const isJob = bookId?.toUpperCase() === "JOB" || bookId?.toLowerCase() === "job";
+  const isPsalms = bookId?.toUpperCase() === "PSA" || bookId?.toLowerCase() === "psalms";
+  const isProverbs = bookId?.toUpperCase() === "PRO" || bookId?.toLowerCase() === "proverbs";
+  const isEcclesiastes =
+    bookId?.toUpperCase() === "ECC" || bookId?.toLowerCase() === "ecclesiastes";
+  const isSongOfSolomon =
+    bookId?.toUpperCase() === "SNG" || bookId?.toLowerCase() === "song of solomon";
   const isCustomBg =
     isGenesis ||
     isExodus ||
@@ -307,7 +313,11 @@ export default function ChapterReaderScreen() {
     isEzra ||
     isNehemiah ||
     isEsther ||
-    isJob;
+    isJob ||
+    isPsalms ||
+    isProverbs ||
+    isEcclesiastes ||
+    isSongOfSolomon;
 
   const bgImageSource = useMemo(() => {
     if (isGenesis) {
@@ -382,6 +392,22 @@ export default function ChapterReaderScreen() {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
       return require("../../../assets/Job.png");
     }
+    if (isPsalms) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Psalms.png");
+    }
+    if (isProverbs) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Proverbs.png");
+    }
+    if (isEcclesiastes) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/Ecclesiastes.png");
+    }
+    if (isSongOfSolomon) {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      return require("../../../assets/SongOfSolomon.png");
+    }
     return null;
   }, [
     isGenesis,
@@ -402,6 +428,10 @@ export default function ChapterReaderScreen() {
     isNehemiah,
     isEsther,
     isJob,
+    isPsalms,
+    isProverbs,
+    isEcclesiastes,
+    isSongOfSolomon,
   ]);
 
   const readerContent = (

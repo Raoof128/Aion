@@ -26,6 +26,19 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Added 4 new book backgrounds (Psalms, Proverbs, Ecclesiastes, Song of Solomon)
+- **Summary:** Added background images for Psalms, Proverbs, Ecclesiastes, and Song of Solomon. All new assets are 1672×941 (landscape). Updated reader chapter component with isPsalms/isProverbs/isEcclesiastes/isSongOfSolomon checks, included in isCustomBg, and added require() calls.
+- **Files Changed:**
+  - [assets/Psalms.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Psalms.png) - Added background image.
+  - [assets/Proverbs.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Proverbs.png) - Added background image.
+  - [assets/Ecclesiastes.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/Ecclesiastes.png) - Added background image.
+  - [assets/SongOfSolomon.png](file:///Users/raoof.r12/Desktop/Raouf/Aion/assets/SongOfSolomon.png) - Added background image.
+  - [app/reader/[bookId]/[chapter].tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/reader/%5BbookId%5D/%5Bchapter%5D.tsx) - Added isPsalms (PSA/psalms), isProverbs (PRO/proverbs), isEcclesiastes (ECC/ecclesiastes), isSongOfSolomon (SNG/song of solomon) checks, included in isCustomBg, added require() calls.
+- **Verification:** Ran `./check.sh` — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** None.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Added 4 new book backgrounds (Ezra, Nehemiah, Esther, Job)
 - **Summary:** Added background images for Ezra, Nehemiah, Esther, and Job. All new assets are 1672×941 (landscape). Updated reader chapter component with isEzra/isNehemiah/isEsther/isJob checks, included in isCustomBg, and added require() calls.
 - **Files Changed:**
