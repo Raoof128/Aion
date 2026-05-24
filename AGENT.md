@@ -11,6 +11,21 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Full documentation audit
+- **Summary:** Audited all docs against the current codebase. Fixed 5 categories of stale/wrong information: (1) README updated — project structure rewritten to match actual tabs/reader/chat layout, verse count corrected 23,583→31,086, Node version corrected 20→22, all 5 migrations listed, EXPO_PUBLIC_OPENAI_KEY added, features list expanded with reader/voice/TTS/notifications/highlights/notes/settings/onboarding, `npm test` added to dev commands; (2) docs/ARCHITECTURE.md — HNSW→IVFFlat, vector(1536)→halfvec(1536), 23,583→31,086 verses, added user_verse_data and user_notes tables, complete component tree rewritten for tabs-based navigation, component and lib inventory tables added; (3) CONTRIBUTING.md — styling section corrected (NativeWind→StyleSheet), testing section replaced (was "no test suite"→full 15-test description), 5 migrations listed, EXPO_PUBLIC_OPENAI_KEY added, PR checks updated with check.sh, Node version corrected; (4) .env.example — added EXPO_PUBLIC_OPENAI_KEY entry; (5) Created 3 new docs: docs/ENVIRONMENT.md, docs/TESTING.md, docs/DEPLOYMENT.md.
+- **Files Changed:**
+  - README.md
+  - docs/ARCHITECTURE.md
+  - docs/ENVIRONMENT.md (created)
+  - docs/TESTING.md (created)
+  - docs/DEPLOYMENT.md (created)
+  - CONTRIBUTING.md
+  - .env.example
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** cleanup_rate_limits() pg_cron scheduling still TODO (noted in DEPLOYMENT.md); BookArtTuner prod gate still TODO.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Cross-platform voice-to-text
 - **Summary:** Voice input was web-only. Now cross-platform: web uses Web Speech API, native uses expo-audio + OpenAI Whisper. Mic button visible on all platforms. EXPO_PUBLIC_OPENAI_KEY added to .env.
 - **Files Changed:** components/ChatInput.tsx, .env

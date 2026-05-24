@@ -21,7 +21,7 @@ Thank you for your interest in contributing to Aion. This document covers everyt
 
 | Tool | Version |
 |---|---|
-| Node.js | 20 or later |
+| Node.js | 22 (CI) or 20+ (local) |
 | npm | 10 or later |
 | Expo CLI | Latest (`npm i -g expo-cli`) |
 | Supabase CLI | Latest (`npm i -g supabase`) |
@@ -66,6 +66,7 @@ Edit `.env`:
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
+EXPO_PUBLIC_OPENAI_KEY=<your-openai-key>   # Required for voice-to-text on iOS/Android
 EXPO_PUBLIC_DEV_BYPASS=<your-dev-secret>   # Remove for production builds
 ```
 
@@ -81,11 +82,14 @@ Never commit either of these files. They are listed in `.gitignore`.
 
 ### 5. Apply Database Migrations
 
-Run the SQL migrations in your Supabase SQL Editor (or via `supabase db push` if using the local stack):
+Apply all migrations in order via `supabase db push` or your Supabase SQL Editor:
 
 ```
-supabase/migrations/20260402080000_initial_schema.sql
-supabase/migrations/20260402081000_rate_limits.sql
+supabase/migrations/20260402080000_initial_schema.sql      — Tables, indexes, RLS, hybrid search
+supabase/migrations/20260402081000_rate_limits.sql         — Rate limiting, response cache, global usage
+supabase/migrations/20260403010000_user_verse_data.sql     — Highlights, bookmarks, and notes tables
+supabase/migrations/20260524000000_backend_hardening.sql   — Security hardening, FK constraints, triggers
+supabase/migrations/20260524000001_optimize_embeddings.sql — halfvec migration, IVFFlat index rebuild
 ```
 
 Enable **Anonymous Sign-Ins** under Supabase Dashboard > Authentication > Providers.
@@ -211,10 +215,11 @@ security: enforce message length cap at Edge Function boundary
 
 4. **Fill in the PR template** completely. Incomplete templates slow review.
 
-5. **Pass all checks** before requesting review:
-   - TypeScript compiles with no errors (`npx tsc --noEmit`)
-   - No ESLint errors
-   - All existing behavior is preserved (manual smoke test if automated tests do not cover the area)
+5. **Pass all checks** before requesting review. Run the quality gate locally:
+   ```bash
+   ./check.sh   # format → lint → type-check → all 15 tests
+   ```
+   All four steps must pass. CI enforces the same checks on every push.
 
 6. **Request a review** from a maintainer. At least one approval is required before merging.
 
@@ -235,7 +240,7 @@ security: enforce message length cap at Edge Function boundary
 
 ### React Native & Expo
 
-- **Use NativeWind for all styling.** Apply Tailwind utility classes via the `className` prop. Do not use `StyleSheet.create` or inline `style` objects for layout or visual styling.
+- **Use `StyleSheet.create` for all styling.** Do not use NativeWind `className` props or Tailwind utility classes — the project migrated to React Native StyleSheet for reliable cross-platform rendering. Colours and fonts come from `lib/theme.ts`.
 - Component files live in `components/`. Screen files live in `app/`.
 - Prefer functional components with hooks. No class components.
 - Co-locate component-specific logic in the same file unless it becomes complex enough to warrant a dedicated hook in `lib/`.
@@ -256,13 +261,34 @@ security: enforce message length cap at Edge Function boundary
 
 ## Testing
 
-Aion does not yet have a full automated test suite. Until one is established, contributors are expected to:
+Aion has a Node.js test suite covering core business logic. Run it with:
+
+```bash
+npm test
+```
+
+The suite uses Node's built-in `node:test` runner via `tsx` and covers:
+
+| File | What is tested |
+|---|---|
+| `tests/bible-data.test.ts` | Book list structure, OT/NT split, VOTD day-of-year rotation |
+| `tests/notifications.test.ts` | AsyncStorage toggle, calendar-index rotation, notification payload |
+| `tests/settings.test.ts` | Font size scale values, theme configurations |
+| `tests/supabase.test.ts` | Environment variable presence checks |
+| `tests/tts.test.ts` | Markdown cleaning regex, web/native TTS dispatch |
+| `tests/utils.test.ts` | `timeAgo()` relative time formatting |
+
+All 15 tests must pass before a PR is merged. The full quality gate is:
+
+```bash
+./check.sh   # format → lint → type-check → test
+```
+
+Contributors are also expected to:
 
 1. **Manually smoke-test** any screen or Edge Function path they modify.
-2. **Verify the TypeScript build** passes: `npx tsc --noEmit`.
-3. **Check for lint issues** if ESLint is configured in the project.
-4. **Test on both iOS and Android** for any UI changes. Use Expo Go or simulators.
-5. **Test rate limiting** by verifying the Edge Function correctly blocks requests after the per-IP limits are exceeded, if modifying that logic.
-6. **Test RLS** by attempting to access another user's data with a different authenticated session, if modifying database policies.
+2. **Test on both iOS and Android** for any UI changes. Use Expo Go or simulators.
+3. **Test rate limiting** by verifying the Edge Function correctly blocks requests after the per-IP limits are exceeded, if modifying that logic.
+4. **Test RLS** by attempting to access another user's data with a different authenticated session, if modifying database policies.
 
-When automated tests are introduced, all PRs will be required to maintain or improve code coverage.
+See [docs/TESTING.md](docs/TESTING.md) for more detail.

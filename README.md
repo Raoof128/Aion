@@ -14,9 +14,15 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 - **Conversational Bible Q&A** — Ask questions in plain language and receive contextual answers grounded in scripture
 - **Hybrid RAG retrieval** — Combines keyword matching and semantic vector search (pgvector) for precise verse lookup
 - **Streaming responses** — Real-time SSE streaming from Gemini via Supabase Edge Functions
+- **Bible reader** — Browse all 66 books, select chapters, and read with custom per-book background art
 - **Rich verse cards** — Inline Bible verse display with book, chapter, and verse attribution
+- **Verse highlights & bookmarks** — Colour-coded highlighting and bookmarking persisted per user
+- **Voice-to-text** — Mic input via Web Speech API (web) or OpenAI Whisper (iOS/Android)
+- **Text-to-speech** — Read-aloud support via platform TTS engines
+- **Daily verse notifications** — Push notification with a rotating verse of the day
 - **Prompt suggestions** — Dynamic suggestion pills on the home screen to inspire exploration
-- **Conversation history** — Persistent history accessible via a slide-out drawer
+- **Conversation history** — Persistent chat history accessible from the More tab
+- **Settings** — Font size and theme controls
 - **Anonymous auth** — Zero sign-up friction; users are authenticated silently on first launch
 - **Rate limiting & caching** — IP-based rate limits and exact-match response cache to control costs
 
@@ -30,8 +36,9 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 - **Desktop:** Tauri v2 (native macOS/Windows/Linux wrapper, ~5MB)
 - **Backend:** Supabase (PostgreSQL + pgvector + Edge Functions)
 - **Auth:** Supabase Anonymous Auth
-- **Embedding Model:** OpenAI `text-embedding-3-small` (1536 dimensions)
+- **Embedding Model:** OpenAI `text-embedding-3-small` (stored as `halfvec(1536)`)
 - **Chat LLM:** Gemini 3.1 Flash Lite Preview
+- **Voice Transcription:** OpenAI Whisper (native platforms)
 - **Data Source:** [bible.helloao.org](https://bible.helloao.org/docs/) (BSB translation)
 - **Client Caching:** @tanstack/react-query
 
@@ -55,7 +62,7 @@ User Message
                                            │
                                    [Retrieved Verses]
                                            │
-                               [Gemini 3 Flash — SSE Stream]
+                               [Gemini 3.1 Flash Lite — SSE Stream]
                                            │
                                [Chat Response + Verse Cards]
                                            │
@@ -66,41 +73,78 @@ User Message
 
 ```
 Aion/
-├── app/                          # Expo Router screens
-│   ├── _layout.tsx               # Root layout (drawer + auth)
-│   ├── index.tsx                 # Home screen (prompt pills)
-│   └── chat/[id].tsx             # Chat screen (streaming + verse cards)
-├── components/                   # React Native components
-│   ├── VerseCard.tsx             # Bible verse display card
-│   ├── PromptPill.tsx            # Suggestion chips
-│   ├── ChatBubble.tsx            # Message bubbles
-│   ├── ChatInput.tsx             # Text input + send
-│   └── HistoryDrawer.tsx         # Conversation history
-├── lib/                          # Shared utilities
-│   ├── supabase.ts               # Supabase client
-│   ├── chat.ts                   # SSE streaming hook
-│   ├── theme.ts                  # Design system (colors, fonts)
-│   └── types.ts                  # TypeScript interfaces
-├── src-tauri/                    # Tauri desktop app wrapper
-│   ├── src/                      # Rust entry points
-│   ├── icons/                    # App icons (all platforms)
-│   └── tauri.conf.json           # Tauri configuration
+├── app/                            # Expo Router screens
+│   ├── _layout.tsx                 # Root layout (auth + anonymous session)
+│   ├── (tabs)/                     # Bottom tab navigation
+│   │   ├── _layout.tsx             # Tab bar layout (Home / Read / Chat / More)
+│   │   ├── index.tsx               # Home screen (VOTD + prompt pills)
+│   │   ├── read.tsx                # Bible browser (book/chapter selection)
+│   │   ├── chat.tsx                # Chat history list
+│   │   └── more.tsx                # History + settings entry
+│   ├── chat/
+│   │   └── [id].tsx                # Active chat screen (streaming + verse cards)
+│   └── reader/
+│       ├── _layout.tsx             # Reader stack layout
+│       └── [bookId]/
+│           ├── index.tsx           # Chapter list for a book
+│           └── [chapter].tsx       # Chapter reader with per-book backgrounds
+├── components/                     # Shared React Native components
+│   ├── BookArtTuner.tsx            # Dev tool: per-book background image tuner
+│   ├── BookBackground.tsx          # Custom background renderer (transform + gradient)
+│   ├── ChatBubble.tsx              # Message bubbles (user + assistant)
+│   ├── ChatInput.tsx               # Text input + voice-to-text + send
+│   ├── HistoryDrawer.tsx           # Legacy conversation history sidebar
+│   ├── Onboarding.tsx              # First-launch onboarding flow
+│   ├── PromptPill.tsx              # Suggestion prompt chips
+│   ├── SettingsSheet.tsx           # Settings bottom sheet (font size, theme)
+│   └── VerseCard.tsx               # Bible verse display card with copy
+├── lib/                            # Shared utilities and hooks
+│   ├── bible-data.ts               # OT/NT book lists, VOTD rotation logic
+│   ├── bookBackgroundSettings.ts   # Per-book background settings (AsyncStorage)
+│   ├── chat.ts                     # SSE streaming + Supabase API calls
+│   ├── notifications.ts            # Daily verse push notifications
+│   ├── settings.tsx                # App-wide settings (font size, theme)
+│   ├── supabase.ts                 # Supabase client + isSupabaseConfigured helper
+│   ├── theme.ts                    # Design system (colours, fonts, tokens)
+│   ├── tts.ts                      # Text-to-speech engine (web + native)
+│   ├── types.ts                    # TypeScript interfaces
+│   └── utils.ts                    # Relative time formatting utility
+├── assets/                         # Images and fonts
+│   └── *.png                       # App icons + per-book background images (30+ books)
+├── src-tauri/                      # Tauri desktop app wrapper
+│   ├── src/                        # Rust entry points
+│   ├── icons/                      # App icons (all platforms)
+│   └── tauri.conf.json             # Tauri configuration
 ├── scripts/
-│   └── ingest.ts                 # Bible data ingestion pipeline
+│   ├── ingest.ts                   # Full Bible ingestion pipeline (BSB + embeddings)
+│   └── fix-incomplete.ts           # Targeted re-ingest for incomplete books
 ├── supabase/
-│   ├── migrations/               # Database schema
-│   └── functions/chat/index.ts   # RAG Edge Function
-└── docs/                         # Design specs and plans
+│   ├── migrations/                 # 5 SQL migration files (see Setup)
+│   └── functions/chat/index.ts     # RAG Edge Function (Deno runtime)
+├── tests/                          # Node.js test suite (tsx runner, 15 tests)
+│   ├── bible-data.test.ts
+│   ├── notifications.test.ts
+│   ├── settings.test.ts
+│   ├── supabase.test.ts
+│   ├── tts.test.ts
+│   └── utils.test.ts
+├── check.sh                        # Quality gate: format → lint → type-check → test
+└── docs/
+    ├── ARCHITECTURE.md
+    ├── ENVIRONMENT.md
+    ├── TESTING.md
+    └── DEPLOYMENT.md
 ```
 
 ## Setup
 
 ### Prerequisites
 
-- Node.js 20+
+- Node.js 22+ (CI runs on 22; 20+ works locally)
 - Expo CLI (`npm install -g expo-cli`)
+- Supabase CLI (`npm install -g supabase`)
 - A Supabase project with pgvector enabled
-- OpenAI API key
+- OpenAI API key (embeddings + Whisper voice transcription)
 - Google AI (Gemini) API key
 
 ### 1. Install Dependencies
@@ -112,15 +156,23 @@ cd scripts && npm install && cd ..
 
 ### 2. Configure Environment
 
-Create `.env` in the project root:
+Copy the example files and fill in your credentials:
+
+```bash
+cp .env.example .env
+cp scripts/.env.example scripts/.env
+```
+
+Edit `.env`:
 
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_DEV_BYPASS=your-dev-secret  # Remove for production
+EXPO_PUBLIC_OPENAI_KEY=your-openai-key    # Required for voice-to-text on iOS/Android
+EXPO_PUBLIC_DEV_BYPASS=your-dev-secret    # Remove for production builds
 ```
 
-Create `scripts/.env`:
+Edit `scripts/.env`:
 
 ```
 SUPABASE_URL=https://your-project.supabase.co
@@ -128,19 +180,27 @@ SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
 OPENAI_API_KEY=your-openai-key
 ```
 
+See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for a full description of every variable.
+
 ### 3. Database Setup
 
-Run the SQL migrations in your Supabase SQL Editor:
+Apply all migrations in order via `supabase db push` or your Supabase SQL Editor:
 
 1. `supabase/migrations/20260402080000_initial_schema.sql` — Tables, indexes, RLS, hybrid search function
 2. `supabase/migrations/20260402081000_rate_limits.sql` — Rate limiting, response cache, global usage
+3. `supabase/migrations/20260403010000_user_verse_data.sql` — Highlights, bookmarks, and notes tables
+4. `supabase/migrations/20260524000000_backend_hardening.sql` — Security hardening, FK constraints, triggers
+5. `supabase/migrations/20260524000001_optimize_embeddings.sql` — halfvec migration, IVFFlat index rebuild
 
 Enable **Anonymous Sign-Ins** in Supabase Dashboard > Authentication > Providers.
 
 ### 4. Edge Function Secrets
 
 ```bash
-supabase secrets set OPENAI_API_KEY="your-key" GEMINI_API_KEY="your-key" DEV_BYPASS_SECRET="your-secret"
+supabase secrets set \
+  OPENAI_API_KEY="your-key" \
+  GEMINI_API_KEY="your-key" \
+  DEV_BYPASS_SECRET="your-secret"
 ```
 
 ### 5. Deploy Edge Function
@@ -156,7 +216,7 @@ cd scripts
 npx tsx ingest.ts
 ```
 
-This fetches the entire BSB Bible from bible.helloao.org, generates embeddings via OpenAI, and upserts to Supabase. Takes ~20 minutes, costs ~$0.02.
+This fetches the entire BSB Bible from bible.helloao.org, generates embeddings via OpenAI, and upserts to Supabase. Takes ~20 minutes, costs ~$0.02. Result: 31,086 verses across all 66 books.
 
 ### 7. Run the App
 
@@ -174,7 +234,10 @@ npm run desktop
 ## Development
 
 ```bash
-# Type-check
+# Quality gate (format + lint + type-check + tests)
+./check.sh
+
+# Type-check only
 npm run type-check
 
 # Lint
@@ -182,6 +245,9 @@ npm run lint
 
 # Format
 npm run format
+
+# Run tests
+npm test
 
 # Run on iOS simulator
 npx expo run:ios
@@ -196,13 +262,17 @@ npm run desktop
 npm run desktop:build
 ```
 
+See [docs/TESTING.md](docs/TESTING.md) for details on the test suite and [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md) for production deployment steps.
+
 ## Security
 
 - **API keys server-side only:** OpenAI, Gemini, and service_role keys stored as Edge Function secrets
 - **IP-based rate limiting:** 5/min burst, 30/3hrs per IP, 200/day global cap
 - **Response cache:** Exact-match queries served from DB at zero LLM cost
 - **Message length cap:** 500 characters max to prevent token-stuffing
-- **RLS enforced:** All tables protected, users can only access their own data
+- **RLS enforced:** All tables protected; users can only access their own data
+- **IDOR protection:** Conversation ownership verified before any write operation
+- **SQL injection protection:** LIKE wildcards escaped in keyword search
 - **Dev bypass:** Secret header for testing, excluded from production builds
 - **Fail-closed:** Rate limit errors default to deny
 

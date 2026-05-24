@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Full documentation audit
+- **Summary:** Audited all docs against the current codebase. Fixed stale/wrong information across README, ARCHITECTURE.md, and CONTRIBUTING.md; added EXPO_PUBLIC_OPENAI_KEY to .env.example; created docs/ENVIRONMENT.md, docs/TESTING.md, docs/DEPLOYMENT.md. Key corrections: verse count 23,583→31,086; embedding HNSW→IVFFlat, vector→halfvec; styling rule NativeWind→StyleSheet; "no test suite" claim replaced with accurate 15-test description; project structure rewritten for tabs-based navigation; all 5 migrations now listed in setup guides; Node version 20→22.
+- **Files Changed:**
+  - README.md — project structure, features, setup (5 migrations), env vars, Node version, verse count, dev commands
+  - docs/ARCHITECTURE.md — verse count, index type, embedding type, two new tables, component tree, inventories
+  - docs/ENVIRONMENT.md — created: full env variable reference
+  - docs/TESTING.md — created: test suite docs and writing guide
+  - docs/DEPLOYMENT.md — created: step-by-step deployment reference
+  - CONTRIBUTING.md — styling rule, testing section, migrations list, env vars, PR checks, Node version
+  - .env.example — added EXPO_PUBLIC_OPENAI_KEY
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** cleanup_rate_limits() pg_cron scheduling (noted in DEPLOYMENT.md); BookArtTuner production gate.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Cross-platform voice-to-text — native support via expo-audio + OpenAI Whisper
 - **Summary:** Voice input was web-only (hidden on iOS/Android). Replaced with a cross-platform implementation: web continues to use the browser Web Speech API; native (iOS/Android) now records audio with `expo-audio` and transcribes via OpenAI Whisper API. Mic button is now visible and functional on all platforms. Added `EXPO_PUBLIC_OPENAI_KEY` to `.env` for client-side Whisper access.
 - **Files Changed:**
