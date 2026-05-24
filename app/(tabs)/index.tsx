@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import {
   View,
   Text,
@@ -38,6 +38,11 @@ import { ChatInput } from "../../components/ChatInput";
 import { colors, fonts } from "../../lib/theme";
 import { getVerseOfTheDay } from "../../lib/bible-data";
 import { isSupabaseConfigured } from "../../lib/supabase";
+import { useStreak } from "../../lib/streak";
+import { StreakBadge } from "../../components/StreakBadge";
+import { StreakCard } from "../../components/StreakCard";
+import { StreakSheet } from "../../components/StreakSheet";
+import { MilestoneCelebration } from "../../components/MilestoneCelebration";
 
 const PROMPT_SUGGESTIONS = [
   { Icon: Search, label: "Find verses with the number 444" },
@@ -61,6 +66,8 @@ export default function HomeScreen() {
   const isLandscape = width > height;
 
   const votd = getVerseOfTheDay();
+  const { streak, weekDays, milestoneUnlocked, dismissMilestone } = useStreak();
+  const [sheetVisible, setSheetVisible] = useState(false);
 
   const breathe = useSharedValue(0.5);
 
@@ -125,13 +132,16 @@ export default function HomeScreen() {
               </Animated.Text>
 
               {/* Logo */}
-              <Animated.Text
+              <Animated.View
                 entering={FadeInDown.duration(600).delay(100)}
-                style={styles.logo}
+                style={styles.logoRow}
                 accessibilityRole="header"
               >
-                A I O N
-              </Animated.Text>
+                <Text style={styles.logo}>A I O N</Text>
+                {streak && (
+                  <StreakBadge count={streak.current_streak} onPress={() => setSheetVisible(true)} />
+                )}
+              </Animated.View>
 
               {/* Divider */}
               <Animated.View
@@ -188,6 +198,9 @@ export default function HomeScreen() {
                 </Pressable>
               </Animated.View>
 
+              {/* Streak Card */}
+              {streak && <StreakCard streak={streak} />}
+
               {/* Read Bible Button */}
               <Pressable
                 onPress={() => router.push("/read")}
@@ -233,6 +246,23 @@ export default function HomeScreen() {
             </View>
           </KeyboardAvoidingView>
         </SafeAreaView>
+        {/* Streak Sheet */}
+        {streak && (
+          <StreakSheet
+            visible={sheetVisible}
+            onClose={() => setSheetVisible(false)}
+            streak={streak}
+            weekDays={weekDays}
+          />
+        )}
+
+        {/* Milestone Celebration */}
+        {milestoneUnlocked && (
+          <MilestoneCelebration
+            milestone={milestoneUnlocked}
+            onDismiss={dismissMilestone}
+          />
+        )}
       </ImageBackground>
     </View>
   );
@@ -308,6 +338,12 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     textTransform: "uppercase",
     marginBottom: 20,
+  },
+  logoRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    marginBottom: 14,
   },
   logo: {
     color: colors.white,
