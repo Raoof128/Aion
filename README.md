@@ -44,29 +44,24 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 ## Architecture
 
-```
-User Message
-    │
-    ▼
-[React Native App] ──────────────► [Supabase Edge Function]
-                                           │
-                               ┌───────────┴───────────┐
-                               │                       │
-                         [Regex Extract]         [OpenAI Embed]
-                         keyword: "John 3:16"    1536-dim vector
-                               │                       │
-                               └───────────┬───────────┘
-                                           │
-                               [Hybrid Search — pgvector]
-                               Keyword match + Semantic similarity
-                                           │
-                                   [Retrieved Verses]
-                                           │
-                               [Gemini 3.1 Flash Lite — SSE Stream]
-                                           │
-                               [Chat Response + Verse Cards]
-                                           │
-    [React Native App] ◄─────────────────────────────────
+```mermaid
+flowchart TD
+    User([User Message]) --> App[React Native App]
+    App -->|HTTPS + JWT| Edge[Supabase Edge Function]
+
+    Edge --> RegEx[Regex Extract\nkeyword · reference]
+    Edge --> Embed[OpenAI Embed\nhalfvec 1536-dim]
+
+    RegEx --> Search[Hybrid Search — pgvector\nKeyword ILIKE + Cosine similarity]
+    Embed --> Search
+
+    Search --> Verses[Retrieved Verses]
+    Verses --> Gemini[Gemini 3.1 Flash Lite\nSSE Stream]
+
+    Gemini -->|text chunks| App
+    Gemini -->|verses · conversation · done| App
+
+    App --> UI[Chat Response\n+ Verse Cards]
 ```
 
 ## Project Structure
