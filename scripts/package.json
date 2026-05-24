@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "ingest": "npx tsx ingest.ts"
+    "ingest": "npx tsx ingest.ts",
+    "fix": "npx tsx fix-incomplete.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.49.0",

@@ -15,10 +15,14 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 const openai = new OpenAI({ apiKey: OPENAI_KEY });
 
 // --- Types ---
+
+// BSB content items can be plain strings, footnote refs, or poetry/prose objects
+type ContentItem = string | { noteId: number } | { text: string; poem?: number };
+
 interface ChapterContent {
   type: string;
   number?: number;
-  content?: (string | { noteId: number })[];
+  content?: ContentItem[];
 }
 
 interface ChapterInner {
@@ -52,11 +56,14 @@ interface VerseRow {
 
 // --- Helpers ---
 
-function flattenVerseContent(
-  content: (string | { noteId: number })[]
-): string {
+function flattenVerseContent(content: ContentItem[]): string {
   return content
-    .filter((item): item is string => typeof item === "string")
+    .map((item) => {
+      if (typeof item === "string") return item;
+      if (typeof item === "object" && "text" in item) return item.text;
+      return "";
+    })
+    .filter(Boolean)
     .join(" ")
     .replace(/\s+/g, " ")
     .trim();

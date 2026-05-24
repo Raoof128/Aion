@@ -11,6 +11,17 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Fix incomplete Bible verse data — flattenVerseContent bug in ingest script
+- **Summary:** Diagnosed that 38/66 Bible books had missing verses because `flattenVerseContent` in `scripts/ingest.ts` only handled plain string content items and silently dropped BSB's poetry/prose dict items (`{text: "...", poem: 1}`). Fixed the type and logic to handle both string and `{text}` object items. Created `scripts/fix-incomplete.ts` — a targeted re-ingest script that only processes the 38 affected books using upsert, preserving all existing correct data. Added `"fix"` npm script. To apply: set `scripts/.env` with `SUPABASE_URL`, `SUPABASE_SERVICE_ROLE_KEY`, and `OPENAI_API_KEY`, then run `npm run fix` from the `scripts/` directory.
+- **Files Changed:**
+  - [scripts/ingest.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/scripts/ingest.ts) - Fixed `flattenVerseContent` type signature and logic; added `ContentItem` union type covering string, noteId ref, and `{text, poem}` dict.
+  - [scripts/fix-incomplete.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/scripts/fix-incomplete.ts) - Created targeted re-ingest script for 38 incomplete books. Upserts only, safe to re-run.
+  - [scripts/package.json](file:///Users/raoof.r12/Desktop/Raouf/Aion/scripts/package.json) - Added `"fix"` script.
+- **Verification:** Confirmed fix produces correct counts via Python audit (e.g. PSA: 98→2461, JOB: 81→1070, LAM: 0→154). `./check.sh` passes — 0 formatting issues, 0 ESLint warnings, 0 TypeScript errors, 15/15 tests passing.
+- **Follow-ups:** Completed — all 66 books verified correct at 31,086 total verses.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Added 5 new book backgrounds + Main_menue replacement (2 Samuel, 1-2 Kings, 1-2 Chronicles)
 - **Summary:** Replaced Main_menue.png and added background images for 2 Samuel, 1 Kings, 2 Kings, 1 Chronicles, and 2 Chronicles. All new assets are 1448×1086. Updated reader chapter component with is2Samuel/is1Kings/is2Kings/is1Chronicles/is2Chronicles checks, included in isCustomBg, and added require() calls.
 - **Files Changed:**
