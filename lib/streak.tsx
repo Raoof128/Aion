@@ -70,6 +70,7 @@ export function StreakProvider({ children }: { children: ReactNode }) {
   const [milestoneUnlocked, setMilestoneUnlocked] = useState<7 | 30 | 100 | null>(null);
   const [loading, setLoading] = useState(true);
   const lastRecordedDate = useRef<string | null>(null);
+  const isInitialised = useRef(false);
 
   const dismissMilestone = useCallback(() => setMilestoneUnlocked(null), []);
 
@@ -78,8 +79,9 @@ export function StreakProvider({ children }: { children: ReactNode }) {
       const response = await recordOpen();
 
       // Skip re-render if we already recorded today (same date idempotent)
-      if (lastRecordedDate.current === response.local_date && streak !== null) return;
+      if (lastRecordedDate.current === response.local_date && isInitialised.current) return;
       lastRecordedDate.current = response.local_date;
+      isInitialised.current = true;
 
       // Sequential: fetch days only after record-open completes
       const days = await fetchWeekDays(response.week_start, response.local_date);
@@ -100,7 +102,7 @@ export function StreakProvider({ children }: { children: ReactNode }) {
     } finally {
       setLoading(false);
     }
-  }, [streak]);
+  }, []);
 
   // Record on mount (app open)
   useEffect(() => {
