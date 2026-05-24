@@ -31,3 +31,28 @@ export type ChatSSEEvent =
   | { type: "conversation"; id: string }
   | { type: "error"; message: string }
   | { type: "done" };
+
+// ── Streak ────────────────────────────────────────────────
+
+export interface StreakState {
+  current_streak: number;
+  longest_streak: number;
+  freeze_uses_this_week: number;
+  last_active_date: string | null; // "YYYY-MM-DD" — server's local date
+  week_start: string | null;       // "YYYY-MM-DD" — ISO week Monday
+}
+
+export interface RecordOpenResponse {
+  current_streak: number;
+  longest_streak: number;
+  freeze_uses_this_week: number;
+  local_date: string;    // "YYYY-MM-DD" — server-derived, use this for UI
+  week_start: string;    // "YYYY-MM-DD" — ISO week Monday
+  milestone_unlocked?: 7 | 30 | 100;
+  today_recorded: boolean;
+}
+
+export interface StreakDayRecord {
+  local_date: string; // "YYYY-MM-DD"
+  status: "active" | "frozen";
+}
