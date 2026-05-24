@@ -4,9 +4,9 @@
 
 **Goal:** Add a Supabase-backed daily study streak that increments when the user opens the app, supports one freeze per week, celebrates milestones at 7/30/100 days, and displays a fire badge in the Home header + a streak card on the Home screen.
 
-**Architecture:** Three Supabase tables (`user_streaks`, `user_streak_days`, `user_streak_milestones`) hold all state. A single Edge Function (`record-open`) receives the user's timezone, computes the local date server-side, and updates all tables inside a transaction with `SELECT FOR UPDATE`. The React Native client calls `record-open` on every app mount, receives a typed response, and feeds that into a `useStreak` hook that drives four new components.
+**Architecture:** Three Supabase tables (`user_streaks`, `user_streak_days`, `user_streak_milestones`) hold all state. A single Edge Function (`record-open`) receives the user's timezone, computes the local date server-side, and updates all tables inside a locked Postgres RPC (`update_streak`). The RPC is callable only by service_role. A `StreakProvider` at the root layout calls `record-open` on app mount and resume (via AppState), exposes state via context. Home screen reads from context to render `StreakBadge`, `StreakCard`, `StreakSheet`, and `MilestoneCelebration`.
 
-**Tech Stack:** Supabase (PostgreSQL, Edge Functions, Deno), React Native + Expo, react-native-reanimated, expo-localization (timezone), node:test (unit tests)
+**Tech Stack:** Supabase (PostgreSQL, Edge Functions, Deno), React Native + Expo, react-native-reanimated, expo-localization, AppState API, tsx (test runner)
 
 **Spec:** `docs/superpowers/specs/2026-05-25-streak-system-design.md`
 
@@ -16,16 +16,18 @@
 
 | Action | Path | Responsibility |
 |--------|------|---------------|
-| Create | `supabase/migrations/20260525000000_streak_system.sql` | All three tables + RLS + indexes |
-| Create | `supabase/functions/record-open/index.ts` | Edge Function — timezone → local date → streak update |
-| Modify | `lib/types.ts` | Add `StreakState`, `RecordOpenResponse` types |
-| Create | `lib/streak.ts` | `useStreak` hook — calls `record-open`, exposes state |
+| Create | `supabase/migrations/20260525000000_streak_system.sql` | All three tables + RLS + `update_streak` RPC + permission grants |
+| Create | `supabase/functions/record-open/index.ts` | Edge Function — timezone → local_date + streak update |
+| Modify | `lib/types.ts` | Add `StreakState`, `RecordOpenResponse`, `StreakDayRecord` |
+| Create | `lib/streak-helpers.ts` | Pure helpers: `isoWeekStart`, `buildWeekDays` (testable, no React) |
+| Create | `lib/streak.ts` | `StreakProvider`, `useStreak` hook — AppState lifecycle + API calls |
 | Create | `components/StreakBadge.tsx` | `🔥 N` header badge, tap to open sheet |
 | Create | `components/StreakCard.tsx` | Home screen streak card (numeral, freeze pill, status) |
 | Create | `components/StreakSheet.tsx` | Bottom sheet — 7-day calendar, milestone badges, stats |
-| Create | `components/MilestoneCelebration.tsx` | Full-screen milestone overlay with particle burst |
-| Modify | `app/(tabs)/index.tsx` | Wire in `StreakBadge`, `StreakCard`, `MilestoneCelebration` |
-| Create | `tests/streak.test.ts` | Unit tests for streak logic helpers |
+| Create | `components/MilestoneCelebration.tsx` | Full-screen milestone overlay with reduce-motion support |
+| Modify | `app/_layout.tsx` | Wrap with `StreakProvider` |
+| Modify | `app/(tabs)/index.tsx` | Consume `useStreak`, render components |
+| Create | `tests/streak-helpers.test.ts` | Unit tests importing real helpers from `lib/streak-helpers.ts` |
 
 ---
 
@@ -40,8 +42,7 @@
 -- supabase/migrations/20260525000000_streak_system.sql
 
 -- ── user_streaks ──────────────────────────────────────────
--- One row per user. Stores current streak summary.
--- All writes owned by the record-open Edge Function (service role).
+-- One row per user. Summary state. Service role owns all writes.
 CREATE TABLE user_streaks (
   user_id               uuid PRIMARY KEY REFERENCES auth.users(id) ON DELETE CASCADE,
   last_active_date      date,
@@ -55,14 +56,12 @@ CREATE TABLE user_streaks (
 );
 
 ALTER TABLE user_streaks ENABLE ROW LEVEL SECURITY;
--- Clients may only SELECT their own row.
 CREATE POLICY "users read own streak"
   ON user_streaks FOR SELECT USING (auth.uid() = user_id);
 
 -- ── user_streak_days ──────────────────────────────────────
 -- One row per user per active/frozen day.
--- Used to render the 7-day calendar in StreakSheet.
--- Missed days are derived from gaps — not stored.
+-- Missed days derived from gaps — not stored.
 CREATE TABLE user_streak_days (
   id          uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id     uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
@@ -81,7 +80,7 @@ CREATE INDEX idx_streak_days_user_date
   ON user_streak_days (user_id, local_date DESC);
 
 -- ── user_streak_milestones ────────────────────────────────
--- Deduplication guard — ensures milestone modal fires exactly once per user.
+-- Prevents milestone modal firing more than once per user.
 CREATE TABLE user_streak_milestones (
   user_id    uuid NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
   milestone  int  NOT NULL CHECK (milestone IN (7, 30, 100)),
@@ -92,27 +91,180 @@ CREATE TABLE user_streak_milestones (
 ALTER TABLE user_streak_milestones ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users read own milestones"
   ON user_streak_milestones FOR SELECT USING (auth.uid() = user_id);
+
+-- ── update_streak RPC ─────────────────────────────────────
+-- Called ONLY by the record-open Edge Function (service role).
+-- Locked to service_role — anon/authenticated users cannot call it.
+-- First-open race is handled by INSERT ... ON CONFLICT before the FOR UPDATE.
+CREATE OR REPLACE FUNCTION update_streak(
+  p_user_id    uuid,
+  p_local_date date,
+  p_timezone   text,
+  p_week_start date
+) RETURNS jsonb
+LANGUAGE plpgsql
+SECURITY DEFINER
+SET search_path = public
+AS $$
+DECLARE
+  v_row           user_streaks%ROWTYPE;
+  v_gap           int;
+  v_milestone     int;
+  v_milestone_new int := NULL;
+BEGIN
+  -- Ensure row exists before locking (handles first-open race)
+  INSERT INTO user_streaks (user_id, freeze_week_start, timezone)
+  VALUES (p_user_id, p_week_start, p_timezone)
+  ON CONFLICT (user_id) DO NOTHING;
+
+  -- Now lock the row for this transaction
+  SELECT * INTO v_row
+  FROM user_streaks
+  WHERE user_id = p_user_id
+  FOR UPDATE;
+
+  -- Guard: reject dates in the past (client clock drift or replay)
+  IF v_row.last_active_date IS NOT NULL AND p_local_date < v_row.last_active_date THEN
+    RETURN jsonb_build_object(
+      'current_streak',        v_row.current_streak,
+      'longest_streak',        v_row.longest_streak,
+      'freeze_uses_this_week', v_row.freeze_uses_this_week,
+      'local_date',            p_local_date::text,
+      'week_start',            p_week_start::text,
+      'today_recorded',        true
+    );
+  END IF;
+
+  -- Already recorded today
+  IF v_row.last_active_date = p_local_date THEN
+    RETURN jsonb_build_object(
+      'current_streak',        v_row.current_streak,
+      'longest_streak',        v_row.longest_streak,
+      'freeze_uses_this_week', v_row.freeze_uses_this_week,
+      'local_date',            p_local_date::text,
+      'week_start',            p_week_start::text,
+      'today_recorded',        true
+    );
+  END IF;
+
+  -- First open (no last_active_date yet)
+  IF v_row.last_active_date IS NULL THEN
+    UPDATE user_streaks SET
+      last_active_date      = p_local_date,
+      current_streak        = 1,
+      longest_streak        = 1,
+      freeze_week_start     = p_week_start,
+      timezone              = p_timezone,
+      updated_at            = now()
+    WHERE user_id = p_user_id;
+
+    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
+    VALUES (p_user_id, p_local_date, 'active', p_timezone)
+    ON CONFLICT (user_id, local_date) DO NOTHING;
+
+    RETURN jsonb_build_object(
+      'current_streak',        1,
+      'longest_streak',        1,
+      'freeze_uses_this_week', 0,
+      'local_date',            p_local_date::text,
+      'week_start',            p_week_start::text,
+      'today_recorded',        false
+    );
+  END IF;
+
+  v_gap := p_local_date - v_row.last_active_date;
+
+  -- Reset freeze count when entering a new ISO week
+  IF v_row.freeze_week_start IS NULL OR v_row.freeze_week_start < p_week_start THEN
+    v_row.freeze_uses_this_week := 0;
+    v_row.freeze_week_start := p_week_start;
+  END IF;
+
+  -- Apply streak logic
+  IF v_gap = 1 THEN
+    v_row.current_streak := v_row.current_streak + 1;
+    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
+    VALUES (p_user_id, p_local_date, 'active', p_timezone)
+    ON CONFLICT (user_id, local_date) DO NOTHING;
+
+  ELSIF v_gap = 2 AND v_row.freeze_uses_this_week < 1 THEN
+    v_row.current_streak := v_row.current_streak + 1;
+    v_row.freeze_uses_this_week := v_row.freeze_uses_this_week + 1;
+    -- Frozen row for missed day
+    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
+    VALUES (p_user_id, v_row.last_active_date + 1, 'frozen', p_timezone)
+    ON CONFLICT (user_id, local_date) DO NOTHING;
+    -- Active row for today
+    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
+    VALUES (p_user_id, p_local_date, 'active', p_timezone)
+    ON CONFLICT (user_id, local_date) DO NOTHING;
+
+  ELSE
+    v_row.current_streak := 1;
+    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
+    VALUES (p_user_id, p_local_date, 'active', p_timezone)
+    ON CONFLICT (user_id, local_date) DO NOTHING;
+  END IF;
+
+  -- Update longest
+  IF v_row.current_streak > v_row.longest_streak THEN
+    v_row.longest_streak := v_row.current_streak;
+  END IF;
+
+  -- Check milestones
+  FOREACH v_milestone IN ARRAY ARRAY[7, 30, 100] LOOP
+    IF v_row.current_streak = v_milestone THEN
+      INSERT INTO user_streak_milestones (user_id, milestone)
+      VALUES (p_user_id, v_milestone)
+      ON CONFLICT (user_id, milestone) DO NOTHING;
+      IF FOUND THEN
+        v_milestone_new := v_milestone;
+      END IF;
+    END IF;
+  END LOOP;
+
+  UPDATE user_streaks SET
+    last_active_date      = p_local_date,
+    current_streak        = v_row.current_streak,
+    longest_streak        = v_row.longest_streak,
+    freeze_uses_this_week = v_row.freeze_uses_this_week,
+    freeze_week_start     = v_row.freeze_week_start,
+    timezone              = p_timezone,
+    updated_at            = now()
+  WHERE user_id = p_user_id;
+
+  RETURN jsonb_build_object(
+    'current_streak',        v_row.current_streak,
+    'longest_streak',        v_row.longest_streak,
+    'freeze_uses_this_week', v_row.freeze_uses_this_week,
+    'milestone_unlocked',    v_milestone_new,
+    'local_date',            p_local_date::text,
+    'week_start',            p_week_start::text,
+    'today_recorded',        false
+  );
+END;
+$$;
+
+-- Lock the RPC down to service_role only
+REVOKE ALL ON FUNCTION update_streak(uuid, date, text, date) FROM PUBLIC;
+REVOKE ALL ON FUNCTION update_streak(uuid, date, text, date) FROM anon;
+REVOKE ALL ON FUNCTION update_streak(uuid, date, text, date) FROM authenticated;
+GRANT EXECUTE ON FUNCTION update_streak(uuid, date, text, date) TO service_role;
 ```
 
-- [ ] **Step 2: Apply locally and confirm no errors**
-
-```bash
-supabase db reset
-```
-
-Expected: migration runs with no errors, three new tables visible in Studio.
-
-If you don't have Supabase CLI set up locally, deploy directly:
+- [ ] **Step 2: Apply migration**
 
 ```bash
 supabase db push
 ```
 
+Expected: migration applies cleanly. Verify three tables appear in Studio. Verify `update_streak` function is listed in Functions and is not callable by the anon role.
+
 - [ ] **Step 3: Commit**
 
 ```bash
 git add supabase/migrations/20260525000000_streak_system.sql
-git commit -m "feat(db): add streak system tables and RLS policies"
+git commit -m "feat(db): add streak tables, update_streak RPC, service_role-only grants"
 ```
 
 ---
@@ -122,9 +274,7 @@ git commit -m "feat(db): add streak system tables and RLS policies"
 **Files:**
 - Modify: `lib/types.ts`
 
-- [ ] **Step 1: Add streak types to `lib/types.ts`**
-
-Append to the end of the file:
+- [ ] **Step 1: Append to `lib/types.ts`**
 
 ```ts
 // ── Streak ────────────────────────────────────────────────
@@ -133,13 +283,16 @@ export interface StreakState {
   current_streak: number;
   longest_streak: number;
   freeze_uses_this_week: number;
-  last_active_date: string | null; // "YYYY-MM-DD"
+  last_active_date: string | null; // "YYYY-MM-DD" — server's local date
+  week_start: string | null;       // "YYYY-MM-DD" — ISO week Monday
 }
 
 export interface RecordOpenResponse {
   current_streak: number;
   longest_streak: number;
   freeze_uses_this_week: number;
+  local_date: string;    // "YYYY-MM-DD" — server-derived, use this for UI
+  week_start: string;    // "YYYY-MM-DD" — ISO week Monday
   milestone_unlocked?: 7 | 30 | 100;
   today_recorded: boolean;
 }
@@ -180,11 +333,12 @@ const anonSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 const CORS_HEADERS = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
-const MILESTONES = [7, 30, 100] as const;
+const MAX_TIMEZONE_LENGTH = 64;
 
-// Returns "YYYY-MM-DD" for a UTC timestamp converted to the given IANA timezone.
+// Returns "YYYY-MM-DD" for now() converted to an IANA timezone.
 function toLocalDateString(utcDate: Date, timezone: string): string {
   try {
     return new Intl.DateTimeFormat("en-CA", {
@@ -194,51 +348,41 @@ function toLocalDateString(utcDate: Date, timezone: string): string {
       day: "2-digit",
     }).format(utcDate);
   } catch {
-    // Fall back to UTC if timezone is invalid
     return utcDate.toISOString().slice(0, 10);
   }
 }
 
-// Returns the ISO week Monday date string "YYYY-MM-DD" for a given local date string.
+// Returns the ISO week Monday "YYYY-MM-DD" for a local date string.
 function isoWeekStart(localDate: string): string {
   const d = new Date(localDate + "T00:00:00Z");
-  const day = d.getUTCDay(); // 0=Sun 1=Mon ... 6=Sat
-  const diff = day === 0 ? -6 : 1 - day; // shift to Monday
+  const day = d.getUTCDay();
+  const diff = day === 0 ? -6 : 1 - day;
   d.setUTCDate(d.getUTCDate() + diff);
   return d.toISOString().slice(0, 10);
-}
-
-// Returns the date string one day before the given "YYYY-MM-DD".
-function dayBefore(dateStr: string): string {
-  const d = new Date(dateStr + "T00:00:00Z");
-  d.setUTCDate(d.getUTCDate() - 1);
-  return d.toISOString().slice(0, 10);
-}
-
-// Returns gap in calendar days between two "YYYY-MM-DD" strings.
-function daysBetween(from: string, to: string): number {
-  const a = new Date(from + "T00:00:00Z");
-  const b = new Date(to + "T00:00:00Z");
-  return Math.round((b.getTime() - a.getTime()) / 86_400_000);
 }
 
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: CORS_HEADERS });
   }
+  if (req.method !== "POST") {
+    return new Response(JSON.stringify({ error: "Method not allowed" }), {
+      status: 405,
+      headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
+    });
+  }
 
-  // Authenticate the caller via the anon JWT
-  const authHeader = req.headers.get("Authorization");
-  if (!authHeader) {
-    return new Response(JSON.stringify({ error: "Missing Authorization header" }), {
+  // Parse Bearer token strictly
+  const authHeader = req.headers.get("Authorization") ?? "";
+  const tokenMatch = authHeader.match(/^Bearer\s+(\S+)$/);
+  if (!tokenMatch) {
+    return new Response(JSON.stringify({ error: "Missing or malformed Authorization header" }), {
       status: 401,
       headers: { ...CORS_HEADERS, "Content-Type": "application/json" },
     });
   }
 
-  const { data: { user }, error: authError } = await anonSupabase.auth.getUser(
-    authHeader.replace("Bearer ", ""),
-  );
+  const { data: { user }, error: authError } = await anonSupabase.auth.getUser(tokenMatch[1]);
   if (authError || !user) {
     return new Response(JSON.stringify({ error: "Unauthorized" }), {
       status: 401,
@@ -246,17 +390,22 @@ Deno.serve(async (req) => {
     });
   }
 
-  const { timezone = "UTC" } = await req.json().catch(() => ({}));
-  const localDate = toLocalDateString(new Date(), timezone);
-  const currentWeekStart = isoWeekStart(localDate);
+  const body = await req.json().catch(() => ({}));
+  const rawTimezone = typeof body.timezone === "string" ? body.timezone : "UTC";
+  // Validate and cap timezone string
+  const timezone =
+    rawTimezone.length > MAX_TIMEZONE_LENGTH || !/^[A-Za-z0-9/_+-]+$/.test(rawTimezone)
+      ? "UTC"
+      : rawTimezone;
 
-  // All streak mutations run inside a transaction via RPC to prevent races.
-  // We use a Postgres function for the atomic update.
+  const localDate = toLocalDateString(new Date(), timezone);
+  const weekStart = isoWeekStart(localDate);
+
   const { data, error } = await serviceSupabase.rpc("update_streak", {
     p_user_id: user.id,
     p_local_date: localDate,
     p_timezone: timezone,
-    p_week_start: currentWeekStart,
+    p_week_start: weekStart,
   });
 
   if (error) {
@@ -273,248 +422,92 @@ Deno.serve(async (req) => {
 });
 ```
 
-- [ ] **Step 2: Add the `update_streak` Postgres function to the migration**
-
-Append to `supabase/migrations/20260525000000_streak_system.sql`:
-
-```sql
--- ── update_streak RPC ─────────────────────────────────────
--- Called exclusively by the record-open Edge Function (service role).
--- Runs atomically with FOR UPDATE to prevent race conditions.
-CREATE OR REPLACE FUNCTION update_streak(
-  p_user_id    uuid,
-  p_local_date date,
-  p_timezone   text,
-  p_week_start date
-) RETURNS jsonb
-LANGUAGE plpgsql
-SECURITY DEFINER
-AS $$
-DECLARE
-  v_row           user_streaks%ROWTYPE;
-  v_gap           int;
-  v_milestone     int;
-  v_milestone_new int := NULL;
-BEGIN
-  -- Lock the row (or create it) to prevent concurrent updates
-  SELECT * INTO v_row
-  FROM user_streaks
-  WHERE user_id = p_user_id
-  FOR UPDATE;
-
-  -- First open ever
-  IF NOT FOUND THEN
-    INSERT INTO user_streaks (user_id, last_active_date, current_streak, longest_streak,
-                              freeze_uses_this_week, freeze_week_start, timezone)
-    VALUES (p_user_id, p_local_date, 1, 1, 0, p_week_start, p_timezone);
-
-    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
-    VALUES (p_user_id, p_local_date, 'active', p_timezone)
-    ON CONFLICT (user_id, local_date) DO NOTHING;
-
-    -- Check milestone for streak=1 (none currently, but kept for future)
-    RETURN jsonb_build_object(
-      'current_streak', 1,
-      'longest_streak', 1,
-      'freeze_uses_this_week', 0,
-      'today_recorded', true
-    );
-  END IF;
-
-  -- Already recorded today
-  IF v_row.last_active_date = p_local_date THEN
-    RETURN jsonb_build_object(
-      'current_streak', v_row.current_streak,
-      'longest_streak', v_row.longest_streak,
-      'freeze_uses_this_week', v_row.freeze_uses_this_week,
-      'today_recorded', true
-    );
-  END IF;
-
-  v_gap := p_local_date - v_row.last_active_date;
-
-  -- Reset freeze count when entering a new ISO week
-  IF v_row.freeze_week_start IS NULL OR v_row.freeze_week_start < p_week_start THEN
-    v_row.freeze_uses_this_week := 0;
-    v_row.freeze_week_start := p_week_start;
-  END IF;
-
-  -- Apply streak logic
-  IF v_gap = 1 THEN
-    -- Consecutive day
-    v_row.current_streak := v_row.current_streak + 1;
-    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
-    VALUES (p_user_id, p_local_date, 'active', p_timezone)
-    ON CONFLICT (user_id, local_date) DO NOTHING;
-
-  ELSIF v_gap = 2 AND v_row.freeze_uses_this_week < 1 THEN
-    -- One missed day — use freeze
-    v_row.current_streak := v_row.current_streak + 1;
-    v_row.freeze_uses_this_week := v_row.freeze_uses_this_week + 1;
-    -- Insert frozen row for the missed day
-    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
-    VALUES (p_user_id, v_row.last_active_date + 1, 'frozen', p_timezone)
-    ON CONFLICT (user_id, local_date) DO NOTHING;
-    -- Insert active row for today
-    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
-    VALUES (p_user_id, p_local_date, 'active', p_timezone)
-    ON CONFLICT (user_id, local_date) DO NOTHING;
-
-  ELSE
-    -- Streak broken
-    v_row.current_streak := 1;
-    INSERT INTO user_streak_days (user_id, local_date, status, timezone)
-    VALUES (p_user_id, p_local_date, 'active', p_timezone)
-    ON CONFLICT (user_id, local_date) DO NOTHING;
-  END IF;
-
-  -- Update longest streak
-  IF v_row.current_streak > v_row.longest_streak THEN
-    v_row.longest_streak := v_row.current_streak;
-  END IF;
-
-  -- Check for new milestone
-  FOREACH v_milestone IN ARRAY ARRAY[7, 30, 100] LOOP
-    IF v_row.current_streak = v_milestone THEN
-      INSERT INTO user_streak_milestones (user_id, milestone)
-      VALUES (p_user_id, v_milestone)
-      ON CONFLICT (user_id, milestone) DO NOTHING;
-      IF FOUND THEN
-        v_milestone_new := v_milestone;
-      END IF;
-    END IF;
-  END LOOP;
-
-  -- Persist summary row
-  UPDATE user_streaks SET
-    last_active_date      = p_local_date,
-    current_streak        = v_row.current_streak,
-    longest_streak        = v_row.longest_streak,
-    freeze_uses_this_week = v_row.freeze_uses_this_week,
-    freeze_week_start     = v_row.freeze_week_start,
-    timezone              = p_timezone,
-    updated_at            = now()
-  WHERE user_id = p_user_id;
-
-  RETURN jsonb_build_object(
-    'current_streak',        v_row.current_streak,
-    'longest_streak',        v_row.longest_streak,
-    'freeze_uses_this_week', v_row.freeze_uses_this_week,
-    'milestone_unlocked',    v_milestone_new,
-    'today_recorded',        false
-  );
-END;
-$$;
-```
-
-- [ ] **Step 3: Apply migration and deploy function**
+- [ ] **Step 2: Deploy function**
 
 ```bash
-supabase db push
 supabase functions deploy record-open
 ```
 
-Expected: function deployed, Postgres function visible in Studio.
+Expected: deployed successfully. No error in Supabase dashboard logs.
 
-- [ ] **Step 4: Commit**
+- [ ] **Step 3: Commit**
 
 ```bash
-git add supabase/migrations/20260525000000_streak_system.sql
 git add supabase/functions/record-open/index.ts
-git commit -m "feat(backend): add record-open Edge Function and update_streak RPC"
+git commit -m "feat(edge): add record-open Edge Function with strict auth, timezone validation"
 ```
 
 ---
 
-## Task 4: `useStreak` hook
+## Task 4: Pure helpers + unit tests
 
 **Files:**
-- Create: `lib/streak.ts`
+- Create: `lib/streak-helpers.ts`
+- Create: `tests/streak-helpers.test.ts`
 
-- [ ] **Step 1: Write the failing test in `tests/streak.test.ts`**
+- [ ] **Step 1: Write the failing tests first**
 
 ```ts
-// tests/streak.test.ts
+// tests/streak-helpers.test.ts
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-
-// Pure helper — extracted for testing without React or Supabase
-function isoWeekStart(localDate: string): string {
-  const d = new Date(localDate + "T00:00:00Z");
-  const day = d.getUTCDay();
-  const diff = day === 0 ? -6 : 1 - day;
-  d.setUTCDate(d.getUTCDate() + diff);
-  return d.toISOString().slice(0, 10);
-}
-
-function buildWeekDays(today: string, days: { local_date: string; status: "active" | "frozen" }[]) {
-  const result: { date: string; status: "active" | "frozen" | "missed" | "today" | "future" }[] = [];
-  const todayDate = new Date(today + "T00:00:00Z");
-  const weekStart = new Date(isoWeekStart(today) + "T00:00:00Z");
-  const statusMap = new Map(days.map((d) => [d.local_date, d.status]));
-
-  for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setUTCDate(weekStart.getUTCDate() + i);
-    const dateStr = d.toISOString().slice(0, 10);
-    if (dateStr > today) {
-      result.push({ date: dateStr, status: "future" });
-    } else if (dateStr === today) {
-      result.push({ date: dateStr, status: statusMap.has(dateStr) ? "active" : "today" });
-    } else {
-      result.push({ date: dateStr, status: statusMap.get(dateStr) ?? "missed" });
-    }
-  }
-  return result;
-}
+import { isoWeekStart, buildWeekDays } from "../lib/streak-helpers.js";
 
 describe("isoWeekStart", () => {
   test("Monday returns itself", () => {
     assert.equal(isoWeekStart("2026-05-25"), "2026-05-25");
   });
+
   test("Sunday returns previous Monday", () => {
     assert.equal(isoWeekStart("2026-05-24"), "2026-05-18");
   });
+
   test("Saturday returns previous Monday", () => {
     assert.equal(isoWeekStart("2026-05-23"), "2026-05-18");
+  });
+
+  test("Wednesday mid-week returns Monday", () => {
+    assert.equal(isoWeekStart("2026-05-27"), "2026-05-25");
   });
 });
 
 describe("buildWeekDays", () => {
   test("today without a record shows today status", () => {
-    const days = buildWeekDays("2026-05-25", []);
+    const days = buildWeekDays("2026-05-25", "2026-05-25", []);
     const today = days.find((d) => d.date === "2026-05-25");
     assert.equal(today?.status, "today");
   });
 
   test("today with active record shows active", () => {
-    const days = buildWeekDays("2026-05-25", [{ local_date: "2026-05-25", status: "active" }]);
+    const days = buildWeekDays("2026-05-25", "2026-05-25", [
+      { local_date: "2026-05-25", status: "active" },
+    ]);
     const today = days.find((d) => d.date === "2026-05-25");
     assert.equal(today?.status, "active");
   });
 
   test("past day with no record shows missed", () => {
-    const days = buildWeekDays("2026-05-25", []);
+    const days = buildWeekDays("2026-05-27", "2026-05-25", []);
     const mon = days.find((d) => d.date === "2026-05-25");
-    // Use a day in the past within the week
-    const pastDay = buildWeekDays("2026-05-27", []);
-    const missedDay = pastDay.find((d) => d.date === "2026-05-25");
-    assert.equal(missedDay?.status, "missed");
+    assert.equal(mon?.status, "missed");
   });
 
-  test("frozen day shows frozen status", () => {
-    const days = buildWeekDays("2026-05-26", [
+  test("frozen day shows frozen", () => {
+    const days = buildWeekDays("2026-05-26", "2026-05-25", [
       { local_date: "2026-05-25", status: "active" },
       { local_date: "2026-05-26", status: "frozen" },
     ]);
-    const frozen = days.find((d) => d.date === "2026-05-26");
-    assert.equal(frozen?.status, "frozen");
+    assert.equal(days.find((d) => d.date === "2026-05-26")?.status, "frozen");
   });
 
   test("future days show future status", () => {
-    const days = buildWeekDays("2026-05-25", []);
-    const future = days.filter((d) => d.status === "future");
-    assert.ok(future.length > 0);
+    const days = buildWeekDays("2026-05-25", "2026-05-25", []);
+    assert.ok(days.some((d) => d.status === "future"));
+  });
+
+  test("produces exactly 7 days", () => {
+    const days = buildWeekDays("2026-05-25", "2026-05-25", []);
+    assert.equal(days.length, 7);
   });
 });
 ```
@@ -522,29 +515,25 @@ describe("buildWeekDays", () => {
 - [ ] **Step 2: Run test to verify it fails**
 
 ```bash
-node --test tests/streak.test.ts
+npm test
 ```
 
-Expected: FAIL — `buildWeekDays is not defined` (we haven't created `lib/streak.ts` yet and tests define the helpers inline here).
+Expected: FAIL — `Cannot find module '../lib/streak-helpers.js'`
 
-Wait — the helpers ARE defined inline in the test. Expected: PASS. If it passes, move on. If it fails due to import/module issues, check `tsconfig.json`.
-
-- [ ] **Step 3: Create `lib/streak.ts`**
+- [ ] **Step 3: Create `lib/streak-helpers.ts`**
 
 ```ts
-// lib/streak.ts
-import { useEffect, useState, useCallback } from "react";
-import * as Localization from "expo-localization";
-import { supabase } from "./supabase";
-import type { RecordOpenResponse, StreakState, StreakDayRecord } from "./types";
+// lib/streak-helpers.ts
+import type { StreakDayRecord } from "./types";
 
-const FALLBACK_TIMEZONE = "UTC";
+export type WeekDayStatus = "active" | "frozen" | "missed" | "today" | "future";
 
-function getTimezone(): string {
-  return Localization.getCalendars()[0]?.timeZone ?? FALLBACK_TIMEZONE;
+export interface WeekDay {
+  date: string;
+  status: WeekDayStatus;
 }
 
-// Exported for use in StreakSheet without needing to re-fetch
+// Returns ISO week Monday "YYYY-MM-DD" for a given "YYYY-MM-DD".
 export function isoWeekStart(localDate: string): string {
   const d = new Date(localDate + "T00:00:00Z");
   const day = d.getUTCDay();
@@ -553,19 +542,22 @@ export function isoWeekStart(localDate: string): string {
   return d.toISOString().slice(0, 10);
 }
 
+// Builds a 7-day array for the week containing `weekStart`.
+// `today` and `weekStart` come from the server response — never computed client-side.
 export function buildWeekDays(
   today: string,
+  weekStart: string,
   days: StreakDayRecord[],
-): { date: string; status: "active" | "frozen" | "missed" | "today" | "future" }[] {
-  const result: { date: string; status: "active" | "frozen" | "missed" | "today" | "future" }[] =
-    [];
-  const weekStart = new Date(isoWeekStart(today) + "T00:00:00Z");
+): WeekDay[] {
+  const result: WeekDay[] = [];
+  const weekStartDate = new Date(weekStart + "T00:00:00Z");
   const statusMap = new Map(days.map((d) => [d.local_date, d.status]));
 
   for (let i = 0; i < 7; i++) {
-    const d = new Date(weekStart);
-    d.setUTCDate(weekStart.getUTCDate() + i);
+    const d = new Date(weekStartDate);
+    d.setUTCDate(weekStartDate.getUTCDate() + i);
     const dateStr = d.toISOString().slice(0, 10);
+
     if (dateStr > today) {
       result.push({ date: dateStr, status: "future" });
     } else if (dateStr === today) {
@@ -576,19 +568,69 @@ export function buildWeekDays(
   }
   return result;
 }
+```
+
+- [ ] **Step 4: Run tests to confirm they pass**
+
+```bash
+npm test
+```
+
+Expected: all streak-helpers tests pass. Other test files also pass (no regressions).
+
+- [ ] **Step 5: Commit**
+
+```bash
+git add lib/streak-helpers.ts tests/streak-helpers.test.ts
+git commit -m "feat(lib): add streak-helpers with isoWeekStart and buildWeekDays + tests"
+```
+
+---
+
+## Task 5: `StreakProvider` and `useStreak` hook
+
+**Files:**
+- Create: `lib/streak.ts`
+
+- [ ] **Step 1: Create `lib/streak.ts`**
+
+```ts
+// lib/streak.ts
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  useCallback,
+  type ReactNode,
+} from "react";
+import { AppState, type AppStateStatus } from "react-native";
+import * as Localization from "expo-localization";
+import { supabase } from "./supabase";
+import { buildWeekDays, type WeekDay } from "./streak-helpers";
+import type { RecordOpenResponse, StreakState, StreakDayRecord } from "./types";
+
+const FALLBACK_TIMEZONE = "UTC";
+
+function getTimezone(): string {
+  return Localization.getCalendars()[0]?.timeZone ?? FALLBACK_TIMEZONE;
+}
 
 async function recordOpen(): Promise<RecordOpenResponse> {
-  const timezone = getTimezone();
+  const { data: sessionData } = await supabase.auth.getSession();
+  const token = sessionData.session?.access_token;
+  if (!token) throw new Error("No session token");
+
   const { data, error } = await supabase.functions.invoke<RecordOpenResponse>("record-open", {
-    body: { timezone },
+    body: { timezone: getTimezone() },
+    headers: { Authorization: `Bearer ${token}` },
   });
   if (error || !data) throw error ?? new Error("record-open returned no data");
   return data;
 }
 
-async function fetchWeekDays(): Promise<StreakDayRecord[]> {
-  const today = new Date().toISOString().slice(0, 10);
-  const weekStart = isoWeekStart(today);
+async function fetchWeekDays(weekStart: string, today: string): Promise<StreakDayRecord[]> {
   const { data, error } = await supabase
     .from("user_streak_days")
     .select("local_date, status")
@@ -599,81 +641,115 @@ async function fetchWeekDays(): Promise<StreakDayRecord[]> {
   return (data ?? []) as StreakDayRecord[];
 }
 
-export interface UseStreakResult {
+// ── Context ───────────────────────────────────────────────
+
+interface StreakContextValue {
   streak: StreakState | null;
-  weekDays: ReturnType<typeof buildWeekDays>;
+  weekDays: WeekDay[];
   milestoneUnlocked: 7 | 30 | 100 | null;
   dismissMilestone: () => void;
   loading: boolean;
 }
 
-export function useStreak(): UseStreakResult {
+const StreakContext = createContext<StreakContextValue>({
+  streak: null,
+  weekDays: [],
+  milestoneUnlocked: null,
+  dismissMilestone: () => {},
+  loading: true,
+});
+
+// ── Provider ──────────────────────────────────────────────
+
+export function StreakProvider({ children }: { children: ReactNode }) {
   const [streak, setStreak] = useState<StreakState | null>(null);
-  const [weekDays, setWeekDays] = useState<ReturnType<typeof buildWeekDays>>([]);
+  const [weekDays, setWeekDays] = useState<WeekDay[]>([]);
   const [milestoneUnlocked, setMilestoneUnlocked] = useState<7 | 30 | 100 | null>(null);
   const [loading, setLoading] = useState(true);
+  const lastRecordedDate = useRef<string | null>(null);
 
   const dismissMilestone = useCallback(() => setMilestoneUnlocked(null), []);
 
-  useEffect(() => {
-    let active = true;
-    (async () => {
-      try {
-        const [response, days] = await Promise.all([recordOpen(), fetchWeekDays()]);
-        if (!active) return;
-        const today = new Date().toISOString().slice(0, 10);
-        setStreak({
-          current_streak: response.current_streak,
-          longest_streak: response.longest_streak,
-          freeze_uses_this_week: response.freeze_uses_this_week,
-          last_active_date: today,
-        });
-        setWeekDays(buildWeekDays(today, days));
-        if (response.milestone_unlocked) {
-          setMilestoneUnlocked(response.milestone_unlocked);
-        }
-      } catch {
-        // Non-fatal — streak UI degrades gracefully if offline or unconfigured
-      } finally {
-        if (active) setLoading(false);
-      }
-    })();
-    return () => {
-      active = false;
-    };
-  }, []);
+  const recordAndRefresh = useCallback(async () => {
+    try {
+      const response = await recordOpen();
 
-  return { streak, weekDays, milestoneUnlocked, dismissMilestone, loading };
+      // Skip re-render if we already recorded today (same date idempotent)
+      if (lastRecordedDate.current === response.local_date && streak !== null) return;
+      lastRecordedDate.current = response.local_date;
+
+      // Sequential: fetch days only after record-open completes
+      const days = await fetchWeekDays(response.week_start, response.local_date);
+
+      setStreak({
+        current_streak: response.current_streak,
+        longest_streak: response.longest_streak,
+        freeze_uses_this_week: response.freeze_uses_this_week,
+        last_active_date: response.local_date,
+        week_start: response.week_start,
+      });
+      setWeekDays(buildWeekDays(response.local_date, response.week_start, days));
+      if (response.milestone_unlocked) {
+        setMilestoneUnlocked(response.milestone_unlocked);
+      }
+    } catch {
+      // Non-fatal — streak UI degrades gracefully when offline or unconfigured
+    } finally {
+      setLoading(false);
+    }
+  }, [streak]);
+
+  // Record on mount (app open)
+  useEffect(() => {
+    recordAndRefresh();
+  }, [recordAndRefresh]);
+
+  // Record on app resume (background → foreground)
+  useEffect(() => {
+    const sub = AppState.addEventListener("change", (state: AppStateStatus) => {
+      if (state === "active") {
+        recordAndRefresh();
+      }
+    });
+    return () => sub.remove();
+  }, [recordAndRefresh]);
+
+  return (
+    <StreakContext.Provider value={{ streak, weekDays, milestoneUnlocked, dismissMilestone, loading }}>
+      {children}
+    </StreakContext.Provider>
+  );
+}
+
+// ── Hook ──────────────────────────────────────────────────
+
+export function useStreak(): StreakContextValue {
+  return useContext(StreakContext);
 }
 ```
 
-- [ ] **Step 4: Run tests**
+- [ ] **Step 2: Commit**
 
 ```bash
-node --test tests/streak.test.ts
-```
-
-Expected: all tests pass.
-
-- [ ] **Step 5: Commit**
-
-```bash
-git add lib/streak.ts lib/types.ts tests/streak.test.ts
-git commit -m "feat(lib): add useStreak hook, buildWeekDays helper, streak types"
+git add lib/streak.ts
+git commit -m "feat(lib): add StreakProvider with AppState lifecycle and useStreak hook"
 ```
 
 ---
 
-## Task 5: `StreakBadge` component
+## Task 6: UI Components
 
 **Files:**
 - Create: `components/StreakBadge.tsx`
+- Create: `components/StreakCard.tsx`
+- Create: `components/StreakSheet.tsx`
+- Create: `components/MilestoneCelebration.tsx`
 
-- [ ] **Step 1: Create the component**
+- [ ] **Step 1: Create `components/StreakBadge.tsx`**
 
 ```tsx
 // components/StreakBadge.tsx
-import { Pressable, Text, StyleSheet, View } from "react-native";
+import { Pressable, Text, StyleSheet } from "react-native";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -704,7 +780,11 @@ export function StreakBadge({ count, onPress }: Props) {
   const animStyle = useAnimatedStyle(() => ({ transform: [{ scale: scale.value }] }));
 
   return (
-    <Pressable onPress={onPress} accessibilityRole="button" accessibilityLabel={`${count}-day streak. Tap for details.`}>
+    <Pressable
+      onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={`${count}-day streak. Tap for details.`}
+    >
       <Animated.View style={[styles.badge, animStyle]}>
         <Text style={styles.fire}>🔥</Text>
         <Text style={styles.count}>{count}</Text>
@@ -729,9 +809,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.5,
     shadowRadius: 8,
   },
-  fire: {
-    fontSize: 14,
-  },
+  fire: { fontSize: 14 },
   count: {
     color: colors.amberGlow,
     fontSize: 13,
@@ -741,21 +819,7 @@ const styles = StyleSheet.create({
 });
 ```
 
-- [ ] **Step 2: Commit**
-
-```bash
-git add components/StreakBadge.tsx
-git commit -m "feat(ui): add StreakBadge component"
-```
-
----
-
-## Task 6: `StreakCard` component
-
-**Files:**
-- Create: `components/StreakCard.tsx`
-
-- [ ] **Step 1: Create the component**
+- [ ] **Step 2: Create `components/StreakCard.tsx`**
 
 ```tsx
 // components/StreakCard.tsx
@@ -769,26 +833,21 @@ interface Props {
 }
 
 export function StreakCard({ streak }: Props) {
-  const studiedToday = streak.last_active_date === new Date().toISOString().slice(0, 10);
+  const studiedToday = streak.last_active_date === streak.week_start
+    ? false
+    : streak.last_active_date !== null; // Use server date, not client Date()
   const freezeAvailable = streak.freeze_uses_this_week < 1;
 
   return (
     <Animated.View entering={FadeInDown.duration(400).delay(750)} style={styles.card}>
-      {/* Amber top accent */}
       <View style={styles.topAccent} />
-
       <View style={styles.row}>
-        {/* Streak numeral */}
         <View style={styles.numeralBlock}>
           <Text style={styles.numeral}>{streak.current_streak}</Text>
           <Text style={styles.numeralLabel}>day streak</Text>
         </View>
-
-        {/* Right side */}
         <View style={styles.rightBlock}>
           <Text style={styles.longest}>Best: {streak.longest_streak} days</Text>
-
-          {/* Freeze pill */}
           <View style={[styles.freezePill, !freezeAvailable && styles.freezePillUsed]}>
             <Text style={styles.freezeText}>
               {freezeAvailable ? "❄️  1 freeze available" : "❄️  Freeze used"}
@@ -796,8 +855,6 @@ export function StreakCard({ streak }: Props) {
           </View>
         </View>
       </View>
-
-      {/* Status line */}
       <Text style={[styles.status, studiedToday && styles.statusDone]}>
         {studiedToday ? "Opened today ✓" : "Open daily to keep your streak"}
       </Text>
@@ -820,11 +877,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.10,
     shadowRadius: 16,
   },
-  topAccent: {
-    height: 2,
-    backgroundColor: colors.amberGlow,
-    opacity: 0.6,
-  },
+  topAccent: { height: 2, backgroundColor: colors.amberGlow, opacity: 0.6 },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -833,9 +886,7 @@ const styles = StyleSheet.create({
     paddingTop: 16,
     paddingBottom: 8,
   },
-  numeralBlock: {
-    alignItems: "flex-start",
-  },
+  numeralBlock: { alignItems: "flex-start" },
   numeral: {
     color: colors.amberGlow,
     fontSize: 48,
@@ -849,15 +900,8 @@ const styles = StyleSheet.create({
     letterSpacing: 1.5,
     textTransform: "uppercase",
   },
-  rightBlock: {
-    alignItems: "flex-end",
-    gap: 8,
-  },
-  longest: {
-    color: colors.textSecondary,
-    fontSize: 12,
-    fontFamily: fonts.uiMedium,
-  },
+  rightBlock: { alignItems: "flex-end", gap: 8 },
+  longest: { color: colors.textSecondary, fontSize: 12, fontFamily: fonts.uiMedium },
   freezePill: {
     paddingHorizontal: 10,
     paddingVertical: 4,
@@ -870,11 +914,7 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.04)",
     borderColor: "rgba(255, 255, 255, 0.08)",
   },
-  freezeText: {
-    color: colors.textSecondary,
-    fontSize: 11,
-    fontFamily: fonts.uiMedium,
-  },
+  freezeText: { color: colors.textSecondary, fontSize: 11, fontFamily: fonts.uiMedium },
   status: {
     color: colors.textMuted,
     fontSize: 11,
@@ -882,34 +922,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingBottom: 14,
   },
-  statusDone: {
-    color: colors.success,
-  },
+  statusDone: { color: colors.success },
 });
 ```
 
-- [ ] **Step 2: Commit**
-
-```bash
-git add components/StreakCard.tsx
-git commit -m "feat(ui): add StreakCard component"
-```
-
----
-
-## Task 7: `StreakSheet` component
-
-**Files:**
-- Create: `components/StreakSheet.tsx`
-
-- [ ] **Step 1: Create the component**
+- [ ] **Step 3: Create `components/StreakSheet.tsx`**
 
 ```tsx
 // components/StreakSheet.tsx
-import { View, Text, StyleSheet, Modal, Pressable, ScrollView } from "react-native";
+import { View, Text, StyleSheet, Modal, Pressable } from "react-native";
 import { colors, fonts } from "../lib/theme";
 import type { StreakState } from "../lib/types";
-import type { buildWeekDays } from "../lib/streak";
+import type { WeekDay } from "../lib/streak-helpers";
 
 const DAYS = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
 const MILESTONES = [7, 30, 100];
@@ -918,17 +942,20 @@ interface Props {
   visible: boolean;
   onClose: () => void;
   streak: StreakState;
-  weekDays: ReturnType<typeof buildWeekDays>;
+  weekDays: WeekDay[];
 }
 
 export function StreakSheet({ visible, onClose, streak, weekDays }: Props) {
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={onClose}>
-      <Pressable style={styles.backdrop} onPress={onClose} accessibilityRole="button" accessibilityLabel="Close streak details" />
+      <Pressable
+        style={styles.backdrop}
+        onPress={onClose}
+        accessibilityRole="button"
+        accessibilityLabel="Close streak details"
+      />
       <View style={styles.sheet}>
-        {/* Handle */}
         <View style={styles.handle} />
-
         <Text style={styles.title}>Your Streak</Text>
 
         {/* 7-day calendar row */}
@@ -936,7 +963,7 @@ export function StreakSheet({ visible, onClose, streak, weekDays }: Props) {
           {weekDays.map((day, i) => (
             <View key={day.date} style={styles.dayCol}>
               <Text style={styles.dayLabel}>{DAYS[i]}</Text>
-              <View style={[styles.dayDot, dayDotStyle(day.status)]} />
+              <View style={[styles.dayDot, dotStyle(day.status)]} />
             </View>
           ))}
         </View>
@@ -977,10 +1004,16 @@ export function StreakSheet({ visible, onClose, streak, weekDays }: Props) {
   );
 }
 
-function dayDotStyle(status: "active" | "frozen" | "missed" | "today" | "future") {
+function dotStyle(status: WeekDay["status"]): object {
   switch (status) {
     case "active":
-      return { backgroundColor: colors.amberGlow, shadowColor: colors.amberGlow, shadowOpacity: 0.6, shadowRadius: 6, shadowOffset: { width: 0, height: 0 } };
+      return {
+        backgroundColor: colors.amberGlow,
+        shadowColor: colors.amberGlow,
+        shadowOpacity: 0.6,
+        shadowRadius: 6,
+        shadowOffset: { width: 0, height: 0 },
+      };
     case "frozen":
       return { backgroundColor: "#60A5FA" };
     case "today":
@@ -1011,10 +1044,7 @@ function StatBlock({ label, value }: { label: string; value: number }) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: {
-    flex: 1,
-    backgroundColor: "rgba(0,0,0,0.5)",
-  },
+  backdrop: { flex: 1, backgroundColor: "rgba(0,0,0,0.5)" },
   sheet: {
     backgroundColor: colors.onyx,
     borderTopLeftRadius: 24,
@@ -1044,57 +1074,21 @@ const styles = StyleSheet.create({
     justifyContent: "space-around",
     marginBottom: 12,
   },
-  dayCol: {
-    alignItems: "center",
-    gap: 6,
-  },
+  dayCol: { alignItems: "center", gap: 6 },
   dayLabel: {
     color: colors.textMuted,
     fontSize: 10,
     fontFamily: fonts.uiMedium,
     letterSpacing: 0.5,
   },
-  dayDot: {
-    width: 28,
-    height: 28,
-    borderRadius: 14,
-  },
-  legend: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    marginBottom: 24,
-  },
-  legendItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-  },
-  legendDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
-  },
-  legendLabel: {
-    color: colors.textMuted,
-    fontSize: 11,
-    fontFamily: fonts.uiMedium,
-  },
-  statsRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    alignItems: "center",
-    marginBottom: 28,
-  },
-  statBlock: {
-    alignItems: "center",
-    paddingHorizontal: 32,
-  },
-  statValue: {
-    color: colors.amberGlow,
-    fontSize: 36,
-    fontFamily: fonts.verse,
-  },
+  dayDot: { width: 28, height: 28, borderRadius: 14 },
+  legend: { flexDirection: "row", justifyContent: "center", gap: 16, marginBottom: 24 },
+  legendItem: { flexDirection: "row", alignItems: "center", gap: 4 },
+  legendDot: { width: 8, height: 8, borderRadius: 4 },
+  legendLabel: { color: colors.textMuted, fontSize: 11, fontFamily: fonts.uiMedium },
+  statsRow: { flexDirection: "row", justifyContent: "center", alignItems: "center", marginBottom: 28 },
+  statBlock: { alignItems: "center", paddingHorizontal: 32 },
+  statValue: { color: colors.amberGlow, fontSize: 36, fontFamily: fonts.verse },
   statLabel: {
     color: colors.textMuted,
     fontSize: 11,
@@ -1102,11 +1096,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1.5,
   },
-  statDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: colors.glass,
-  },
+  statDivider: { width: 1, height: 40, backgroundColor: colors.glass },
   milestonesLabel: {
     color: colors.textMuted,
     fontSize: 10,
@@ -1116,12 +1106,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
     marginBottom: 12,
   },
-  milestonesRow: {
-    flexDirection: "row",
-    justifyContent: "center",
-    gap: 16,
-    marginBottom: 28,
-  },
+  milestonesRow: { flexDirection: "row", justifyContent: "center", gap: 16, marginBottom: 28 },
   badge: {
     alignItems: "center",
     width: 60,
@@ -1141,14 +1126,8 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.4,
     shadowRadius: 8,
   },
-  badgeNum: {
-    color: colors.textGhost,
-    fontSize: 20,
-    fontFamily: fonts.verse,
-  },
-  badgeNumEarned: {
-    color: colors.amberGlow,
-  },
+  badgeNum: { color: colors.textGhost, fontSize: 20, fontFamily: fonts.verse },
+  badgeNumEarned: { color: colors.amberGlow },
   badgeDay: {
     color: colors.textGhost,
     fontSize: 9,
@@ -1156,9 +1135,7 @@ const styles = StyleSheet.create({
     textTransform: "uppercase",
     letterSpacing: 1,
   },
-  badgeDayEarned: {
-    color: colors.amberGlow,
-  },
+  badgeDayEarned: { color: colors.amberGlow },
   closeBtn: {
     alignSelf: "center",
     paddingHorizontal: 32,
@@ -1168,33 +1145,17 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.glassBorder,
   },
-  closeBtnText: {
-    color: colors.textSecondary,
-    fontSize: 13,
-    fontFamily: fonts.uiMedium,
-  },
+  closeBtnText: { color: colors.textSecondary, fontSize: 13, fontFamily: fonts.uiMedium },
 });
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 4: Create `components/MilestoneCelebration.tsx`**
 
-```bash
-git add components/StreakSheet.tsx
-git commit -m "feat(ui): add StreakSheet with 7-day calendar and milestone badges"
-```
-
----
-
-## Task 8: `MilestoneCelebration` component
-
-**Files:**
-- Create: `components/MilestoneCelebration.tsx`
-
-- [ ] **Step 1: Create the component**
+Note: uses `AccessibilityInfo` from React Native directly — no extra dependency needed.
 
 ```tsx
 // components/MilestoneCelebration.tsx
-import { View, Text, StyleSheet, Modal, Pressable } from "react-native";
+import { View, Text, StyleSheet, Modal, Pressable, AccessibilityInfo } from "react-native";
 import Animated, {
   FadeIn,
   FadeOut,
@@ -1204,8 +1165,7 @@ import Animated, {
   withSequence,
   withTiming,
 } from "react-native-reanimated";
-import { useEffect } from "react";
-import { useAccessibilityInfo } from "@react-native/hooks";
+import { useEffect, useState } from "react";
 import { colors, fonts } from "../lib/theme";
 
 const MESSAGES: Record<number, string> = {
@@ -1220,39 +1180,41 @@ interface Props {
 }
 
 export function MilestoneCelebration({ milestone, onDismiss }: Props) {
-  const { reduceMotionEnabled } = useAccessibilityInfo();
+  const [reduceMotion, setReduceMotion] = useState(false);
   const pulse = useSharedValue(1);
 
   useEffect(() => {
-    if (!reduceMotionEnabled) {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion);
+  }, []);
+
+  useEffect(() => {
+    if (!reduceMotion) {
       pulse.value = withRepeat(
-        withSequence(
-          withTiming(1.15, { duration: 600 }),
-          withTiming(1, { duration: 600 }),
-        ),
+        withSequence(withTiming(1.15, { duration: 600 }), withTiming(1, { duration: 600 })),
         3,
         false,
       );
     }
-  }, [pulse, reduceMotionEnabled]);
+  }, [pulse, reduceMotion]);
 
   const glowStyle = useAnimatedStyle(() => ({
     transform: [{ scale: pulse.value }],
-    shadowOpacity: reduceMotionEnabled ? 0.5 : pulse.value * 0.8,
+    shadowOpacity: reduceMotion ? 0.5 : pulse.value * 0.8,
   }));
 
   return (
     <Modal visible animationType="fade" transparent onRequestClose={onDismiss}>
-      <Animated.View entering={FadeIn.duration(300)} exiting={FadeOut.duration(200)} style={styles.overlay}>
+      <Animated.View
+        entering={FadeIn.duration(300)}
+        exiting={FadeOut.duration(200)}
+        style={styles.overlay}
+      >
         <Animated.View style={[styles.card, glowStyle]}>
-          {/* Ember glow ring */}
           <View style={styles.glowRing} />
-
           <Text style={styles.fire}>🔥</Text>
           <Text style={styles.number}>{milestone}</Text>
           <Text style={styles.days}>DAYS</Text>
           <Text style={styles.message}>{MESSAGES[milestone]}</Text>
-
           <Pressable
             style={styles.button}
             onPress={onDismiss}
@@ -1300,16 +1262,8 @@ const styles = StyleSheet.create({
     marginTop: -100,
     marginLeft: -100,
   },
-  fire: {
-    fontSize: 48,
-    marginBottom: 8,
-  },
-  number: {
-    color: colors.amberGlow,
-    fontSize: 72,
-    fontFamily: fonts.verse,
-    lineHeight: 76,
-  },
+  fire: { fontSize: 48, marginBottom: 8 },
+  number: { color: colors.amberGlow, fontSize: 72, fontFamily: fonts.verse, lineHeight: 76 },
   days: {
     color: colors.textMuted,
     fontSize: 11,
@@ -1334,29 +1288,63 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.amberBorder,
   },
-  buttonText: {
-    color: colors.amberGlow,
-    fontSize: 14,
-    fontFamily: fonts.uiBold,
-  },
+  buttonText: { color: colors.amberGlow, fontSize: 14, fontFamily: fonts.uiBold },
 });
 ```
 
-- [ ] **Step 2: Commit**
+- [ ] **Step 5: Commit all four components**
 
 ```bash
-git add components/MilestoneCelebration.tsx
-git commit -m "feat(ui): add MilestoneCelebration overlay with reduce-motion support"
+git add components/StreakBadge.tsx components/StreakCard.tsx components/StreakSheet.tsx components/MilestoneCelebration.tsx
+git commit -m "feat(ui): add StreakBadge, StreakCard, StreakSheet, MilestoneCelebration"
 ```
 
 ---
 
-## Task 9: Wire into Home Screen
+## Task 7: Wire `StreakProvider` into root layout
+
+**Files:**
+- Modify: `app/_layout.tsx`
+
+- [ ] **Step 1: Add import**
+
+In `app/_layout.tsx`, add after the existing provider imports:
+
+```tsx
+import { StreakProvider } from "../lib/streak";
+```
+
+- [ ] **Step 2: Wrap the tree**
+
+Find the `<SettingsProvider>` wrapper in the return statement. Wrap it with `StreakProvider`:
+
+```tsx
+<StreakProvider>
+  <SettingsProvider>
+    <QueryClientProvider client={queryClient}>
+      {/* ... existing content ... */}
+    </QueryClientProvider>
+  </SettingsProvider>
+</StreakProvider>
+```
+
+`StreakProvider` must be inside the auth-ready guard (after `if (!ready ...)` checks pass) so `supabase.auth.getSession()` returns a valid session when `record-open` is called.
+
+- [ ] **Step 3: Commit**
+
+```bash
+git add app/_layout.tsx
+git commit -m "feat(root): add StreakProvider to root layout with AppState lifecycle"
+```
+
+---
+
+## Task 8: Wire components into Home screen
 
 **Files:**
 - Modify: `app/(tabs)/index.tsx`
 
-- [ ] **Step 1: Add imports at the top of `app/(tabs)/index.tsx`**
+- [ ] **Step 1: Add imports**
 
 Add after the existing imports:
 
@@ -1369,18 +1357,30 @@ import { StreakSheet } from "../../components/StreakSheet";
 import { MilestoneCelebration } from "../../components/MilestoneCelebration";
 ```
 
-- [ ] **Step 2: Call `useStreak` inside `HomeScreen`**
+- [ ] **Step 2: Add hook inside `HomeScreen`**
 
-Add after the existing `const votd = getVerseOfTheDay();` line:
+After `const votd = getVerseOfTheDay();`:
 
 ```tsx
 const { streak, weekDays, milestoneUnlocked, dismissMilestone } = useStreak();
 const [sheetVisible, setSheetVisible] = useState(false);
 ```
 
-- [ ] **Step 3: Add `StreakBadge` to the header**
+- [ ] **Step 3: Replace logo `Animated.Text` with a row**
 
-In the JSX, find the `<Animated.Text ... style={styles.logo}>A I O N</Animated.Text>` block. Wrap the logo and badge in a row. Replace that block with:
+Find:
+
+```tsx
+<Animated.Text
+  entering={FadeInDown.duration(600).delay(100)}
+  style={styles.logo}
+  accessibilityRole="header"
+>
+  A I O N
+</Animated.Text>
+```
+
+Replace with:
 
 ```tsx
 <Animated.View
@@ -1395,21 +1395,17 @@ In the JSX, find the `<Animated.Text ... style={styles.logo}>A I O N</Animated.T
 </Animated.View>
 ```
 
-- [ ] **Step 4: Add `StreakCard` below the VOTD card**
+- [ ] **Step 4: Add `StreakCard` after the VOTD section**
 
-Find the closing `</Animated.View>` of the VOTD section (the one wrapping `<Pressable ... style={...votdCard...}`). Directly after it, add:
+Find the closing `</Animated.View>` that wraps the VOTD `<Pressable>`. After it, add:
 
 ```tsx
-{/* Streak Card */}
 {streak && <StreakCard streak={streak} />}
 ```
 
-- [ ] **Step 5: Add modals before the closing `</ImageBackground>`**
-
-Before `</ImageBackground>`, add:
+- [ ] **Step 5: Add modals before closing `</ImageBackground>`**
 
 ```tsx
-{/* Streak Sheet */}
 {streak && (
   <StreakSheet
     visible={sheetVisible}
@@ -1419,7 +1415,6 @@ Before `</ImageBackground>`, add:
   />
 )}
 
-{/* Milestone Celebration */}
 {milestoneUnlocked && (
   <MilestoneCelebration
     milestone={milestoneUnlocked}
@@ -1428,9 +1423,9 @@ Before `</ImageBackground>`, add:
 )}
 ```
 
-- [ ] **Step 6: Add `logoRow` style to the stylesheet**
+- [ ] **Step 6: Add `logoRow` style**
 
-In `const styles = StyleSheet.create({...})`, add:
+In the `StyleSheet.create({})` block, add:
 
 ```ts
 logoRow: {
@@ -1441,54 +1436,113 @@ logoRow: {
 },
 ```
 
-Also update the existing `logo` style — remove its `marginBottom` since `logoRow` now controls spacing.
+Remove `marginBottom` from the existing `logo` style if present (spacing is now owned by `logoRow`).
 
-- [ ] **Step 7: Run the app and verify**
-
-```bash
-npx expo start
-```
-
-Open on iOS/Android/web. Verify:
-- Fire badge appears in the header with a count
-- Streak card appears below VOTD
-- Tapping the badge opens the sheet
-- 7-day calendar renders
-- If it's a milestone open, the celebration overlay appears
-
-- [ ] **Step 8: Commit**
+- [ ] **Step 7: Commit**
 
 ```bash
 git add app/(tabs)/index.tsx
-git commit -m "feat(home): wire StreakBadge, StreakCard, StreakSheet, and MilestoneCelebration into Home screen"
+git commit -m "feat(home): add StreakBadge, StreakCard, StreakSheet, MilestoneCelebration to Home screen"
 ```
 
 ---
 
-## Task 10: Dependency check — expo-localization
+## Task 9: Dependency check
 
 **Files:**
 - Check: `package.json`
 
-- [ ] **Step 1: Verify expo-localization is installed**
+- [ ] **Step 1: Verify expo-localization is present**
 
 ```bash
 grep "expo-localization" package.json
 ```
 
-Expected: a line like `"expo-localization": "~16.x.x"`.
-
 If missing:
 
 ```bash
 npx expo install expo-localization
+git add package.json package-lock.json
+git commit -m "chore: add expo-localization for server-side timezone detection"
 ```
 
-- [ ] **Step 2: Commit if package.json changed**
+---
+
+## Task 10: Final verification
+
+- [ ] **Step 1: Run full test suite**
 
 ```bash
-git add package.json package-lock.json
-git commit -m "chore: add expo-localization for timezone detection"
+npm test
+```
+
+Expected: all tests pass including the new `streak-helpers` tests.
+
+- [ ] **Step 2: Run quality gate**
+
+```bash
+./check.sh
+```
+
+Expected: format ✓, lint ✓, type-check ✓, all tests ✓.
+
+- [ ] **Step 3: Start the app and test manually**
+
+```bash
+npx expo start
+```
+
+Verify:
+- Fire badge appears in header on Home screen with streak count
+- Streak card appears below VOTD
+- Tapping the badge opens `StreakSheet`
+- 7-day calendar shows correct day statuses
+- Milestone badges render (locked until earned)
+- Backgrounding and foregrounding the app does not double-increment (idempotent)
+
+- [ ] **Step 4: Update AGENT.md**
+
+Append to the `## Change Log` section in `AGENT.md`:
+
+```markdown
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Streak system — daily study counter with freeze and milestones
+- **Summary:** Added Supabase-backed daily streak tracking. Three new tables: `user_streaks` (summary), `user_streak_days` (history), `user_streak_milestones` (dedupe). `update_streak` Postgres RPC handles all state mutations atomically with FOR UPDATE locking; callable only by service_role. `record-open` Edge Function receives timezone, derives local_date server-side, returns streak state + server dates. `StreakProvider` at root layout records on app mount and resume via AppState. UI: StreakBadge in header, StreakCard on Home, StreakSheet (7-day calendar + milestones), MilestoneCelebration overlay (reduce-motion safe).
+- **Files Changed:**
+  - supabase/migrations/20260525000000_streak_system.sql (created)
+  - supabase/functions/record-open/index.ts (created)
+  - lib/types.ts (StreakState, RecordOpenResponse, StreakDayRecord added)
+  - lib/streak-helpers.ts (created)
+  - lib/streak.ts (created)
+  - components/StreakBadge.tsx (created)
+  - components/StreakCard.tsx (created)
+  - components/StreakSheet.tsx (created)
+  - components/MilestoneCelebration.tsx (created)
+  - app/_layout.tsx (StreakProvider added)
+  - app/(tabs)/index.tsx (streak UI wired in)
+  - tests/streak-helpers.test.ts (created)
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, all tests ✓.
+- **Follow-ups:** Push notification milestones (phase 2) — requires push token table + permission flow + provider integration.
+```
+
+- [ ] **Step 5: Update CHANGELOG.md**
+
+Add an entry under `## [Unreleased]` (or create the section if it doesn't exist):
+
+```markdown
+### Added
+- Daily study streak system: fire badge in header, streak card on Home, 7-day history sheet, milestone celebrations at 7/30/100 days
+- Streak freeze mechanic: one grace day per ISO week
+- `update_streak` Postgres RPC with service_role-only access and FOR UPDATE locking
+- `record-open` Edge Function with server-side timezone/date derivation
+```
+
+- [ ] **Step 6: Commit final housekeeping**
+
+```bash
+git add AGENT.md CHANGELOG.md
+git commit -m "docs: update AGENT.md and CHANGELOG.md for streak system"
 ```
 
 ---
@@ -1497,31 +1551,37 @@ git commit -m "chore: add expo-localization for timezone detection"
 
 **Spec coverage:**
 
-| Spec requirement | Task |
+| Requirement | Task |
 |---|---|
-| `user_streaks` table + RLS | Task 1 |
-| `user_streak_days` table + RLS | Task 1 |
-| `user_streak_milestones` table + RLS | Task 1 |
-| Client sends timezone only; server derives local_date | Task 3 |
-| SELECT FOR UPDATE transaction | Task 3 (update_streak RPC) |
+| Three tables + RLS + cascade deletes | Task 1 |
 | NOT NULL + CHECK constraints | Task 1 |
-| First-open branch | Task 3 |
-| Freeze logic (1/week, weekly reset) | Task 3 |
-| Milestone dedupe | Task 3 |
-| `useStreak` hook + `buildWeekDays` helper | Task 4 |
-| Unit tests | Task 4 |
-| `StreakBadge` (fire icon + pulse) | Task 5 |
-| `StreakCard` (numeral, freeze pill, status) | Task 6 |
-| `StreakSheet` (7-day calendar, milestones, stats) | Task 7 |
-| `MilestoneCelebration` (overlay, reduce-motion) | Task 8 |
-| Home screen wiring | Task 9 |
-| expo-localization timezone | Task 10 |
+| `update_streak` RPC, service_role only, SET search_path | Task 1 |
+| INSERT ON CONFLICT first-open race fix | Task 1 |
+| Past-date guard (p_local_date < last_active_date) | Task 1 |
+| Client sends timezone only | Task 3 |
+| Server derives local_date | Task 3 |
+| Timezone validation + length cap | Task 3 |
+| Strict Bearer token parsing | Task 3 |
+| Access-Control-Allow-Methods | Task 3 |
+| `RecordOpenResponse` returns `local_date` + `week_start` | Tasks 2 + 3 |
+| Pure helpers in separate file with real tests | Task 4 |
+| `npm test` runner (tsx) | Task 4 |
+| `buildWeekDays` uses server dates, not client Date() | Tasks 4 + 5 |
+| Sequential `fetchWeekDays` after `recordOpen` | Task 5 |
+| `StreakProvider` + AppState lifecycle (not just Home mount) | Task 5 |
+| `StreakBadge` pulse animation | Task 6 |
+| `StreakCard` freeze pill, status line | Task 6 |
+| `StreakSheet` 7-day calendar + milestone badges | Task 6 |
+| `MilestoneCelebration` + reduce-motion via AccessibilityInfo | Task 6 |
+| No `@react-native/hooks` dependency | Task 6 |
+| `StreakProvider` in root layout | Task 7 |
+| Home screen wiring | Task 8 |
+| expo-localization dependency check | Task 9 |
+| `./check.sh` gate | Task 10 |
+| AGENT.md + CHANGELOG.md entries | Task 10 |
 
-All spec requirements covered.
+All spec requirements and reviewer fixes covered.
 
-**Placeholder scan:** None found.
+**Placeholder scan:** None.
 
-**Type consistency:**
-- `RecordOpenResponse`, `StreakState`, `StreakDayRecord` defined in Task 2, used in Tasks 3, 4, 6, 7 — consistent.
-- `buildWeekDays` return type used via `ReturnType<typeof buildWeekDays>` in StreakSheet — no drift possible.
-- `isoWeekStart` defined in `lib/streak.ts` and tested in `tests/streak.test.ts` inline copy — identical logic, verified by tests.
+**Type consistency:** `WeekDay` exported from `streak-helpers.ts`, imported by `StreakSheet` and `streak.ts`. `RecordOpenResponse.local_date`/`week_start` added in Task 2, consumed in Tasks 3 and 5. `StreakState.week_start` added in Task 2, used in `StreakCard` for "Opened today" check. All names consistent throughout.
