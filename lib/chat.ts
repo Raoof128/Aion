@@ -2,7 +2,7 @@ import { useState, useCallback, useRef } from "react";
 import { supabase } from "./supabase";
 import type { Verse } from "./types";
 
-const SUPABASE_URL = process.env.EXPO_PUBLIC_SUPABASE_URL!;
+const SUPABASE_URL = (process.env.EXPO_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "");
 const DEV_BYPASS_SECRET = process.env.EXPO_PUBLIC_DEV_BYPASS || "";
 
 interface UseChatReturn {
@@ -51,7 +51,7 @@ export function useChat(): UseChatReturn {
         method: "POST",
         headers,
         body: JSON.stringify({
-          message,
+          message: message.trim(),
           conversation_id: convId,
         }),
         signal: abortRef.current.signal,

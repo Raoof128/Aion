@@ -3,10 +3,12 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.0";
 // --- Environment ---
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY")!;
 const OPENAI_API_KEY = Deno.env.get("OPENAI_API_KEY")!;
 const GEMINI_API_KEY = Deno.env.get("GEMINI_API_KEY")!;
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+const anonSupabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 // --- Constants ---
 const MAX_MESSAGE_LENGTH = 500;
@@ -320,11 +322,11 @@ Deno.serve(async (req) => {
       });
     }
 
-    const token = authHeader.replace("Bearer ", "");
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
     const {
       data: { user },
       error: authError,
-    } = await createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!).auth.getUser(token);
+    } = await anonSupabase.auth.getUser(token);
 
     if (authError || !user) {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
@@ -358,8 +360,16 @@ Deno.serve(async (req) => {
       );
     }
 
+    const trimmedMessage = message.trim();
+    if (!trimmedMessage) {
+      return new Response(
+        JSON.stringify({ error: "Message cannot be empty" }),
+        { status: 400, headers: { "Content-Type": "application/json" } }
+      );
+    }
+
     // Prevent token-stuffing attacks
-    if (message.length > MAX_MESSAGE_LENGTH) {
+    if (trimmedMessage.length > MAX_MESSAGE_LENGTH) {
       return new Response(
         JSON.stringify({ error: `Message too long. Maximum ${MAX_MESSAGE_LENGTH} characters.` }),
         { status: 400, headers: { "Content-Type": "application/json" } }
@@ -367,7 +377,7 @@ Deno.serve(async (req) => {
     }
 
     // --- Check exact-match cache (zero LLM cost) ---
-    const queryHash = await hashQuery(message);
+    const queryHash = await hashQuery(trimmedMessage);
     const cached = await getCachedResponse(queryHash);
 
     if (cached) {
@@ -389,7 +399,7 @@ Deno.serve(async (req) => {
           persistMessages(
             user.id,
             conversation_id,
-            message,
+            trimmedMessage,
             cached.response_text,
             cached.verses as VerseResult[]
           ).then((convId) => {
@@ -414,10 +424,10 @@ Deno.serve(async (req) => {
     }
 
     // --- Cache miss: full RAG pipeline ---
-    const keyword = extractKeyword(message);
-    const embedding = await embedText(message);
+    const keyword = extractKeyword(trimmedMessage);
+    const embedding = await embedText(trimmedMessage);
     const verses = await searchVerses(embedding, keyword);
-    const prompt = buildPrompt(message, verses);
+    const prompt = buildPrompt(trimmedMessage, verses);
 
     // SSE stream
     const encoder = new TextEncoder();
@@ -447,13 +457,15 @@ Deno.serve(async (req) => {
 
           send("verses", { verses: versesJson });
 
-          // Cache this response for future exact-match hits
-          await cacheResponse(queryHash, message, fullResponse, versesJson);
+          // Cache this response for future exact-match hits (only if non-empty)
+          if (fullResponse.trim().length > 0) {
+            await cacheResponse(queryHash, trimmedMessage, fullResponse, versesJson);
+          }
 
           const convId = await persistMessages(
             user.id,
             conversation_id,
-            message,
+            trimmedMessage,
             fullResponse,
             verses
           );

@@ -1,6 +1,6 @@
 import "../global.css";
 import { useEffect, useState } from "react";
-import { ActivityIndicator, View, StyleSheet } from "react-native";
+import { ActivityIndicator, View, Text, StyleSheet } from "react-native";
 import { Stack } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
@@ -26,6 +26,7 @@ const queryClient = new QueryClient();
 
 export default function RootLayout() {
   const [ready, setReady] = useState(false);
+  const [authFailed, setAuthFailed] = useState(false);
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingChecked, setOnboardingChecked] = useState(false);
 
@@ -43,10 +44,15 @@ export default function RootLayout() {
       try {
         const { data } = await supabase.auth.getSession();
         if (!data.session) {
-          await supabase.auth.signInAnonymously();
+          const { error } = await supabase.auth.signInAnonymously();
+          if (error) {
+            console.error("Auth initialization failed:", error);
+            setAuthFailed(true);
+          }
         }
       } catch (error) {
         console.error("Auth initialization failed:", error);
+        setAuthFailed(true);
       } finally {
         setReady(true);
       }
@@ -67,6 +73,16 @@ export default function RootLayout() {
     return (
       <View style={styles.loading}>
         <ActivityIndicator color={colors.purple} size="large" />
+      </View>
+    );
+  }
+
+  if (authFailed) {
+    return (
+      <View style={styles.loading}>
+        <Text style={styles.authError}>
+          Unable to connect. Please check your connection and restart the app.
+        </Text>
       </View>
     );
   }
@@ -108,5 +124,11 @@ const styles = StyleSheet.create({
   },
   root: {
     flex: 1,
+  },
+  authError: {
+    color: "rgba(255,255,255,0.5)",
+    fontSize: 14,
+    textAlign: "center",
+    paddingHorizontal: 32,
   },
 });

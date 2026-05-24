@@ -8,6 +8,28 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Storage optimization + full deployment via Supabase CLI
+- **Summary:** Supabase free tier (500 MB) was nearly full — 31,086 bible_verses rows with `vector(1536)` embeddings + HNSW index was consuming ~400–500 MB. Fix: (1) cast `embedding` column from `vector(1536)` to `halfvec(1536)` — cuts per-row storage from 6 KB to 3 KB (~50% savings, no data loss, no re-ingestion); (2) replaced HNSW index with IVFFlat (lists=50) — significantly smaller index footprint. Also deployed updated Edge Function and confirmed `search_verses` returns correct results with new column type.
+- **Files Changed:**
+  - [supabase/migrations/20260524000001_optimize_embeddings.sql](file:///Users/raoof.r12/Desktop/Raouf/Aion/supabase/migrations/20260524000001_optimize_embeddings.sql) - halfvec cast, IVFFlat rebuild, updated search_verses function.
+- **Deployed:** `supabase db push` (both hardening + optimization migrations), `supabase functions deploy chat`.
+- **Verification:** `search_verses` RPC tested via REST API — returns correct verse results with similarity scores. All secrets confirmed present on Edge Function.
+- **Follow-ups:** Monitor storage in Supabase dashboard — expect ~200–250 MB freed. If still tight, next step is reducing dimensions to 512 (requires re-ingestion).
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Full backend security audit — Edge Function, migrations, lib/chat.ts, _layout.tsx
+- **Summary:** Identified and fixed 13 backend issues across 4 files + 1 new migration. Fixes: (1) `SUPABASE_ANON_KEY` now a module-level constant; anon Supabase client cached at module level instead of created per-request; (2) Token extraction fixed — `authHeader.replace("Bearer ", "")` → `startsWith` + `slice(7)` to handle non-standard headers without corrupting the token; (3) Whitespace-only messages now rejected with 400 — `message.trim()` empty check added after the existing type check; (4) Empty/error Gemini responses no longer cached permanently — `cacheResponse` guarded with `fullResponse.trim().length > 0`; (5) LIKE wildcard injection in `search_verses` fixed — `%` and `_` in user keyword now escaped before ILIKE; (6) TOCTOU race in `check_rate_limit` global daily cap fixed — `FOR UPDATE` lock added on global_usage row read; (7) `updated_at` auto-trigger added for conversations, user_verse_data, user_notes — rename in history screen now correctly re-sorts the list; (8) FK constraints added — `conversations.user_id`, `user_verse_data.user_id`, `user_notes.user_id` → `auth.users(id) ON DELETE CASCADE`; (9) `conversations.title` length constraint added (≤300 chars); (10) `SUPABASE_URL` in lib/chat.ts normalized with `.replace(/\/$/, "")` to prevent double-slash in fetch URLs; (11) Message trimmed before sending to Edge Function; (12) Auth failure in `_layout.tsx` now sets `authFailed` state and renders a user-visible error instead of silently proceeding.
+- **Files Changed:**
+  - [supabase/functions/chat/index.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/supabase/functions/chat/index.ts) - ANON_KEY module-level; anonSupabase cached; token extraction fixed; trimmedMessage + empty check; cache write guard.
+  - [supabase/migrations/20260524000000_backend_hardening.sql](file:///Users/raoof.r12/Desktop/Raouf/Aion/supabase/migrations/20260524000000_backend_hardening.sql) - New migration: LIKE wildcard escape; FOR UPDATE on global_usage; updated_at triggers; FK constraints; title length check.
+  - [lib/chat.ts](file:///Users/raoof.r12/Desktop/Raouf/Aion/lib/chat.ts) - URL trailing slash normalization; message trim before send.
+  - [app/_layout.tsx](file:///Users/raoof.r12/Desktop/Raouf/Aion/app/_layout.tsx) - authFailed state; user-visible error message on auth init failure.
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Remaining risks:** cleanup_rate_limits() still not scheduled via pg_cron (requires Supabase dashboard config); migration FK constraints require existing data integrity — run with caution on populated production DB.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Second UI/UX audit (fresh pass) — 12 issues across 5 files
 - **Summary:** Fresh-eyes audit identified and fixed: (1) `handleBack` regression in chapter reader still using `router.push` instead of `router.back()`; (2) `SafeAreaView` in chat screen missing `edges={["top"]}` — bottom inset was conflicting with `KeyboardAvoidingView`; (3) `KeyboardAvoidingView` using `behavior="height"` on Android changed to `undefined` to prevent layout jumps; (4) Dead `emptyIcon` style in chat screen removed; (5) Missing `fontFamily` on 4 styles in chapter reader (`headingText`, `chapterNumLarge`, `verseActionText`, `copiedBadge`); (6) Verse `Pressable` elements now have `accessibilityRole="button"` and `accessibilityLabel`/`accessibilityHint`; (7) Sparkles icon in Chat tab screen now has 20px bottom margin for visual breathing room; (8) `emptyContainer` in history screen had `paddingTop: 40` + `flex: 1 justifyContent: center` — double centering removed; (9) Hardcoded `"#56566A"` color in ChatInput replaced with `colors.textGhost`.
 - **Files Changed:**

@@ -11,6 +11,22 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-24 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Storage optimization — halfvec migration + IVFFlat index + CLI deployment
+- **Summary:** Free tier storage crisis resolved. Cast bible_verses.embedding to halfvec(1536), rebuilt HNSW→IVFFlat (lists=50). Deployed via Supabase CLI using PAT (titanfall1380@gmail.com account owns the project, ref: eynemyseadlkbzwtzrry). Both migrations pushed, Edge Function deployed, search verified working.
+- **Files Changed:** supabase/migrations/20260524000001_optimize_embeddings.sql
+- **Verification:** REST API call to search_verses returned correct results post-migration.
+- **Follow-ups:** Monitor storage dashboard. If still tight: reduce to 512-dim embeddings (needs re-ingestion via scripts/).
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Full backend security audit — Edge Function hardening, migration fixes, lib/chat.ts, _layout.tsx
+- **Summary:** 13 backend issues found and fixed. Key changes: anonSupabase client cached at module level (not per-request); token extraction hardened; whitespace-only messages rejected; empty Gemini responses not cached; LIKE wildcard injection in search_verses fixed via ESCAPE; TOCTOU race in check_rate_limit fixed with FOR UPDATE; updated_at triggers added for conversations/user_verse_data/user_notes; FK constraints to auth.users with CASCADE DELETE; title length constraint; SUPABASE_URL normalized in lib/chat.ts; auth failure now user-visible in _layout.tsx.
+- **Files Changed:** supabase/functions/chat/index.ts, supabase/migrations/20260524000000_backend_hardening.sql, lib/chat.ts, app/_layout.tsx
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 15/15 tests ✓.
+- **Follow-ups:** cleanup_rate_limits() needs pg_cron scheduling via Supabase dashboard; FK migration should be dry-run on prod DB first.
+
+### 2026-05-24 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Second UI/UX audit (fresh pass) — 12 issues across 5 files
 - **Summary:** Fixed `handleBack` regression in `[chapter].tsx` (router.push → router.back); fixed SafeAreaView `edges` in chat screen; fixed Android KAV behavior; removed dead `emptyIcon` style; added `fontFamily` to 4 missing styles in chapter reader; added `accessibilityRole/Label/Hint` to verse Pressables; fixed Sparkles icon spacing in Chat tab; fixed emptyContainer double-centering in history screen; replaced hardcoded hex color with design token in ChatInput.
 - **Files Changed:** app/reader/[bookId]/[chapter].tsx, app/chat/[id].tsx, app/(tabs)/chat.tsx, app/(tabs)/more.tsx, components/ChatInput.tsx
