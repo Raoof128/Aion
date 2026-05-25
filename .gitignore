@@ -52,3 +52,7 @@ scripts/.env
 
 # OS
 Thumbs.db
+
+# Research results
+research/results/*
+!research/results/.gitkeep
