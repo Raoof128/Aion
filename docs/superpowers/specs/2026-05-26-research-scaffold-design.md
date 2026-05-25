@@ -179,8 +179,10 @@ type RunResult = {
   citation_support: null;           // Phase 3
   false_premise_refusal: null;      // Phase 3
   latency_ms: number;
+  http_status: number | null;       // HTTP status from Edge Function (null on timeout)
   error: string | null;
   run_at: string;                   // ISO 8601 timestamp
+  dataset_path: string;             // which dataset file produced this run
 };
 ```
 
