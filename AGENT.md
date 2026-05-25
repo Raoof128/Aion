@@ -11,6 +11,31 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-25 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background images — Daniel, Hosea, Joel, Amos, Obadiah, Jonah, Micah, Nahum, Habakkuk
+- **Summary:** 9 new book art images added to assets/ and wired into the chapter reader switch statement. Images were provided by the user named after their book (with inconsistent trailing spaces — stripped on copy). Nahum's book ID is `NAM` not `NAH` — verified from bible-data.ts before mapping.
+- **Files Changed:**
+  - assets/ — Amos.png, Daniel.png, Habakkuk.png, Hosea.png, Joel.png, Jonah.png, Micah.png, Nahum.png, Obadiah.png (created)
+  - app/reader/[bookId]/[chapter].tsx — 9 new cases added to bgImageSource switch (DAN, HOS, JOL, AMO, OBA, JON, MIC, NAM, HAB)
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 33/33 tests ✓.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Test coverage for BookBackgroundSettings + check.sh test count display
+- **Summary:** Added 8 tests for `lib/bookBackgroundSettings.ts` (load defaults, save→load round-trip, partial merge, per-book isolation, sync cache, reset, corrupt JSON fallback). Used `require.cache` busting with a `freshModule()` helper to reset the module-level `cachedSettings` variable between tests. Updated `check.sh` to pipe test output through `tee` and extract the pass count from TAP output — final summary now reads `format ✓  lint ✓  types ✓  33 tests ✓`. Total test count: 25 → 33.
+- **Files Changed:**
+  - tests/bookBackgroundSettings.test.ts (created) — 8 tests
+  - check.sh — test section captures TAP output via tee, extracts pass count, shows count in step result and final summary
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 33/33 tests ✓.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Supabase deployment — streak system migration + Edge Function
+- **Summary:** Used PAT from `.env` (`SUPABASE_ACCESS_TOKEN`) to authenticate Supabase CLI. Ran `supabase link --project-ref eynemyseadlkbzwtzrry` then `supabase db push` (applied `20260525000000_streak_system.sql`) and `supabase functions deploy record-open`. Docker not running on machine — Edge Function deployed via API upload (not local build).
+- **Files Changed:** None (deployment only)
+- **Verification:** CLI reported `Finished supabase db push` and `Deployed Functions on project eynemyseadlkbzwtzrry: record-open`.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Daily study streak system — Supabase-backed counter, freeze mechanic, milestone celebrations, UI
 - **Summary:** Implemented end-to-end streak tracking across 10 tasks. Three new Supabase tables (user_streaks, user_streak_days, user_streak_milestones) with RLS SELECT-only policies and a SECURITY DEFINER RPC (update_streak) that owns all writes. Deno Edge Function (record-open) validates IANA timezone server-side and derives local_date via Intl.DateTimeFormat — no client date spoofing possible. One ISO-week freeze: gap==2 with a remaining freeze bridges the missed day. Milestones at 7/30/100 days fire once via user_streak_milestones dedup table. StreakProvider wraps the root layout; uses isInitialised ref + empty dep array to prevent double recordOpen() on mount; AppState listener re-records on app resume. Four UI components: StreakBadge (fire badge in header, pulses on mount), StreakCard (large numeral, freeze pill, status line), StreakSheet (7-day calendar, milestone badges), MilestoneCelebration (full-screen overlay with amber pulse, static fallback for reduceMotion).
 - **Files Changed:**

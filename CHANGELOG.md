@@ -8,6 +8,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-25 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background images for 9 Minor Prophets + Daniel
+- **Summary:** 9 new book art PNGs added as chapter reader backgrounds. User-supplied images were named after their books (some with trailing spaces — stripped on copy). Each image wired into the `bgImageSource` switch by book ID. Nahum verified as `NAM` (not `NAH`) from bible-data.ts before mapping.
+- **Files Changed:**
+  - assets/Amos.png, Daniel.png, Habakkuk.png, Hosea.png, Joel.png, Jonah.png, Micah.png, Nahum.png, Obadiah.png (created)
+  - app/reader/[bookId]/[chapter].tsx — cases DAN, HOS, JOL, AMO, OBA, JON, MIC, NAM, HAB added to switch
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 33/33 tests ✓.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** BookBackgroundSettings test suite + check.sh test count display
+- **Summary:** 8 new unit tests for `lib/bookBackgroundSettings.ts` using the same `require.cache` mock pattern as existing tests. A `freshModule()` helper deletes the module from `require.cache` between tests to reset the module-level `cachedSettings` variable. `check.sh` updated to pipe `npm test` output through `tee` and extract the TAP `# pass N` line — final summary now shows `format ✓  lint ✓  types ✓  N tests ✓` with a live count. Total: 25 → 33 tests.
+- **Files Changed:**
+  - tests/bookBackgroundSettings.test.ts (created)
+  - check.sh — live test count in summary
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 33/33 tests ✓.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Supabase deployment of streak system
+- **Summary:** PAT from `.env` used to authenticate CLI (`SUPABASE_ACCESS_TOKEN`). Linked project `eynemyseadlkbzwtzrry`, pushed migration `20260525000000_streak_system.sql`, deployed `record-open` Edge Function. Docker was not running; CLI uploaded the function via API directly.
+- **Files Changed:** None (deployment only)
+- **Verification:** `Finished supabase db push` + `Deployed Functions on project eynemyseadlkbzwtzrry: record-open`.
+
+### 2026-05-25 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Daily study streak system
 - **Summary:** End-to-end streak tracking tied to anonymous Supabase user UUID. Server derives `local_date` from client-supplied IANA timezone (no date spoofing). One ISO-week freeze bridges a single missed day. Milestones at 7, 30, 100 days fire once via a dedup table. Four UI components integrated into Home screen: fire badge in header, streak card below VOTD, bottom sheet with 7-day calendar and milestone badges, full-screen celebration overlay with reduce-motion fallback.
 - **Files Changed:**
