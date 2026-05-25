@@ -73,6 +73,7 @@ export async function callChat(
                 answer += (data as { content?: string }).content ?? "";
                 break;
               case "verses":
+                // Server emits exactly one verses event per request; overwrite is intentional
                 retrieved_verses = ((data as { verses?: unknown[] }).verses ?? []).map(
                   (v) => normaliseCoord(v as { book_id?: string; book_name?: string; chapter: number; verse: number })
                 );
@@ -81,6 +82,7 @@ export async function callChat(
                 conversation_id = (data as { id?: string }).id ?? null;
                 break;
               case "error":
+                reader.cancel();
                 return {
                   answer,
                   retrieved_verses,
