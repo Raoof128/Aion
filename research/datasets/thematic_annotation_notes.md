@@ -82,10 +82,10 @@ Near-miss: 1JN.4.19 ("We love because he first loved us") — valid but secondar
 | Faith defined | HEB.11.1 | "Now faith is confidence in what we hope for..." |
 | Faith by grace not works | EPH.2.8, EPH.2.9 | "saved through faith... not from yourselves, it is the gift of God" |
 | Faith comes from hearing | ROM.10.17 | "faith comes from hearing the message" |
-| Faith without works | JAM.2.17 | "faith by itself, if it is not accompanied by action, is dead" |
+| Faith without works | JAS.2.17 | "faith by itself, if it is not accompanied by action, is dead" |
 
 Near-miss: MAT.17.20 (faith like a mustard seed) — about size/power of faith, not definition.  
-Annotation note: JAM.2.17 and EPH.2.8-9 appear contradictory — this is intentional tension. The system should cite both without fabricating a resolution.
+Annotation note: JAS.2.17 and EPH.2.8-9 appear contradictory — this is intentional tension. The system should cite both without fabricating a resolution.
 
 ---
 
@@ -96,7 +96,7 @@ Annotation note: JAM.2.17 and EPH.2.8-9 appear contradictory — this is intenti
 | Prayer instead of anxiety | PHP.4.6, PHP.4.7 | Direct instruction |
 | The Lord's Prayer | MAT.6.9–MAT.6.13 | 5-verse block — verify exact verse range in BSB |
 | Pray without ceasing | 1TH.5.17 | Single verse |
-| Righteous person's prayer | JAM.5.16 | "The prayer of a righteous person is powerful" |
+| Righteous person's prayer | JAS.5.16 | "The prayer of a righteous person is powerful" |
 
 **IMPORTANT:** The Lord's Prayer verse range (MAT.6.9-13) needs BSB verification — some editions end at verse 13, others extend to verse 14. Check whether verse 13 is "deliver us from evil" or includes "for thine is the kingdom."
 
@@ -146,7 +146,7 @@ Annotation note: ISA.26.3 and ROM.5.1 represent different peace concepts (psycho
 | Cluster | Verses | Notes |
 |---------|--------|-------|
 | Trust over understanding | PRO.3.5, PRO.3.6 | Wisdom as trust in God |
-| Ask for wisdom | JAM.1.5 | "If any of you lacks wisdom, let them ask God" |
+| Ask for wisdom | JAS.1.5 | "If any of you lacks wisdom, let them ask God" |
 | God gives wisdom | PRO.2.6 | "For the Lord gives wisdom" |
 | Beginning of wisdom | PSA.111.10 | "The fear of the Lord is the beginning of wisdom" — verify exact verse in BSB |
 
