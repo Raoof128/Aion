@@ -344,6 +344,18 @@ export default function ChapterReaderScreen() {
         return require("../../../assets/Nahum.png");
       case "HAB":
         return require("../../../assets/Habakkuk.png");
+      case "ZEP":
+        return require("../../../assets/Zephaniah.png");
+      case "HAG":
+        return require("../../../assets/Haggai.png");
+      case "ZEC":
+        return require("../../../assets/Zechariah.png");
+      case "MAL":
+        return require("../../../assets/Malachi.png");
+      case "MAT":
+        return require("../../../assets/Matthew.png");
+      case "MRK":
+        return require("../../../assets/Mark.png");
       default:
         return null;
     }

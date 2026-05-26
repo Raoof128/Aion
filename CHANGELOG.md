@@ -8,6 +8,21 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background images — Zephaniah, Haggai, Zechariah, Malachi, Matthew, Mark
+- **Summary:** Added 6 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. Renamed and stripped the trailing space from `Mark .png` to `Mark.png` during the copy process to maintain naming consistency.
+- **Files Changed:**
+  - assets/Zephaniah.png (created)
+  - assets/Haggai.png (created)
+  - assets/Zechariah.png (created)
+  - assets/Malachi.png (created)
+  - assets/Matthew.png (created)
+  - assets/Mark.png (created)
+  - app/reader/[bookId]/[chapter].tsx — Added cases ZEP, HAG, ZEC, MAL, MAT, MRK to bgImageSource switch
+- **Verification:** `./check.sh` passes successfully with all checks verified (formatting, linting, type-checking, and all 73 tests passing).
+- **Follow-ups:** None.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Research scaffold live run + reference-aware hybrid RAG (v1)
 - **Summary:** Completed the live benchmark loop and shipped the first retrieval architecture improvement. Two infrastructure fixes to unblock the run: Supabase CLI was on the wrong account (fixed via `SUPABASE_ACCESS_TOKEN` PAT from `.env`); `EXPO_PUBLIC_DEV_BYPASS` was blank while the remote secret had a real value (fixed by generating a new shared secret). Updated Gemini model from deprecated `gemini-3.1-flash-lite-preview` to stable `gemini-3.1-flash-lite`. First stub_10 run produced **Pilot Result 1** — explicit Bible references (John 3:16, Psalm 23:1) both scored R@5=0.00 because the hybrid RAG was treating them as free text for semantic search ("vibe-searching a street address"). Fixed by adding a 66-book reference parser that resolves `"John 3:16"` → `(JHN, 3, 16)` and performs exact `bible_verses` lookups before falling back to hybrid search. v1 result: **R@5 0.286 → 0.571, MRR 0.143 → 0.429, direct R@5 0.00 → 1.00**.
 - **Added:**
