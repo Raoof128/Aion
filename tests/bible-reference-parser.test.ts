@@ -105,4 +105,51 @@ describe("parseReferences", () => {
     const r = parseReferences("Hebrews 11:1");
     assert.deepEqual(r, [{ book_id: "HEB", chapter: 11, verse_start: 1, verse_end: 1 }]);
   });
+
+  // --- Chapter-level refs (v2) ---
+
+  it("parses Psalm 23 as chapter ref", () => {
+    const r = parseReferences("How does Psalm 23 describe God?");
+    assert.deepEqual(r, [
+      { book_id: "PSA", chapter: 23, verse_start: 1, verse_end: 999, chapter_only: true },
+    ]);
+  });
+
+  it("parses 1 Corinthians 15 as chapter ref", () => {
+    const r = parseReferences("Does 1 Corinthians 15 prove bodily resurrection?");
+    assert.deepEqual(r, [
+      { book_id: "1CO", chapter: 15, verse_start: 1, verse_end: 999, chapter_only: true },
+    ]);
+  });
+
+  it("parses Psalm 23 and John 10 as two chapter refs", () => {
+    const r = parseReferences("How do Psalm 23 and John 10 describe God as shepherd?");
+    assert.deepEqual(r, [
+      { book_id: "PSA", chapter: 23, verse_start: 1, verse_end: 999, chapter_only: true },
+      { book_id: "JHN", chapter: 10, verse_start: 1, verse_end: 999, chapter_only: true },
+    ]);
+  });
+
+  it("verse ref takes priority over chapter ref for same position", () => {
+    // "John 3:16" should produce a verse ref, NOT a chapter ref for "John 3"
+    const r = parseReferences("What does John 3:16 say?");
+    assert.deepEqual(r, [{ book_id: "JHN", chapter: 3, verse_start: 16, verse_end: 16 }]);
+  });
+
+  it("parses mixed verse and chapter refs in one query", () => {
+    // "John 3:16" is a verse ref; "Psalm 23" is a chapter ref
+    const r = parseReferences("Compare John 3:16 with Psalm 23");
+    assert.deepEqual(r, [
+      { book_id: "JHN", chapter: 3, verse_start: 16, verse_end: 16 },
+      { book_id: "PSA", chapter: 23, verse_start: 1, verse_end: 999, chapter_only: true },
+    ]);
+  });
+
+  it("parses Philippians 4 and Matthew 6 as chapter refs", () => {
+    const r = parseReferences("Compare the teaching on anxiety in Philippians 4 and Matthew 6.");
+    assert.deepEqual(r, [
+      { book_id: "PHP", chapter: 4, verse_start: 1, verse_end: 999, chapter_only: true },
+      { book_id: "MAT", chapter: 6, verse_start: 1, verse_end: 999, chapter_only: true },
+    ]);
+  });
 });

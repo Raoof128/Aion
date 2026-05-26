@@ -3,6 +3,7 @@ export type ParsedRef = {
   chapter: number;
   verse_start: number;
   verse_end: number;
+  chapter_only?: true; // present only for chapter-level lookups (e.g. "Psalm 23", "1 Corinthians 15")
 };
 
 const ALIAS_MAP: Record<string, string> = {
@@ -171,20 +172,43 @@ const ALIAS_MAP: Record<string, string> = {
   rev: "REV",
 };
 
+// Matches "Book Chapter:Verse" and "Book Chapter:Verse-Verse" (verse refs — highest priority)
 const REF_REGEX =
   /\b((?:\d\s)?[A-Za-z]+(?:\s+of\s+[A-Za-z]+)?)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?\b/g;
 
+// Matches "Book Chapter" without ":verse" — chapter-level refs (lower priority, skips covered positions)
+// (?!:\d) prevents matching when already followed by a colon-digit (handled by REF_REGEX)
+const CHAPTER_REGEX = /\b((?:\d\s)?[A-Za-z]+(?:\s+of\s+[A-Za-z]+)?)\s+(\d{1,3})\b(?!:\d)/g;
+
 export function parseReferences(text: string): ParsedRef[] | null {
   const refs: ParsedRef[] = [];
+  const covered = new Set<number>();
   let match: RegExpExecArray | null;
+
+  // Pass 1: verse refs — take priority and mark their text positions as covered
   REF_REGEX.lastIndex = 0;
   while ((match = REF_REGEX.exec(text)) !== null) {
     const bookId = ALIAS_MAP[match[1].toLowerCase().trim()];
     if (!bookId) continue;
+    for (let i = match.index; i < match.index + match[0].length; i++) covered.add(i);
     const chapter = parseInt(match[2], 10);
     const verseStart = parseInt(match[3], 10);
     const verseEnd = match[4] ? parseInt(match[4], 10) : verseStart;
     refs.push({ book_id: bookId, chapter, verse_start: verseStart, verse_end: verseEnd });
   }
+
+  // Pass 2: chapter refs — only emit if start position is not already covered by a verse ref
+  CHAPTER_REGEX.lastIndex = 0;
+  while ((match = CHAPTER_REGEX.exec(text)) !== null) {
+    if (covered.has(match.index)) continue;
+    const bookId = ALIAS_MAP[match[1].toLowerCase().trim()];
+    if (!bookId) {
+      CHAPTER_REGEX.lastIndex = match.index + 1;
+      continue;
+    }
+    const chapter = parseInt(match[2], 10);
+    refs.push({ book_id: bookId, chapter, verse_start: 1, verse_end: 999, chapter_only: true });
+  }
+
   return refs.length > 0 ? refs : null;
 }

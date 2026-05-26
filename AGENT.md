@@ -12,6 +12,21 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** v2 chapter-ref parser + v2 benchmark (gold_40 v0.2)
+- **Summary:** Fixed CHAPTER_REGEX backtrack bug in `parseReferences` — when ALIAS_MAP lookup fails on a mid-sentence token (e.g. "Does 1"), the regex now resets `lastIndex = match.index + 1` to allow the subsequent match to capture the full "1 Corinthians 15" unit. Same fix applied to Edge Function. Added 6 chapter-ref tests (79/79 passing). Created `aion_bibleqa_gold_40_v0.2.jsonl` (separate file, never mutating v0.1). Ran v2 benchmark: R@5=0.882, MRR=0.700, 4 failures. Direct category: R@5=1.00 (perfect). Chapter-ref path works for most cases; aion_035 multi-hop chapter filter miss is the priority v3 fix. Deployed Edge Function v2.
+- **Files Changed:**
+  - lib/bible-reference-parser.ts — CHAPTER_REGEX backtrack fix (Pass 2 loop)
+  - supabase/functions/chat/index.ts — same fix + chapter-constrained search path + numeric keyword suppression
+  - tests/bible-reference-parser.test.ts — 6 chapter-ref tests added (79 total)
+  - research/datasets/aion_bibleqa_gold_40_v0.2.jsonl (created — 6 cluster expansions, schema_version 0.2)
+  - research/results/v2_chapter_ref_gold40_v02.jsonl (created — frozen 40-row run)
+  - research/results/v2_chapter_ref_gold40_v02_summary.md (created)
+  - research/results/v2_chapter_ref_gold40_v02_failures.md (created — 4 failures: gold_too_narrow ×2, semantic_drift, chapter_filter_miss)
+- **Verification:** `./check.sh` — format ✓, lint ✓, type-check ✓, 79/79 tests ✓. Benchmark: 40/40, 0 errors, R@5=0.882.
+- **Follow-ups:** v3 — direct DB chapter lookup for `chapter_only` refs (fixes aion_035). v2.1 annotation — expand aion_023/aion_033 clusters. v3.1 — semantic drift fix for thematic grace queries.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** gold_40 benchmark + failure analysis (v1 hybrid-ref)
 - **Summary:** Ran full 40-question gold_40 benchmark against v1 hybrid-ref system. 40/40 runs, 0 errors. Result frozen as `v1_hybrid_ref_gold40.jsonl`. Overall R@5=0.676, MRR=0.552. Direct category perfect (10/10 R@5=1.00). Three failure patterns identified: (1) chapter-only reference parser gap — 4 failures where "Psalm 23", "1 Corinthians 15", etc. trigger catastrophic numeric keyword matches; (2) acceptable cluster too narrow — 5 failures where valid verses were retrieved but not annotated; (3) semantic drift on grace/strength/peace — canonical verses underrank behind adjacent-vocabulary matches. Created summary and failure analysis artefacts. Renamed draft dataset to final locked name.
 - **Files Changed:**

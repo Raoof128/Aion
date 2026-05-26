@@ -87,11 +87,11 @@ async function cacheResponse(
 
 // --- Keyword Extraction ---
 function extractKeyword(message: string): string {
-  // Match numbers (e.g., "444", "666", "12")
-  const numberMatch = message.match(/\b\d{2,}\b/);
-  if (numberMatch) return numberMatch[0];
+  // Do not emit bare numbers — they cause false matches against census records,
+  // population counts, and verse/chapter numbers in unrelated passages.
+  // Verse references are resolved by parseReferences before this function runs.
 
-  // Match Bible references (e.g., "John 3:16", "Genesis 1:1")
+  // Match Bible references with explicit verse numbers (e.g., "John 3:16")
   const refMatch = message.match(
     /\b(Genesis|Exodus|Leviticus|Numbers|Deuteronomy|Joshua|Judges|Ruth|Samuel|Kings|Chronicles|Ezra|Nehemiah|Esther|Job|Psalms?|Proverbs|Ecclesiastes|Song of Solomon|Isaiah|Jeremiah|Lamentations|Ezekiel|Daniel|Hosea|Joel|Amos|Obadiah|Jonah|Micah|Nahum|Habakkuk|Zephaniah|Haggai|Zechariah|Malachi|Matthew|Mark|Luke|John|Acts|Romans|Corinthians|Galatians|Ephesians|Philippians|Colossians|Thessalonians|Timothy|Titus|Philemon|Hebrews|James|Peter|Jude|Revelation)\s+\d+:\d+/i
   );
@@ -140,6 +140,7 @@ interface ParsedRef {
   chapter: number;
   verse_start: number;
   verse_end: number;
+  chapter_only?: true; // present only for chapter-level lookups (e.g. "Psalm 23", "1 Corinthians 15")
 }
 
 const ALIAS_MAP: Record<string, string> = {
@@ -211,21 +212,44 @@ const ALIAS_MAP: Record<string, string> = {
   revelation: "REV", rev: "REV",
 };
 
+// Matches "Book Chapter:Verse" and "Book Chapter:Verse-Verse" (verse refs — highest priority)
 const REF_REGEX =
   /\b((?:\d\s)?[A-Za-z]+(?:\s+of\s+[A-Za-z]+)?)\s+(\d{1,3}):(\d{1,3})(?:-(\d{1,3}))?\b/g;
 
+// Matches "Book Chapter" without ":verse" — chapter-level refs (lower priority)
+const CHAPTER_REGEX =
+  /\b((?:\d\s)?[A-Za-z]+(?:\s+of\s+[A-Za-z]+)?)\s+(\d{1,3})\b(?!:\d)/g;
+
 function parseReferences(text: string): ParsedRef[] | null {
   const refs: ParsedRef[] = [];
+  const covered = new Set<number>();
   let match: RegExpExecArray | null;
+
+  // Pass 1: verse refs — take priority and mark their text positions as covered
   REF_REGEX.lastIndex = 0;
   while ((match = REF_REGEX.exec(text)) !== null) {
     const bookId = ALIAS_MAP[match[1].toLowerCase().trim()];
     if (!bookId) continue;
+    for (let i = match.index; i < match.index + match[0].length; i++) covered.add(i);
     const chapter = parseInt(match[2], 10);
     const verseStart = parseInt(match[3], 10);
     const verseEnd = match[4] ? parseInt(match[4], 10) : verseStart;
     refs.push({ book_id: bookId, chapter, verse_start: verseStart, verse_end: verseEnd });
   }
+
+  // Pass 2: chapter refs — only emit if start position is not already covered by a verse ref
+  CHAPTER_REGEX.lastIndex = 0;
+  while ((match = CHAPTER_REGEX.exec(text)) !== null) {
+    if (covered.has(match.index)) continue;
+    const bookId = ALIAS_MAP[match[1].toLowerCase().trim()];
+    if (!bookId) {
+      CHAPTER_REGEX.lastIndex = match.index + 1;
+      continue;
+    }
+    const chapter = parseInt(match[2], 10);
+    refs.push({ book_id: bookId, chapter, verse_start: 1, verse_end: 999, chapter_only: true });
+  }
+
   return refs.length > 0 ? refs : null;
 }
 
@@ -543,7 +567,42 @@ Deno.serve(async (req) => {
     const parsedRefs = parseReferences(trimmedMessage);
     let verses: VerseResult[];
     if (parsedRefs) {
-      verses = await lookupByRefs(parsedRefs);
+      const verseRefs = parsedRefs.filter((r) => !r.chapter_only);
+      const chapterRefs = parsedRefs.filter((r) => r.chapter_only);
+
+      // Exact verse lookups for explicit verse references (e.g. "John 3:16")
+      verses = verseRefs.length > 0 ? await lookupByRefs(verseRefs) : [];
+
+      // Chapter-constrained semantic search for chapter references (e.g. "Psalm 23", "1 Cor 15")
+      if (chapterRefs.length > 0) {
+        const keyword = extractKeyword(trimmedMessage);
+        const embedding = await embedText(trimmedMessage);
+        const broadResults = await searchVerses(embedding, keyword, 20);
+
+        const chapterSet = new Set(chapterRefs.map((r) => `${r.book_id}.${r.chapter}`));
+        const chapterFiltered = broadResults.filter((v) =>
+          chapterSet.has(`${v.book_id}.${v.chapter}`)
+        );
+
+        // Combine verse lookups + chapter-filtered semantic results, dedup, cap at 6
+        const combined = [...verses, ...chapterFiltered];
+        const seen = new Set<string>();
+        const deduped = combined.filter((v) => {
+          const key = `${v.book_id}.${v.chapter}.${v.verse}`;
+          if (seen.has(key)) return false;
+          seen.add(key);
+          return true;
+        });
+
+        if (deduped.length >= 2) {
+          verses = deduped.slice(0, 6);
+        } else {
+          // Not enough chapter-specific results — fall back to broad semantic results
+          verses = [...verses, ...broadResults].slice(0, 6);
+        }
+      }
+
+      // Final fallback: empty after all lookup attempts
       if (verses.length === 0) {
         const keyword = extractKeyword(trimmedMessage);
         const embedding = await embedText(trimmedMessage);

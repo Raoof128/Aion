@@ -8,6 +8,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** v2 chapter-ref parser + v2 benchmark (gold_40 v0.2)
+- **Summary:** Fixed CHAPTER_REGEX backtrack bug — `lastIndex = match.index + 1` on ALIAS_MAP miss prevents "1 Corinthians 15" from being silently skipped when "Does 1" consumes the leading "1". Applied to both `lib/bible-reference-parser.ts` and Edge Function. 6 chapter-ref tests added (79/79). Created v0.2 dataset (expanded clusters, separate file). v2 benchmark: R@5=0.882 (+0.029 system gain over v1-on-v0.2, +0.206 total over v1 baseline). 4 failures: 2 gold_too_narrow, 1 semantic_drift, 1 chapter_filter_miss. Edge Function deployed.
+- **Added:**
+  - `research/datasets/aion_bibleqa_gold_40_v0.2.jsonl` — expanded clusters (6 questions patched, schema_version 0.2)
+  - `research/results/v2_chapter_ref_gold40_v02.jsonl` — frozen 40-row run
+  - `research/results/v2_chapter_ref_gold40_v02_summary.md` — metrics + progression table
+  - `research/results/v2_chapter_ref_gold40_v02_failures.md` — 4 labelled failures with analysis + fix paths
+- **Changed:**
+  - `lib/bible-reference-parser.ts` — CHAPTER_REGEX backtrack fix; `chapter_only?: true` type on `ParsedRef`
+  - `supabase/functions/chat/index.ts` — same parser fix; chapter-constrained semantic search path; numeric keyword suppression in `extractKeyword`
+  - `tests/bible-reference-parser.test.ts` — 6 new chapter-ref tests (79 total)
+- **Verification:** `./check.sh` — format ✓, lint ✓, type-check ✓, 79/79 tests ✓. Benchmark 40/40, 0 errors.
+- **Follow-ups:** v3 — direct DB chapter lookup for `chapter_only` refs. v2.1 — aion_023/aion_033 cluster expansion. v3.1 — thematic grace semantic drift.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** gold_40 benchmark + failure analysis (v1 hybrid-ref)
 - **Summary:** Ran first full 40-question gold_40 benchmark against v1 hybrid-ref system. 40/40 runs, 0 errors, avg latency 1828ms. Frozen result: R@5=0.676, P@5=0.182, MRR=0.552. Direct category 10/10 R@5=1.00 — reference parser fully resolves explicit verse references. Three root failure patterns identified and documented: (1) chapter-only reference parser gap — queries naming "Psalm 23", "1 Corinthians 15" trigger catastrophic numeric keyword retrieval (census records, fish counts); (2) acceptable cluster too narrow — 5 failures where the system retrieved genuinely valid verses not in the annotation (JHN.13.34 for love, ROM.12.18 for peace, MAT.10.28 for fear, JAS.2.14 for faith/works, LUK.12.22 for anxiety); (3) semantic drift — "grace" retrieves Pauline salutation formulae rather than EPH.2.8-9; "strength" retrieves power/dunamis verses rather than PHP.4.13.
 - **Added:**
