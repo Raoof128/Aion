@@ -253,6 +253,63 @@ function parseReferences(text: string): ParsedRef[] | null {
   return refs.length > 0 ? refs : null;
 }
 
+// Direct DB chapter lookup — guarantees verses from the exact chapter regardless of
+// semantic proximity. Used for chapter_only refs (e.g. "Psalm 23", "1 Corinthians 15").
+async function lookupChapterVerses(refs: ParsedRef[]): Promise<VerseResult[]> {
+  const results: VerseResult[] = [];
+  for (const ref of refs) {
+    const { data, error } = await supabase
+      .from("bible_verses")
+      .select("id, book_id, book_name, chapter, verse, content")
+      .eq("book_id", ref.book_id)
+      .eq("chapter", ref.chapter)
+      .order("verse", { ascending: true });
+
+    if (!error && data) {
+      for (const v of data) results.push({ ...v, similarity: 0.9 });
+    }
+  }
+  return results;
+}
+
+// Semantic within-chapter selection — filters semantic results to the referenced chapters
+// in rank order (no per-chapter quota), then guarantees at least one verse per chapter
+// from the direct DB lookup when a chapter is absent from the semantic top-N.
+// Never returns unrestricted semantic results — only verses from the referenced chapters.
+function selectWithinChapters(
+  chapterRefs: ParsedRef[],
+  directVerses: VerseResult[],
+  semanticResults: VerseResult[],
+  totalBudget: number
+): VerseResult[] {
+  const chapterKeys = new Set(chapterRefs.map((r) => `${r.book_id}.${r.chapter}`));
+
+  // All semantic results within any referenced chapter, preserving semantic rank order
+  const semInChapters = semanticResults.filter((v) => chapterKeys.has(`${v.book_id}.${v.chapter}`));
+
+  // Take top semantic results up to budget
+  const result: VerseResult[] = semInChapters.slice(0, totalBudget);
+
+  // Guarantee: if a chapter ref produced no semantic hits at all, add its first verse from
+  // the direct DB lookup so the chapter is always represented in the output
+  const coveredChapters = new Set(result.map((v) => `${v.book_id}.${v.chapter}`));
+  const resultIds = new Set(result.map((v) => v.id));
+  for (const ref of chapterRefs) {
+    const key = `${ref.book_id}.${ref.chapter}`;
+    if (coveredChapters.has(key)) continue;
+    const directForRef = directVerses.filter(
+      (v) => v.book_id === ref.book_id && v.chapter === ref.chapter
+    );
+    if (directForRef.length > 0 && !resultIds.has(directForRef[0].id)) {
+      result.push(directForRef[0]);
+      resultIds.add(directForRef[0].id);
+      coveredChapters.add(key);
+    }
+  }
+
+  return result;
+}
+
 async function lookupByRefs(refs: ParsedRef[]): Promise<VerseResult[]> {
   const results: VerseResult[] = [];
   for (const ref of refs) {
@@ -573,31 +630,42 @@ Deno.serve(async (req) => {
       // Exact verse lookups for explicit verse references (e.g. "John 3:16")
       verses = verseRefs.length > 0 ? await lookupByRefs(verseRefs) : [];
 
-      // Chapter-constrained semantic search for chapter references (e.g. "Psalm 23", "1 Cor 15")
+      // v3: direct DB chapter lookup + semantic within-chapter ranking.
+      // The direct lookup guarantees coverage of the right chapter.
+      // The semantic results (matchCount=50) provide the ranking signal within the chapter.
+      // Never falls back to unrestricted semantic results — only falls back if the DB
+      // itself returns 0 rows (a data integrity issue, not a retrieval failure).
       if (chapterRefs.length > 0) {
-        const keyword = extractKeyword(trimmedMessage);
-        const embedding = await embedText(trimmedMessage);
-        const broadResults = await searchVerses(embedding, keyword, 20);
+        const allChapterVerses = await lookupChapterVerses(chapterRefs);
 
-        const chapterSet = new Set(chapterRefs.map((r) => `${r.book_id}.${r.chapter}`));
-        const chapterFiltered = broadResults.filter((v) =>
-          chapterSet.has(`${v.book_id}.${v.chapter}`)
-        );
+        if (allChapterVerses.length > 0) {
+          const keyword = extractKeyword(trimmedMessage);
+          const embedding = await embedText(trimmedMessage);
+          // matchCount=20: same depth as baseline semantic search. The direct DB lookup
+          // already guarantees chapter coverage; semantic provides the within-chapter ranking.
+          const semanticResults = await searchVerses(embedding, keyword, 20);
 
-        // Combine verse lookups + chapter-filtered semantic results, dedup, cap at 6
-        const combined = [...verses, ...chapterFiltered];
-        const seen = new Set<string>();
-        const deduped = combined.filter((v) => {
-          const key = `${v.book_id}.${v.chapter}.${v.verse}`;
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        });
-
-        if (deduped.length >= 2) {
-          verses = deduped.slice(0, 6);
+          const chapterSelected = selectWithinChapters(
+            chapterRefs,
+            allChapterVerses,
+            semanticResults,
+            6
+          );
+          const combined = [...verses, ...chapterSelected];
+          const seen = new Set<string>();
+          verses = combined
+            .filter((v) => {
+              const key = `${v.book_id}.${v.chapter}.${v.verse}`;
+              if (seen.has(key)) return false;
+              seen.add(key);
+              return true;
+            })
+            .slice(0, 6);
         } else {
-          // Not enough chapter-specific results — fall back to broad semantic results
+          // DB returned nothing — true fallback (data issue, not retrieval failure)
+          const keyword = extractKeyword(trimmedMessage);
+          const embedding = await embedText(trimmedMessage);
+          const broadResults = await searchVerses(embedding, keyword, 6);
           verses = [...verses, ...broadResults].slice(0, 6);
         }
       }

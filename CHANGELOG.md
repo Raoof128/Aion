@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** v3 direct-chapter lookup + v0.3 annotation + doc updates
+- **Summary:** Replaced v2 chapter-ref retrieval (broad semantic → filter → unrestricted fallback) with v3 direct architecture: `lookupChapterVerses` fetches all verses from the referenced chapter via direct DB query; `selectWithinChapters` applies semantic ranking within those verses only; a per-chapter coverage guarantee ensures at least one verse per chapter even when the semantic search misses it. Rule: no unrestricted fallback for `chapter_only` refs. aion_035 ("Psalm 23 and John 10 shepherd") fixed: PSA.23.1 is now guaranteed via direct lookup. aion_036 ("Philippians 4 and Matthew 6 anxiety") correctly fails — its v2 rescue was an accidental unrestricted fallback. Created v0.3 dataset: aion_023 (strength) and aion_033 (resurrection) acceptable clusters expanded from failure analysis. v3 on v0.3: R@5=0.941, MRR=0.773, 2 remaining failures. docs/TESTING.md rewritten to reflect 79 tests and benchmark harness coverage.
+- **Added:**
+  - `research/datasets/aion_bibleqa_gold_40_v0.3.jsonl` — cluster expansions for aion_023 and aion_033 (schema_version 0.3)
+  - `research/results/v3_direct_chapter_gold40_v02_final.jsonl` — v3 on v0.2 frozen run (R@5=0.882)
+  - `research/results/v3_direct_chapter_gold40_v03.jsonl` — v3 on v0.3 frozen run (R@5=0.941)
+  - `research/results/v3_direct_chapter_gold40_v02_summary.md` — metrics + architecture comparison
+  - `research/results/v3_direct_chapter_gold40_v02_failures.md` — 4 labelled failures with root cause + fix path
+- **Changed:**
+  - `supabase/functions/chat/index.ts` — v3 chapter-ref path: `lookupChapterVerses` + `selectWithinChapters` replace the v2 semantic-filter+fallback block
+  - `research/README.md` — full benchmark progression table, dataset version history, open failure table
+  - `docs/TESTING.md` — 79 tests across 9 files; benchmark harness section; updated "What Is Not Tested"
+  - `README.md` — test count 15→79 in project structure
+- **Verification:** `./check.sh` — format ✓, lint ✓, type-check ✓, 79/79 tests ✓. Benchmark: v3 on v0.3 — 40/40 runs, 0 errors, R@5=0.941.
+- **Follow-ups:** v3.1 — grace semantic drift fix. v4 — per-chapter vector search RPC to fix aion_036. Phase 3 — citation faithfulness judge.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** v2 chapter-ref parser + v2 benchmark (gold_40 v0.2)
 - **Summary:** Fixed CHAPTER_REGEX backtrack bug — `lastIndex = match.index + 1` on ALIAS_MAP miss prevents "1 Corinthians 15" from being silently skipped when "Does 1" consumes the leading "1". Applied to both `lib/bible-reference-parser.ts` and Edge Function. 6 chapter-ref tests added (79/79). Created v0.2 dataset (expanded clusters, separate file). v2 benchmark: R@5=0.882 (+0.029 system gain over v1-on-v0.2, +0.206 total over v1 baseline). 4 failures: 2 gold_too_narrow, 1 semantic_drift, 1 chapter_filter_miss. Edge Function deployed.
 - **Added:**

@@ -116,10 +116,13 @@ Aion/
 ├── supabase/
 │   ├── migrations/                 # 5 SQL migration files (see Setup)
 │   └── functions/chat/index.ts     # RAG Edge Function (Deno runtime)
-├── tests/                          # Node.js test suite (tsx runner, 15 tests)
+├── tests/                          # Node.js test suite (tsx runner, 79 tests)
 │   ├── bible-data.test.ts
+│   ├── bible-reference-parser.test.ts
+│   ├── bookBackgroundSettings.test.ts
 │   ├── notifications.test.ts
 │   ├── settings.test.ts
+│   ├── streak-helpers.test.ts
 │   ├── supabase.test.ts
 │   ├── tts.test.ts
 │   └── utils.test.ts
