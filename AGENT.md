@@ -12,6 +12,28 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Paper skeleton + artefact freeze (Phase 3 complete)
+- **Summary:** Froze Phase 3 canonical artefacts under `phase3_citation_faithfulness_gold40_v03.*` naming. Wrote `judge_prompt_false_premise.md` (complements existing citation_support prompt). Created `research/paper/` with 8 section drafts (abstract, introduction, related_work, method, experiments, results, discussion, limitations, conclusion). Applied stop-slop: active voice, specific claims, no filler. All [CITE] markers require programmatic verification before submission. Paper title: "Aion: A Benchmark for Citation-Faithfulness and False-Premise Robustness in Verse-Grounded Bible RAG."
+- **Files Changed:**
+  - research/results/phase3_citation_faithfulness_gold40_v03.jsonl (canonical copy of judged JSONL)
+  - research/results/phase3_citation_faithfulness_gold40_v03_summary.md (canonical copy of summary)
+  - research/results/phase3_citation_faithfulness_gold40_v03_failures.md (new — detailed failure analysis)
+  - research/judges/judge_prompt_false_premise.md (new — false_premise/adversarial scoring rubric)
+  - research/paper/abstract.md (new)
+  - research/paper/introduction.md (new)
+  - research/paper/related_work.md (new)
+  - research/paper/method.md (new)
+  - research/paper/experiments.md (new)
+  - research/paper/results.md (new)
+  - research/paper/discussion.md (new)
+  - research/paper/limitations.md (new)
+  - research/paper/conclusion.md (new)
+  - research/README.md — Phase 3 results section + paper pointer added
+- **Verification:** `./check.sh` not re-run (no code changes; research artefacts and markdown only). 79/79 tests unchanged.
+- **Follow-ups:** Verify and replace [CITE] placeholders in paper before arXiv submission. v3.1 grace semantic drift. v4 per-chapter vector RPC. Human annotation sample for judge validation.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Phase 3 citation-faithfulness judge — run + results
 - **Summary:** Ran Phase 3 LLM-as-judge on `v3_direct_chapter_gold40_v03.jsonl` (40 rows). Fixed verse-lookup.ts bug (PostgREST `or` filter was malformed, causing all 1000 verses to be fetched instead of the 153 specific ones — switched to supabase-js `.or()` which resolves correctly). Fixed judge model (`gemini-2.0-flash-lite` deprecated → `gemini-3.1-flash-lite`). Results: mean `citation_support`=0.978, zero unsupported/decorative citations, `false_premise_refusal`=1.000 (6/6). Only two sub-1.0 rows: aion_021 (cs=0.75, minor over-reach on EPH.6.19 citation) and aion_035 (cs=0.50, JHN.10.1 cited instead of JHN.10.11 — per-chapter guarantee adds the first verse of the chapter, not the theologically central one).
 - **Files Changed:**

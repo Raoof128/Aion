@@ -8,6 +8,29 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Paper skeleton + artefact freeze (Phase 3 complete)
+- **Summary:** Phase 3 is locked. Created canonical artefacts under `phase3_citation_faithfulness_gold40_v03.*` naming (copy from `v3_*` originals). Added `judge_prompt_false_premise.md` to document the false_premise/adversarial rubric. Created `research/paper/` with 8 drafted sections applying stop-slop (active voice, specificity, no filler). All citations are marked `[CITE]` and require programmatic verification before submission. Target: arXiv preprint / NeurIPS or ACL workshop submission.
+- **Added:**
+  - `research/results/phase3_citation_faithfulness_gold40_v03.jsonl` — canonical frozen judge output
+  - `research/results/phase3_citation_faithfulness_gold40_v03_summary.md` — canonical summary
+  - `research/results/phase3_citation_faithfulness_gold40_v03_failures.md` — detailed failure analysis (aion_021, aion_035)
+  - `research/judges/judge_prompt_false_premise.md` — false_premise/adversarial judge rubric
+  - `research/paper/abstract.md`
+  - `research/paper/introduction.md`
+  - `research/paper/related_work.md`
+  - `research/paper/method.md`
+  - `research/paper/experiments.md`
+  - `research/paper/results.md`
+  - `research/paper/discussion.md`
+  - `research/paper/limitations.md`
+  - `research/paper/conclusion.md`
+- **Changed:**
+  - `research/README.md` — Phase 3 results table + paper pointer
+- **Verification:** No code changes. Research artefacts and markdown only. 79/79 tests unchanged from prior session.
+- **Follow-ups:** Programmatic citation verification (replace [CITE] markers). v3.1 grace drift. v4 per-chapter vector RPC. Human annotation sample for judge cs validation.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Phase 3 citation-faithfulness judge — run + results
 - **Summary:** Executed Phase 3 LLM-as-judge harness on the frozen v3 retrieval baseline. Fixed two bugs first: (1) `verse-lookup.ts` PostgREST OR filter was malformed (missing `=`), returning 1000 random verses instead of the 153 specific retrieved ones — fixed by switching to `supabase-js .or()` which handles filter syntax correctly; (2) `gemini-2.0-flash-lite` is deprecated for new users — updated to `gemini-3.1-flash-lite`. Results: mean citation_support=0.978 (n=34 answer-with-citations rows), unsupported claim rate=0.000, decorative citation rate=0.000, false_premise/adversarial refusal=1.000 (6/6). Two sub-perfect rows: aion_021 (cs=0.75 — EPH.6.19 over-cited for gratitude) and aion_035 (cs=0.50 — JHN.10.1 cited instead of JHN.10.11; per-chapter guarantee adds first verse of chapter which for JHN.10 is the thieves/gate verse, not the good shepherd verse).
 - **Added:**
