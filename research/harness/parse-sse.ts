@@ -10,7 +10,7 @@ import type { SSEParseResult } from "./types.ts";
 export async function callChat(
   token: string,
   question: string,
-  timeoutMs = 60_000
+  timeoutMs = 60_000,
 ): Promise<SSEParseResult> {
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
@@ -74,8 +74,10 @@ export async function callChat(
                 break;
               case "verses":
                 // Server emits exactly one verses event per request; overwrite is intentional
-                retrieved_verses = ((data as { verses?: unknown[] }).verses ?? []).map(
-                  (v) => normaliseCoord(v as { book_id?: string; book_name?: string; chapter: number; verse: number })
+                retrieved_verses = ((data as { verses?: unknown[] }).verses ?? []).map((v) =>
+                  normaliseCoord(
+                    v as { book_id?: string; book_name?: string; chapter: number; verse: number },
+                  ),
                 );
                 break;
               case "conversation":

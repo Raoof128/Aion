@@ -8,13 +8,7 @@ export type BenchmarkQuestion = {
   schema_version: "0.1";
   id: string;
   question: string;
-  category:
-    | "direct"
-    | "thematic"
-    | "interpretive"
-    | "multi_hop"
-    | "false_premise"
-    | "adversarial";
+  category: "direct" | "thematic" | "interpretive" | "multi_hop" | "false_premise" | "adversarial";
   difficulty: "easy" | "medium" | "hard";
   gold_verses: VerseCoord[];
   acceptable_verse_clusters: string[][];

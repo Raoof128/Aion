@@ -22,8 +22,8 @@ async function main() {
   const path = process.argv[2] || OUTPUT_PATH;
 
   const results = await loadResults(path);
-  const scored = results.filter(r => r.recall_at_5 !== null && r.error === null);
-  const errors = results.filter(r => r.error !== null);
+  const scored = results.filter((r) => r.recall_at_5 !== null && r.error === null);
+  const errors = results.filter((r) => r.error !== null);
 
   const byCategory: Record<string, RunResult[]> = {};
   for (const r of scored) {
@@ -32,13 +32,15 @@ async function main() {
   }
 
   console.log(`\n=== Benchmark Report: ${path} ===`);
-  console.log(`Total runs: ${results.length} | Scored: ${scored.length} | Errors: ${errors.length}`);
+  console.log(
+    `Total runs: ${results.length} | Scored: ${scored.length} | Errors: ${errors.length}`,
+  );
 
   if (scored.length > 0) {
-    const overallR5 = avg(scored.map(r => r.recall_at_5!));
-    const overallP5 = avg(scored.map(r => r.precision_at_5!));
-    const overallMrr = avg(scored.map(r => r.mrr!));
-    const overallLatency = avg(scored.map(r => r.latency_ms));
+    const overallR5 = avg(scored.map((r) => r.recall_at_5!));
+    const overallP5 = avg(scored.map((r) => r.precision_at_5!));
+    const overallMrr = avg(scored.map((r) => r.mrr!));
+    const overallLatency = avg(scored.map((r) => r.latency_ms));
 
     console.log(`\nOverall (n=${scored.length}):`);
     console.log(`  Recall@5:    ${overallR5!.toFixed(3)}`);
@@ -48,9 +50,9 @@ async function main() {
 
     console.log(`\nBy category:`);
     for (const [cat, rows] of Object.entries(byCategory).sort()) {
-      const r5 = avg(rows.map(r => r.recall_at_5!))!.toFixed(2);
-      const p5 = avg(rows.map(r => r.precision_at_5!))!.toFixed(2);
-      const mrrVal = avg(rows.map(r => r.mrr!))!.toFixed(2);
+      const r5 = avg(rows.map((r) => r.recall_at_5!))!.toFixed(2);
+      const p5 = avg(rows.map((r) => r.precision_at_5!))!.toFixed(2);
+      const mrrVal = avg(rows.map((r) => r.mrr!))!.toFixed(2);
       console.log(`  ${cat.padEnd(14)}  n=${rows.length}  R@5=${r5}  P@5=${p5}  MRR=${mrrVal}`);
     }
   }
@@ -63,7 +65,7 @@ async function main() {
   }
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

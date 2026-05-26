@@ -60,9 +60,7 @@ async function main() {
       precision_at_5: hasGold
         ? precisionAt5(sse.retrieved_verses, goldCoords, q.acceptable_verse_clusters)
         : null,
-      mrr: hasGold
-        ? mrr(sse.retrieved_verses, goldCoords, q.acceptable_verse_clusters)
-        : null,
+      mrr: hasGold ? mrr(sse.retrieved_verses, goldCoords, q.acceptable_verse_clusters) : null,
       citation_validity: null,
       citation_support: null,
       false_premise_refusal: null,
@@ -97,7 +95,7 @@ async function main() {
     }
   }
 
-  await new Promise<void>(resolve => out.end(resolve));
+  await new Promise<void>((resolve) => out.end(resolve));
 
   console.log(`\n--- Aggregate (${scoredCount} scored, ${errorCount} errors) ---`);
   if (scoredCount > 0) {
@@ -108,7 +106,7 @@ async function main() {
   console.log(`Output written to: ${OUTPUT_PATH}`);
 }
 
-main().catch(err => {
+main().catch((err) => {
   console.error(err);
   process.exit(1);
 });

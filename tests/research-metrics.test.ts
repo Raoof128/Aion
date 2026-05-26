@@ -23,7 +23,10 @@ describe("normaliseCoord", () => {
   });
 
   test("book_id takes precedence over book_name", () => {
-    assert.equal(normaliseCoord({ book_id: "EPH", book_name: "Matthew", chapter: 4, verse: 32 }), "EPH.4.32");
+    assert.equal(
+      normaliseCoord({ book_id: "EPH", book_name: "Matthew", chapter: 4, verse: 32 }),
+      "EPH.4.32",
+    );
   });
 });
 
@@ -43,17 +46,27 @@ describe("normaliseGoldVerses", () => {
 
 describe("recallAt5", () => {
   test("returns 1 when gold verse is in top 5", () => {
-    assert.equal(recallAt5(["MAT.6.14", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []), 1);
+    assert.equal(
+      recallAt5(["MAT.6.14", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []),
+      1,
+    );
   });
 
   test("returns 0 when gold verse is not in top 5", () => {
-    assert.equal(recallAt5(["ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1", "COL.3.1"], ["MAT.6.14"], []), 0);
+    assert.equal(
+      recallAt5(["ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1", "COL.3.1"], ["MAT.6.14"], []),
+      0,
+    );
   });
 
   test("only considers first 5 retrieved, gold at position 6 is a miss", () => {
     assert.equal(
-      recallAt5(["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "HEB.11.1", "MAT.6.14"], ["MAT.6.14"], []),
-      0
+      recallAt5(
+        ["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "HEB.11.1", "MAT.6.14"],
+        ["MAT.6.14"],
+        [],
+      ),
+      0,
     );
   });
 
@@ -62,9 +75,9 @@ describe("recallAt5", () => {
       recallAt5(
         ["MAT.6.15", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"],
         ["MAT.6.14"],
-        [["MAT.6.14", "MAT.6.15"]]
+        [["MAT.6.14", "MAT.6.15"]],
       ),
-      1
+      1,
     );
   });
 
@@ -79,16 +92,16 @@ describe("precisionAt5", () => {
       precisionAt5(
         ["MAT.6.14", "EPH.4.32", "ROM.8.1", "JHN.3.16", "PSA.23.1"],
         ["MAT.6.14", "EPH.4.32"],
-        []
+        [],
       ),
-      0.4
+      0.4,
     );
   });
 
   test("0 of 5 retrieved are gold → 0.0", () => {
     assert.equal(
       precisionAt5(["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "HEB.11.1"], ["MAT.6.14"], []),
-      0.0
+      0.0,
     );
   });
 
@@ -97,9 +110,9 @@ describe("precisionAt5", () => {
       precisionAt5(
         ["MAT.6.14", "EPH.4.32", "ROM.8.29", "PHP.4.6", "1PE.5.7"],
         ["MAT.6.14", "EPH.4.32", "ROM.8.29", "PHP.4.6", "1PE.5.7"],
-        []
+        [],
       ),
-      1.0
+      1.0,
     );
   });
 
@@ -109,30 +122,39 @@ describe("precisionAt5", () => {
       precisionAt5(
         ["MAT.6.15", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"],
         ["MAT.6.14"],
-        [["MAT.6.14", "MAT.6.15"]]
+        [["MAT.6.14", "MAT.6.15"]],
       ),
-      0.2
+      0.2,
     );
   });
 });
 
 describe("mrr", () => {
   test("first match at rank 1 → 1.0", () => {
-    assert.equal(mrr(["MAT.6.14", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []), 1.0);
+    assert.equal(
+      mrr(["MAT.6.14", "ROM.8.1", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []),
+      1.0,
+    );
   });
 
   test("first match at rank 2 → 0.5", () => {
-    assert.equal(mrr(["ROM.8.1", "MAT.6.14", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []), 0.5);
+    assert.equal(
+      mrr(["ROM.8.1", "MAT.6.14", "JHN.3.16", "PSA.23.1", "EPH.4.1"], ["MAT.6.14"], []),
+      0.5,
+    );
   });
 
   test("first match at rank 5 → 0.2", () => {
-    assert.equal(mrr(["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "MAT.6.14"], ["MAT.6.14"], []), 0.2);
+    assert.equal(
+      mrr(["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "MAT.6.14"], ["MAT.6.14"], []),
+      0.2,
+    );
   });
 
   test("no match → 0.0", () => {
     assert.equal(
       mrr(["ROM.8.1", "JHN.3.16", "PSA.23.1", "COL.3.1", "HEB.11.1"], ["MAT.6.14"], []),
-      0.0
+      0.0,
     );
   });
 
@@ -140,7 +162,7 @@ describe("mrr", () => {
     const result = mrr(
       ["ROM.8.1", "JHN.3.16", "MAT.6.15", "COL.3.1", "HEB.11.1"],
       ["MAT.6.14"],
-      [["MAT.6.14", "MAT.6.15"]]
+      [["MAT.6.14", "MAT.6.15"]],
     );
     assert.ok(Math.abs(result - 1 / 3) < 1e-9);
   });
