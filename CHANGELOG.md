@@ -8,6 +8,18 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** gold_40 benchmark + failure analysis (v1 hybrid-ref)
+- **Summary:** Ran first full 40-question gold_40 benchmark against v1 hybrid-ref system. 40/40 runs, 0 errors, avg latency 1828ms. Frozen result: R@5=0.676, P@5=0.182, MRR=0.552. Direct category 10/10 R@5=1.00 — reference parser fully resolves explicit verse references. Three root failure patterns identified and documented: (1) chapter-only reference parser gap — queries naming "Psalm 23", "1 Corinthians 15" trigger catastrophic numeric keyword retrieval (census records, fish counts); (2) acceptable cluster too narrow — 5 failures where the system retrieved genuinely valid verses not in the annotation (JHN.13.34 for love, ROM.12.18 for peace, MAT.10.28 for fear, JAS.2.14 for faith/works, LUK.12.22 for anxiety); (3) semantic drift — "grace" retrieves Pauline salutation formulae rather than EPH.2.8-9; "strength" retrieves power/dunamis verses rather than PHP.4.13.
+- **Added:**
+  - `research/results/v1_hybrid_ref_gold40.jsonl` — frozen run (40 rows)
+  - `research/results/v1_hybrid_ref_gold40_summary.md` — metrics by category + progression table
+  - `research/results/v1_hybrid_ref_gold40_failures.md` — 11 labelled failures with retrieved verses, root cause, fix path
+- **Renamed:** `aion_bibleqa_gold_40_draft.jsonl` → `aion_bibleqa_gold_40.jsonl`
+- **Verification:** 40/40 runs, 0 errors. `./check.sh` — format ✓, lint ✓, type-check ✓, 73/73 tests ✓.
+- **Follow-ups:** v2 — extend parser for chapter refs, ban numeric keywords, expand clusters for 5 annotation-miss failures.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** BSB coord verification + gold dataset lock (all 40 verified)
 - **Summary:** Ran live verification SQL against the `bible_verses` table for all uncertain coords in the gold_40 draft. Found that James is stored as `JAS` (not `JAM`) in the BSB corpus — fixed throughout the dataset and annotation notes. Comprehensive check confirmed 179 coords across 40 questions all exist in `bible_verses`. Updated all 21 `needs_review` questions to `verified`; `aion_bibleqa_gold_40_draft.jsonl` is now 40/40 verified and ready for a full benchmark run.
 - **Fixed:**

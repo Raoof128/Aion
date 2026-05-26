@@ -12,6 +12,18 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** gold_40 benchmark + failure analysis (v1 hybrid-ref)
+- **Summary:** Ran full 40-question gold_40 benchmark against v1 hybrid-ref system. 40/40 runs, 0 errors. Result frozen as `v1_hybrid_ref_gold40.jsonl`. Overall R@5=0.676, MRR=0.552. Direct category perfect (10/10 R@5=1.00). Three failure patterns identified: (1) chapter-only reference parser gap — 4 failures where "Psalm 23", "1 Corinthians 15", etc. trigger catastrophic numeric keyword matches; (2) acceptable cluster too narrow — 5 failures where valid verses were retrieved but not annotated; (3) semantic drift on grace/strength/peace — canonical verses underrank behind adjacent-vocabulary matches. Created summary and failure analysis artefacts. Renamed draft dataset to final locked name.
+- **Files Changed:**
+  - research/datasets/aion_bibleqa_gold_40_draft.jsonl → research/datasets/aion_bibleqa_gold_40.jsonl (renamed)
+  - research/results/v1_hybrid_ref_gold40.jsonl (created — frozen run results)
+  - research/results/v1_hybrid_ref_gold40_summary.md (created — metrics breakdown by category)
+  - research/results/v1_hybrid_ref_gold40_failures.md (created — 11 labelled failures with root cause + fix path)
+- **Verification:** 40/40 runs, 0 errors. `./check.sh` — format ✓, lint ✓, type-check ✓, 73/73 tests ✓.
+- **Follow-ups:** v2 design — (1) extend parseReferences for chapter-only refs; (2) ban numeric keywords in extractKeyword; (3) expand gold clusters for love/peace/fear/faith-works/anxiety.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** BSB coord verification + gold dataset lock (all 40 verified)
 - **Summary:** Ran live BSB verification SQL against `bible_verses` table. Discovered James is stored as `JAS` (not `JAM`) in the BSB corpus. Fixed `JAM` → `JAS` in `aion_bibleqa_gold_40_draft.jsonl` (book_id fields + cluster strings) and `thematic_annotation_notes.md`. Confirmed all 179 coords across the 40-question dataset exist in `bible_verses`. Updated all 21 `needs_review` questions to `verified` — dataset is now 40/40 verified.
 - **Files Changed:**
