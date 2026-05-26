@@ -12,6 +12,18 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Phase 3 citation-faithfulness judge — run + results
+- **Summary:** Ran Phase 3 LLM-as-judge on `v3_direct_chapter_gold40_v03.jsonl` (40 rows). Fixed verse-lookup.ts bug (PostgREST `or` filter was malformed, causing all 1000 verses to be fetched instead of the 153 specific ones — switched to supabase-js `.or()` which resolves correctly). Fixed judge model (`gemini-2.0-flash-lite` deprecated → `gemini-3.1-flash-lite`). Results: mean `citation_support`=0.978, zero unsupported/decorative citations, `false_premise_refusal`=1.000 (6/6). Only two sub-1.0 rows: aion_021 (cs=0.75, minor over-reach on EPH.6.19 citation) and aion_035 (cs=0.50, JHN.10.1 cited instead of JHN.10.11 — per-chapter guarantee adds the first verse of the chapter, not the theologically central one).
+- **Files Changed:**
+  - research/harness/verse-lookup.ts — switched from manual PostgREST URL to supabase-js `.or()` filter
+  - research/harness/judge-citation.ts — model `gemini-2.0-flash-lite` → `gemini-3.1-flash-lite`
+  - research/results/v3_direct_chapter_gold40_v03_judged.jsonl (created — 40 judged rows)
+  - research/results/v3_phase3_gold40_v03_judged_summary.md (created)
+- **Verification:** 40/40 judged, 0 errors. `./check.sh` — format ✓, lint ✓, type-check ✓, 79/79 tests ✓.
+- **Follow-ups:** v3.1 — grace semantic drift. v4 — per-chapter vector RPC (fixes JHN.10.1 → JHN.10.11 per-chapter guarantee). Phase 4 — inter-rater reliability if paper needs it.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** v3 direct-chapter lookup + v0.3 dataset + doc updates
 - **Summary:** Replaced v2's chapter-ref retrieval path (broad semantic search → filter to chapters → fallback if empty) with v3's correct architecture: direct DB lookup by `(book_id, chapter)` → semantic ranking within those chapters only → per-chapter coverage guarantee. Rule: for `chapter_only` refs, never return unrestricted semantic results unless the DB lookup itself fails. Fixed aion_035 (multi-hop "Psalm 23 and John 10"): direct DB lookup fetches all PSA.23/JHN.10 verses, per-chapter guarantee adds PSA.23.1 even when absent from the semantic top-20. aion_036 (Philippians 4/Matthew 6) now correctly fails — its v2 "rescue" was an accidental unrestricted fallback, not a real fix. Created v0.3 dataset: expanded aion_023 (strength) and aion_033 (resurrection) clusters based on failure analysis. v3 on v0.3: R@5=0.941, 2 remaining failures (aion_027 grace semantic_drift, aion_036 IVFFlat_boundary). Updated docs: TESTING.md now reflects 79 tests and live benchmark coverage; research/README.md has full progression table; README.md project structure updated.
 - **Files Changed:**

@@ -8,6 +8,19 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Phase 3 citation-faithfulness judge — run + results
+- **Summary:** Executed Phase 3 LLM-as-judge harness on the frozen v3 retrieval baseline. Fixed two bugs first: (1) `verse-lookup.ts` PostgREST OR filter was malformed (missing `=`), returning 1000 random verses instead of the 153 specific retrieved ones — fixed by switching to `supabase-js .or()` which handles filter syntax correctly; (2) `gemini-2.0-flash-lite` is deprecated for new users — updated to `gemini-3.1-flash-lite`. Results: mean citation_support=0.978 (n=34 answer-with-citations rows), unsupported claim rate=0.000, decorative citation rate=0.000, false_premise/adversarial refusal=1.000 (6/6). Two sub-perfect rows: aion_021 (cs=0.75 — EPH.6.19 over-cited for gratitude) and aion_035 (cs=0.50 — JHN.10.1 cited instead of JHN.10.11; per-chapter guarantee adds first verse of chapter which for JHN.10 is the thieves/gate verse, not the good shepherd verse).
+- **Added:**
+  - `research/results/v3_direct_chapter_gold40_v03_judged.jsonl` — 40-row judged output
+  - `research/results/v3_phase3_gold40_v03_judged_summary.md` — Phase 3 summary + paper claim
+- **Changed:**
+  - `research/harness/verse-lookup.ts` — supabase-js `.or()` replaces broken manual PostgREST URL filter
+  - `research/harness/judge-citation.ts` — model updated to `gemini-3.1-flash-lite`
+- **Verification:** 40/40 judged, 0 judge errors. `./check.sh` — format ✓, lint ✓, type-check ✓, 79/79 tests ✓.
+- **Follow-ups:** v3.1 grace drift. v4 per-chapter vector RPC. Paper claim locked: cs=0.978, fp_refusal=1.000, R@5=0.941.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** v3 direct-chapter lookup + v0.3 annotation + doc updates
 - **Summary:** Replaced v2 chapter-ref retrieval (broad semantic → filter → unrestricted fallback) with v3 direct architecture: `lookupChapterVerses` fetches all verses from the referenced chapter via direct DB query; `selectWithinChapters` applies semantic ranking within those verses only; a per-chapter coverage guarantee ensures at least one verse per chapter even when the semantic search misses it. Rule: no unrestricted fallback for `chapter_only` refs. aion_035 ("Psalm 23 and John 10 shepherd") fixed: PSA.23.1 is now guaranteed via direct lookup. aion_036 ("Philippians 4 and Matthew 6 anxiety") correctly fails — its v2 rescue was an accidental unrestricted fallback. Created v0.3 dataset: aion_023 (strength) and aion_033 (resurrection) acceptable clusters expanded from failure analysis. v3 on v0.3: R@5=0.941, MRR=0.773, 2 remaining failures. docs/TESTING.md rewritten to reflect 79 tests and benchmark harness coverage.
 - **Added:**

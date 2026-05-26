@@ -17,7 +17,7 @@ import { GEMINI_API_KEY, JUDGE_INPUT, JUDGE_OUTPUT } from "./env.ts";
 import { fetchVerseTexts, formatVerseBlock } from "./verse-lookup.ts";
 import type { JudgedResult, RunResult } from "./types.ts";
 
-const JUDGE_MODEL = "gemini-2.0-flash-lite";
+const JUDGE_MODEL = "gemini-3.1-flash-lite";
 const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${JUDGE_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
 
 // Delay between judge calls to avoid rate-limiting (ms)

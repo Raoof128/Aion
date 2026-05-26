@@ -1,3 +1,4 @@
+import { createClient } from "@supabase/supabase-js";
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./env.ts";
 
 export type VerseFetched = {
@@ -7,6 +8,8 @@ export type VerseFetched = {
   verse: number;
   content: string;
 };
+
+const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 /**
  * Parses a dot-notation coord string ("JHN.3.16") into its components.
@@ -40,32 +43,24 @@ export async function fetchVerseTexts(coords: string[]): Promise<Map<string, Ver
 
   if (parsed.length === 0) return new Map();
 
-  // Build a PostgREST `or` filter: (book_id.eq.JHN,chapter.eq.3,verse.eq.16),(...)
-  // For large sets, split into batches of 20 to stay within URL length limits.
-  const BATCH = 20;
   const result = new Map<string, VerseFetched>();
+  const BATCH = 20;
 
   for (let i = 0; i < parsed.length; i += BATCH) {
     const batch = parsed.slice(i, i + BATCH);
+    // Build a PostgREST OR filter using supabase-js — each condition matches one verse exactly
+    const orFilter = batch
+      .map((p) => `and(book_id.eq.${p.book_id},chapter.eq.${p.chapter},verse.eq.${p.verse})`)
+      .join(",");
 
-    // Use a single request with multiple OR conditions via PostgREST
-    const orParts = batch.map(
-      (p) => `and(book_id.eq.${p.book_id},chapter.eq.${p.chapter},verse.eq.${p.verse})`,
-    );
-    const filter = `or(${orParts.join(",")})`;
+    const { data, error } = await supabase
+      .from("bible_verses")
+      .select("book_id,book_name,chapter,verse,content")
+      .or(orFilter)
+      .limit(batch.length + 5);
 
-    const url = `${SUPABASE_URL}/rest/v1/bible_verses?select=book_id,book_name,chapter,verse,content&${filter}`;
-    const resp = await fetch(url, {
-      headers: {
-        apikey: SUPABASE_ANON_KEY,
-        Authorization: `Bearer ${SUPABASE_ANON_KEY}`,
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!resp.ok) continue;
-    const rows = (await resp.json()) as VerseFetched[];
-    for (const row of rows) {
+    if (error || !data) continue;
+    for (const row of data as VerseFetched[]) {
       const coord = `${row.book_id}.${row.chapter}.${row.verse}`;
       result.set(coord, row);
     }
