@@ -12,6 +12,17 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background image replacements — Mark, Matthew, Zechariah
+- **Summary:** Replaced existing background images for Mark, Matthew, and Zechariah with newer versions from the external `Aion_Replacement` directory.
+- **Files Changed:**
+  - assets/Mark.png (replaced)
+  - assets/Matthew.png (replaced)
+  - assets/Zechariah.png (replaced)
+- **Verification:** `./check.sh` passes successfully with all checks verified (formatting, linting, type-checking, and all 73 tests passing).
+- **Follow-ups:** None.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book background images — Zephaniah, Haggai, Zechariah, Malachi, Matthew, Mark
 - **Summary:** Added 6 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. Renamed and stripped the trailing space from `Mark .png` to `Mark.png` during the copy process to maintain naming consistency.
 - **Files Changed:**
