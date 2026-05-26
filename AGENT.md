@@ -12,6 +12,16 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** BSB coord verification + gold dataset lock (all 40 verified)
+- **Summary:** Ran live BSB verification SQL against `bible_verses` table. Discovered James is stored as `JAS` (not `JAM`) in the BSB corpus. Fixed `JAM` → `JAS` in `aion_bibleqa_gold_40_draft.jsonl` (book_id fields + cluster strings) and `thematic_annotation_notes.md`. Confirmed all 179 coords across the 40-question dataset exist in `bible_verses`. Updated all 21 `needs_review` questions to `verified` — dataset is now 40/40 verified.
+- **Files Changed:**
+  - research/datasets/aion_bibleqa_gold_40_draft.jsonl — JAM→JAS fix; all annotation_status → verified
+  - research/datasets/thematic_annotation_notes.md — JAM→JAS fix (4 cluster refs)
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 73/73 tests ✓.
+- **Follow-ups:** Run full gold_40 benchmark against v1 hybrid-ref system. Phase 3 LLM-as-judge (citation faithfulness) still pending.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book background image replacements — Mark, Matthew, Zechariah
 - **Summary:** Replaced existing background images for Mark, Matthew, and Zechariah with newer versions from the external `Aion_Replacement` directory.
 - **Files Changed:**

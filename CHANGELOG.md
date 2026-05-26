@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** BSB coord verification + gold dataset lock (all 40 verified)
+- **Summary:** Ran live verification SQL against the `bible_verses` table for all uncertain coords in the gold_40 draft. Found that James is stored as `JAS` (not `JAM`) in the BSB corpus — fixed throughout the dataset and annotation notes. Comprehensive check confirmed 179 coords across 40 questions all exist in `bible_verses`. Updated all 21 `needs_review` questions to `verified`; `aion_bibleqa_gold_40_draft.jsonl` is now 40/40 verified and ready for a full benchmark run.
+- **Fixed:**
+  - `research/datasets/aion_bibleqa_gold_40_draft.jsonl` — `book_id:"JAM"` → `"JAS"` and `"JAM."` → `"JAS."` in cluster strings; all `annotation_status: "needs_review"` → `"verified"` (21 questions)
+  - `research/datasets/thematic_annotation_notes.md` — `JAM.` → `JAS.` (faith, prayer, wisdom cluster refs)
+- **Verification:** `./check.sh` passes — format ✓, lint ✓, type-check ✓, 73/73 tests ✓.
+- **Follow-ups:** Full gold_40 benchmark run (v1 hybrid-ref system). Phase 3 LLM-as-judge citation faithfulness stub exists at `research/judges/judge_prompt_citation_support.md`.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book background image replacements — Mark, Matthew, Zechariah
 - **Summary:** Replaced existing background images for Mark, Matthew, and Zechariah with newer versions from the external `Aion_Replacement` directory.
 - **Files Changed:**
