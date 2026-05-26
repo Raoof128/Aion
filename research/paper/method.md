@@ -50,6 +50,6 @@ The system prompt does not instruct on theological interpretation — it only co
 |---------|-------------|------------|------------|
 | v1 (hybrid-ref) | Semantic search + alias-based verse extraction | 0.676 | — |
 | v2 (chapter-ref) | v1 + chapter-only parser + semantic filter | 0.882 | — |
-| v3 (direct-chapter) | v2 → direct DB chapter lookup, no unrestricted fallback | 0.882 | **0.941** |
+| v3 (direct-chapter) | v2 → direct DB chapter lookup, no unrestricted fallback | 0.882 (MRR 0.714) | **0.941** |
 
 v0.3 expanded the `acceptable_verse_clusters` for two questions (aion_023 strength, aion_033 resurrection) based on v2 failure analysis. The v0.2→v0.3 system gain is +0.059 and is entirely attributable to annotation expansion, not architecture change.

@@ -44,7 +44,7 @@ Three observations:
 |--------|---------|-----|-----|-------|
 | v1 hybrid-ref | v0.1 | 0.676 | 0.552 | Baseline; chapter-only parser gap |
 | v2 chapter-ref | v0.2 | 0.882 | 0.700 | Chapter parser added; annotation expansion |
-| v3 direct-chapter | v0.2 | 0.882 | 0.712 | Architecture change; same dataset |
+| v3 direct-chapter | v0.2 | 0.882 | 0.714 | Architecture change; same dataset |
 | v3 direct-chapter | v0.3 | **0.941** | **0.773** | Annotation expansion for aion_023/033 |
 
 v3 on v0.2 vs v2 on v0.2 (same dataset, different architecture): R@5 holds at 0.882. The architecture change fixes aion_035 (multi-hop, Psalm 23 + John 10) but correctly re-breaks aion_036, which was an accidental success in v2 due to an unrestricted semantic fallback.

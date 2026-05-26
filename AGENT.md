@@ -12,6 +12,17 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Full audit of all 3 research phases — metric verification
+- **Summary:** Ran independent Python audit recomputing all metrics from raw JSONL artefacts. Findings: Phase 1 (R@5=0.676 ✅), Phase 2a/v2 (R@5=0.882, MRR=0.700 ✅), Phase 2b/v3-on-v0.2 (R@5=0.882 ✅, MRR=0.712→corrected to 0.714), Phase 2c/v3-on-v0.3 (R@5=0.941, MRR=0.773 ✅), Phase 3 judge (cs=0.978, fp_refusal=1.000 ✅), all Table 2 per-category numbers ✅. One discrepancy: v3/v0.2 MRR was incorrectly stated as 0.712 in paper drafts; actual = 0.7142 (rounds to 0.714). Fixed in method.md and results.md. Additional finding: v3_direct_chapter_gold40_v02_final.jsonl contains 3 development runs (120 rows); paper correctly uses single-run R@5=0.882. IVFFlat variance quantified: 3 questions flip across 3 runs (aion_006, aion_007, aion_036); run-to-run R@5 range = 0.853–0.882. Added to limitations.md.
+- **Files Changed:**
+  - research/paper/method.md — MRR 0.712 → 0.714 in version history table
+  - research/paper/results.md — same correction in Table 3
+  - research/paper/limitations.md — IVFFlat non-determinism quantified with run-level variance data
+- **Verification:** All paper claims verified against raw JSONL artefacts. Only one correction required.
+- **Follow-ups:** Programmatic citation verification ([CITE] markers). v3.1 grace drift. v4 per-chapter vector RPC.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Paper skeleton + artefact freeze (Phase 3 complete)
 - **Summary:** Froze Phase 3 canonical artefacts under `phase3_citation_faithfulness_gold40_v03.*` naming. Wrote `judge_prompt_false_premise.md` (complements existing citation_support prompt). Created `research/paper/` with 8 section drafts (abstract, introduction, related_work, method, experiments, results, discussion, limitations, conclusion). Applied stop-slop: active voice, specific claims, no filler. All [CITE] markers require programmatic verification before submission. Paper title: "Aion: A Benchmark for Citation-Faithfulness and False-Premise Robustness in Verse-Grounded Bible RAG."
 - **Files Changed:**

@@ -8,6 +8,17 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Full audit — 3-phase metric verification + paper corrections
+- **Summary:** Independent Python audit recomputed all metrics from raw JSONL artefacts. All major paper claims verified. One correction: v3/v0.2 MRR = 0.714, not 0.712 (rounding error in paper draft). IVFFlat variance quantified: aion_006/007/036 flip across 3 repeated runs of v3/v0.2 (run-to-run R@5 = 0.853–0.882). v3_direct_chapter_gold40_v02_final.jsonl confirmed to contain 3 development runs; paper's R@5=0.882 is correct from single-run canonical measurement.
+- **Fixed:**
+  - `research/paper/method.md` — v3/v0.2 MRR 0.712 → 0.714
+  - `research/paper/results.md` — same
+  - `research/paper/limitations.md` — IVFFlat non-determinism section updated with quantified variance data from audit
+- **Verification:** All metrics re-derived from raw data. Zero other discrepancies found.
+- **Follow-ups:** [CITE] placeholder resolution. v3.1. v4. Human annotation sample.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Paper skeleton + artefact freeze (Phase 3 complete)
 - **Summary:** Phase 3 is locked. Created canonical artefacts under `phase3_citation_faithfulness_gold40_v03.*` naming (copy from `v3_*` originals). Added `judge_prompt_false_premise.md` to document the false_premise/adversarial rubric. Created `research/paper/` with 8 drafted sections applying stop-slop (active voice, specificity, no filler). All citations are marked `[CITE]` and require programmatic verification before submission. Target: arXiv preprint / NeurIPS or ACL workshop submission.
 - **Added:**
