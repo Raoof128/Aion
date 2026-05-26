@@ -12,6 +12,14 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Paper writing — full LaTeX draft (ACL format)
+- **Summary:** Full paper written into research/paper/latex/acl_latex.tex. 7 pages, compiles clean with pdflatex + bibtex. All 11 citations use verified BibTeX keys. Lima et al. (2025) is marked [PLACEHOLDER] in paper.bib — needs verification before submission.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/paper.bib
+- **Verification:** pdflatex + bibtex + two pdflatex passes. Zero errors, zero undefined citations.
+- **Follow-ups:** Verify Lima et al. 2025 citation. Add pipeline figure. Human judge validation sample.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Citation verification — all [CITE] markers resolved
 - **Summary:** Verified all 11 paper citations via ArXiv abstract pages and ACL Anthology. One venue correction: Izacard & Grave was listed as 2020/arXiv — actual venue is EACL 2021. G-Eval confirmed EMNLP 2023. RAGAS confirmed arXiv-only. Replaced vague [verify] markers: false-premise QA → Hu et al. ACL 2023; Bible alignment → Resnik et al. 1999 + Akerman et al. 2023; multi-hop RAG → Tang & Yang 2024. All BibTeX entries appended to related_work.md. Zheng et al. 2023 inline citation fixed in limitations.md. Zero [CITE] markers remain.
 - **Files Changed:** research/paper/related_work.md, research/paper/limitations.md

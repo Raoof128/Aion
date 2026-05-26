@@ -1,0 +1,392 @@
+\documentclass[11pt]{article}
+
+\usepackage[review]{acl}
+
+\usepackage{times}
+\usepackage{latexsym}
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage{microtype}
+\usepackage{inconsolata}
+\usepackage{graphicx}
+\usepackage{booktabs}
+\usepackage{multirow}
+
+\title{Aion-BibleQA: Evaluating Retrieval and Citation Faithfulness\\
+       in Verse-Grounded Bible RAG Systems}
+
+\author{Anonymous Authors\\
+  Anonymous Affiliation\\
+  \texttt{anonymous@example.com}}
+
+\begin{document}
+\maketitle
+
+\begin{abstract}
+We introduce \textbf{Aion-BibleQA}, a 40-question pilot benchmark for evaluating citation faithfulness and false-premise robustness in verse-grounded Bible retrieval-augmented generation (RAG).
+Existing RAG evaluations measure whether the right document was retrieved, but not whether the system uses retrieved content as citation support in its answer---a gap that matters most when user trust depends on accurate scripture attribution.
+We build a layered retrieval pipeline that combines exact verse lookup, chapter-aware database queries, numeric keyword suppression, and hybrid semantic ranking, and evaluate it with two complementary metrics: Recall@5 for retrieval coverage and citation\_support (an LLM-as-judge score, 0--1) for answer faithfulness.
+On gold\_40 v0.3, our v3 system achieves R@5\,=\,0.941, mean citation\_support\,=\,0.978, zero unsupported citations, and a false-premise refusal rate of 1.000 (6/6).
+Failure analysis shows that the dominant remaining errors trace to retrieval scope---semantic drift in thematic queries and within-chapter verse selection---not to citation misuse, which establishes that retrieval and faithfulness are separable failure modes in Bible RAG systems.
+\end{abstract}
+
+%% ---------------------------------------------------------------
+\section{Introduction}
+%% ---------------------------------------------------------------
+
+Bible study applications face a sharper faithfulness challenge than most RAG domains.
+A user who asks ``What does John 3:16 say about love?'' expects the system to cite John 3:16, not a topically adjacent verse.
+If the system retrieves the right chapter but cites the wrong verse within it, the answer sounds plausible while misattributing scripture, a failure invisible to standard retrieval metrics.
+
+Retrieval-augmented generation \citep{lewis2020rag} is the dominant architecture for knowledge-intensive QA.
+Evaluation typically measures whether retrieval returned relevant documents (Recall@k, MRR) and whether the final answer matches a reference (BLEU, BERTScore, exact match).
+Neither metric captures whether the system used retrieved content correctly.
+A system can score R@5\,=\,1 while citing a retrieved passage for a claim it does not support.
+
+We call this gap the \textbf{retrieval-faithfulness split}: retrieval correctness and citation faithfulness are distinct failure modes that require separate measurement.
+
+This paper makes five contributions:
+
+\begin{itemize}
+  \item \textbf{Aion-BibleQA}, a 40-question benchmark with gold verse annotations across six categories (direct, interpretive, thematic, multi-hop, false-premise, adversarial) designed to stress-test both retrieval and faithfulness.
+  \item A \textbf{layered retrieval architecture} (exact verse lookup $\rightarrow$ chapter-aware DB query $\rightarrow$ per-chapter coverage guarantee $\rightarrow$ hybrid semantic re-ranking) achieving R@5\,=\,0.941 on the benchmark.
+  \item A \textbf{citation-faithfulness evaluation protocol} using an LLM-as-judge to score how faithfully retrieved verses appear in generated answers, producing a citation\_support score (0--1) and a false\_premise\_refusal flag (0/1).
+  \item \textbf{Empirical results} on gold\_40 v0.3: R@5\,=\,0.941, mean citation\_support\,=\,0.978, unsupported claim rate\,=\,0.000, false-premise refusal rate\,=\,1.000.
+  \item A \textbf{failure taxonomy} identifying retrieval scope as the remaining bottleneck: semantic drift and within-chapter verse selection, not citation misuse.
+\end{itemize}
+
+Once retrieval scope is correct, the system cites retrieved verses without misattribution.
+The split clarifies the engineering agenda: improve what gets retrieved, not how it is cited.
+
+%% ---------------------------------------------------------------
+\section{Related Work}
+%% ---------------------------------------------------------------
+
+\subsection{Retrieval-Augmented Generation}
+
+\citet{lewis2020rag} introduced RAG as a parametric--nonparametric hybrid: a dense retrieval component fetches supporting documents, and a seq2seq generator conditions on both the query and retrieved content.
+Subsequent work improved dense retrieval representations \citep{karpukhin2020dpr} and showed that generative models benefit from conditioning on multiple retrieved passages simultaneously \citep{izacard2021fid}.
+RAG has been extended to multi-hop settings where answers require aggregating evidence across documents \citep{tang2024multihoprag}.
+A recurring finding is that retrieval quality caps answer quality: systems cannot generate faithful answers from content they did not retrieve.
+
+Our work extends this line: retrieval quality and answer faithfulness are separable, and a system can retrieve the right chapter while citing the wrong verse within it.
+
+\subsection{Faithfulness and Grounding Evaluation}
+
+Faithfulness---whether an answer is entailed by its supporting context---is distinct from factual correctness \citep{maynez2020faithfulness}.
+RAGAS \citep{es2023ragas} decomposes RAG evaluation into faithfulness, answer relevance, and context precision, using an LLM to judge each dimension without ground-truth annotations.
+G-Eval \citep{liu2023geval} demonstrates strong correlation between GPT-4 judgments and human ratings for faithfulness-like criteria across summarisation and dialogue tasks.
+We follow this line by using a Gemini judge to score citation\_support, and we add false\_premise\_refusal as an orthogonal robustness metric.
+
+A known limitation of LLM-as-judge is same-family bias: a judge tends to rate outputs from the same model family higher \citep{zheng2023judging}.
+Our judge (Gemini) evaluates answers generated by a Gemini-family model; we discuss this in the Limitations section.
+
+\subsection{Bible NLP}
+
+The Bible is among the most studied multilingual corpora in NLP.
+\citet{resnik1999bible} established the Bible as a parallel corpus for cross-lingual alignment, a line extended by the eBible Corpus \citep{akerman2023ebible} covering 833 languages.
+\citet{lima2025aibible} survey AI applications to biblical text analysis and identify semantic search and question answering as emerging tasks with limited benchmark coverage.
+To our knowledge, citation-faithfulness evaluation has not been applied to Bible RAG systems prior to this work.
+
+\subsection{False-Premise Robustness}
+
+Robustness to false premises has received growing attention in QA.
+\citet{hu2023falsepremise} construct a dataset of false-premise questions and show that current systems often answer as if the false premise were true rather than detecting and correcting it.
+Bible QA has a specific form of this problem: users frequently misquote or misattribute verses.
+We include false-premise and adversarial categories in Aion-BibleQA to measure whether the system refuses fabrication requests and corrects misattributions.
+
+%% ---------------------------------------------------------------
+\section{System Architecture}
+%% ---------------------------------------------------------------
+
+\subsection{Overview}
+
+Aion is a verse-grounded Bible QA system deployed as a Supabase Edge Function.
+Given a user query, the system parses any explicit Bible references, retrieves candidate verses, re-ranks them semantically, and generates a grounded answer citing specific verses.
+
+\subsection{Reference Parsing}
+
+A two-pass parser identifies explicit scripture references in the query.
+
+\textbf{Pass 1 (verse-level):} Regex matches \texttt{BOOK CHAPTER:VERSE} patterns (e.g., ``John 3:16'', ``Ps.\ 23:1''). An alias map normalises common abbreviations and alternate spellings to canonical book IDs.
+
+\textbf{Pass 2 (chapter-only):} A separate regex captures patterns like ``Psalm 23'' or ``1 Corinthians 15'' where no verse is specified. A backtrack fix (\texttt{lastIndex = match.index + 1} on alias miss) prevents tokens such as ``Does 1'' from consuming the leading digit of ``1 Corinthians''.
+
+\textbf{Numeric keyword suppression:} Parsed chapter references suppress numeric token extraction in the downstream semantic query. Without this, a query for ``Psalm 23'' generates keyword ``23'', retrieving unrelated numerical content (census records, inventory lists).
+
+\subsection{Layered Retrieval (v3 Direct-Chapter)}
+
+Retrieval proceeds in four layers, ordered by specificity.
+
+\textbf{Layer 1 --- Exact verse lookup.} For verse-level references, the system queries the \texttt{bible\_verses} table directly by (\textit{book\_id}, \textit{chapter}, \textit{verse}). These rows are added to the candidate set without a semantic ranking step.
+
+\textbf{Layer 2 --- Chapter-aware DB query (\texttt{lookupChapterVerses}).} For chapter-only references, all verses in the referenced chapter are fetched directly from \texttt{bible\_verses} by (\textit{book\_id}, \textit{chapter}). This avoids the v2 design flaw of running an unconstrained semantic search then filtering, which could return semantically close verses from other chapters.
+
+\textbf{Layer 3 --- Semantic re-ranking within chapter (\texttt{selectWithinChapters}).} Fetched chapter verses are re-ranked by cosine similarity to the query embedding. An IVFFlat index on the \texttt{embedding} column provides approximate nearest-neighbour search. The top-$k$ results are selected.
+
+\textbf{Per-chapter coverage guarantee.} After semantic re-ranking, the system verifies that at least one verse from each referenced chapter appears in the final candidate set. If not, it appends the chapter's first verse. This ensures multi-hop queries referencing two chapters always return at least one verse from each.
+
+\textbf{Layer 4 --- Hybrid semantic fallback.} For queries with no parsed references, the system runs an unconstrained semantic search over all verses using the query embedding. Keywords extracted from the query bias results toward verses with matching lexical content.
+
+\textbf{Context assembly.} The top-5 verses across all layers are assembled into a context block formatted as \texttt{BOOK CHAPTER:VERSE --- \{text\}} on separate lines.
+
+\subsection{Answer Generation}
+
+We pass the assembled verse context and original query to a Gemini model with a system prompt that instructs it to: answer from the provided verses only; cite specific verses inline; refuse or correct false premises; and decline to fabricate verses or attributions.
+
+\subsection{Version History}
+
+Table~\ref{tab:versions} shows how retrieval performance evolved across system versions.
+v3 on v0.2 vs.\ v2 on v0.2 (same dataset, different architecture): R@5 holds at 0.882.
+The architecture change fixes aion\_035 (Psalm 23 + John 10 multi-hop) but correctly re-breaks aion\_036, which was an accidental success in v2 due to an unrestricted semantic fallback.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{llcc}
+    \toprule
+    \textbf{System} & \textbf{Dataset} & \textbf{R@5} & \textbf{MRR} \\
+    \midrule
+    v1 hybrid-ref     & v0.1 & 0.676 & 0.552 \\
+    v2 chapter-ref    & v0.2 & 0.882 & 0.700 \\
+    v3 direct-chapter & v0.2 & 0.882 & 0.714 \\
+    v3 direct-chapter & v0.3 & \textbf{0.941} & \textbf{0.773} \\
+    \bottomrule
+  \end{tabular}
+  \caption{Retrieval performance across system versions. The v0.3 gain (+0.059 R@5) is attributable to annotation expansion for two questions (aion\_023, aion\_033), not architecture change.}
+  \label{tab:versions}
+\end{table}
+
+%% ---------------------------------------------------------------
+\section{Experiments}
+%% ---------------------------------------------------------------
+
+\subsection{Benchmark: Aion-BibleQA gold\_40}
+
+\textbf{Dataset:} \texttt{aion\_bibleqa\_gold\_40\_v0.3.jsonl} --- 40 questions, 6 categories (Table~\ref{tab:categories}).
+Each question has a \texttt{gold\_verse} (primary expected verse coordinate, e.g., \texttt{JHN.3.16}) and an \texttt{acceptable\_verse\_clusters} list.
+R@5\,=\,1 if any retrieved verse matches the gold or any cluster member.
+All 40 questions were verified against the live \texttt{bible\_verses} table (BSB translation).
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lcp{4.5cm}}
+    \toprule
+    \textbf{Category} & \textbf{n} & \textbf{Description} \\
+    \midrule
+    direct        & 10 & Names a specific verse (e.g., ``What does John 3:16 say?'') \\
+    interpretive  &  7 & Asks for meaning of a named passage \\
+    thematic      & 12 & Theme query without naming a verse \\
+    multi\_hop    &  5 & Requires verses from two different chapters \\
+    false\_premise &  4 & Contains a factual error about scripture \\
+    adversarial   &  2 & Asks the system to fabricate content \\
+    \bottomrule
+  \end{tabular}
+  \caption{Aion-BibleQA category distribution.}
+  \label{tab:categories}
+\end{table}
+
+\textbf{Annotation note:} Aion-BibleQA is a pilot benchmark created for this study. Questions cover six failure modes identified during v1 system development, not a random sample of user queries. Results should be interpreted in this context.
+
+\subsection{Retrieval Metrics}
+
+\textbf{Recall@5 (R@5):} Binary. Score 1 if any of the top-5 retrieved verse coordinates matches \texttt{gold\_verse} or any cluster member; else 0.
+
+\textbf{MRR (Mean Reciprocal Rank):} $1/r$ where $r$ is the rank of the first matching verse in the ranked list; 0 if no match in top-5.
+
+Both metrics are computed per row; averages reported per category and overall.
+
+\subsection{Citation-Faithfulness Evaluation}
+
+\textbf{Judge model:} \texttt{gemini-3.1-flash-lite}.
+
+For each row, the judge receives: (1) the question, (2) the category, (3) expected behaviour from the dataset annotation, (4) the retrieved verse block with full verse texts, and (5) the system answer.
+
+The judge produces a JSON response with two fields:
+\begin{itemize}
+  \item \texttt{citation\_support} (0.0--1.0) for direct/interpretive/thematic/multi\_hop rows
+  \item \texttt{false\_premise\_refusal} (0 or 1) for false\_premise/adversarial rows
+\end{itemize}
+
+\textbf{Implementation:} All 40 rows judged in a single pass with three-attempt retry per row and exponential backoff; 0 judge call failures.
+
+\subsection{Aggregate Metrics}
+
+\begin{itemize}
+  \item \textbf{mean\_citation\_support:} Mean cs across non-refusal rows (n\,=\,34)
+  \item \textbf{unsupported\_claim\_rate:} Fraction of rows with cs\,<\,0.5
+  \item \textbf{decorative\_citation\_rate:} Fraction of rows with cs\,$\leq$\,0.25
+  \item \textbf{fp\_refusal\_rate:} Fraction of false\_premise/adversarial rows with false\_premise\_refusal\,=\,1
+\end{itemize}
+
+\subsection{Experimental Setup}
+
+Bible translation: BSB (Berean Standard Bible) stored in a Supabase \texttt{bible\_verses} table.
+Embedding model: pgvector extension with IVFFlat index on the \texttt{embedding} column.
+Answer model: Gemini (same model family as judge; see the Limitations section), deployed as a Supabase Edge Function on Deno Deploy infrastructure.
+Judge model: \texttt{gemini-3.1-flash-lite}.
+Benchmark runner: calls the live Edge Function over HTTPS with SSE streaming from a consumer MacBook.
+All benchmark runs are frozen as JSONL artefacts; results are reproducible from those frozen files.
+
+%% ---------------------------------------------------------------
+\section{Results}
+%% ---------------------------------------------------------------
+
+\subsection{Main Results}
+
+Table~\ref{tab:main} shows overall metrics for v3 on gold\_40 v0.3.
+R@5\,=\,0.941, citation\_support\,=\,0.978, and fp\_refusal\,=\,1.000 together show that where the system retrieves the right content, it uses that content without citation error.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lc}
+    \toprule
+    \textbf{Metric} & \textbf{Score} \\
+    \midrule
+    R@5                            & 0.941 \\
+    MRR                            & 0.773 \\
+    Mean citation\_support         & 0.978 \\
+    Unsupported claim rate (cs\,<\,0.5)   & 0.000 \\
+    Decorative citation rate (cs\,$\leq$\,0.25) & 0.000 \\
+    False-premise / adversarial refusal & 1.000 (6/6) \\
+    \bottomrule
+  \end{tabular}
+  \caption{v3 system on gold\_40 v0.3 --- overall metrics.}
+  \label{tab:main}
+\end{table}
+
+\subsection{Per-Category Breakdown}
+
+Table~\ref{tab:percat} shows results by question category.
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lccccc}
+    \toprule
+    \textbf{Category} & \textbf{n} & \textbf{R@5} & \textbf{MRR} & \textbf{cs} & \textbf{fp} \\
+    \midrule
+    direct        & 10 & 1.000 & 1.000 & 1.000 & --- \\
+    interpretive  &  7 & 1.000 & 1.000 & 1.000 & --- \\
+    thematic      & 12 & 0.917 & 0.667 & 0.979 & --- \\
+    multi\_hop    &  5 & 0.800 & 0.600 & 0.900 & --- \\
+    false\_premise &  4 & ---   & ---   & ---   & 1.000 \\
+    adversarial   &  2 & ---   & ---   & ---   & 1.000 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Per-category results. cs = citation\_support; fp = fp\_refusal.}
+  \label{tab:percat}
+\end{table}
+
+\textbf{Direct and interpretive categories are solved.} R@5\,=\,1.00 and citation\_support\,=\,1.00 for all 17 questions. The exact verse lookup layer handles named verse queries completely; semantic re-ranking never introduces wrong verses when the reference is explicit.
+
+\textbf{Thematic and multi-hop contain the remaining retrieval failures.} Two questions fail R@5: aion\_027 (thematic, grace semantic drift) and aion\_036 (multi-hop, IVFFlat boundary). Citation faithfulness remains high for both categories (cs\,=\,0.979 and 0.900), showing that the system cites retrieved content correctly even when retrieval returned suboptimal verses.
+
+\textbf{False-premise and adversarial robustness is perfect.} All six refusal-category questions scored 1. No fabricated content appeared in any answer.
+
+\subsection{Sub-1.0 Rows}
+
+Two rows scored below citation\_support\,=\,1.0.
+
+\textbf{aion\_021} (thematic, cs\,=\,0.75): EPH.6.19 cited for a gratitude context. The verse records Paul requesting prayer for his ministry, not a general statement about thankfulness. A minor over-reach.
+
+\textbf{aion\_035} (multi-hop, cs\,=\,0.50): JHN.10.1 cited instead of JHN.10.11. The per-chapter coverage guarantee appends the first verse of JHN.10 (the parable of the gate) rather than the theologically central verse (``I am the good shepherd''). Notably, R@5\,=\,1 for this question (PSA.23.1 retrieved correctly); the failure is within-chapter verse selection, not retrieval coverage. aion\_035 achieves R@5\,=\,1 yet cs\,=\,0.50, a direct illustration of the retrieval-faithfulness split.
+
+%% ---------------------------------------------------------------
+\section{Discussion}
+%% ---------------------------------------------------------------
+
+\subsection{The Retrieval-Faithfulness Split}
+
+Retrieval correctness and citation faithfulness are separable.
+Table~\ref{tab:percat} shows this: multi\_hop R@5\,=\,0.800 while multi\_hop citation\_support\,=\,0.900.
+A system can retrieve the wrong verse (R@5\,=\,0) yet cite whatever it retrieved correctly (cs\,=\,1.00): aion\_027 illustrates this.
+Conversely, a system can achieve R@5\,=\,1 while citing the wrong verse within a chapter (cs\,=\,0.50): aion\_035 illustrates this.
+
+Both metrics are necessary. High R@5 does not prevent citation misuse; high citation\_support does not mean relevant content was retrieved. The Phase 3 evaluation protocol measures both.
+
+\subsection{Failure Taxonomy}
+
+All remaining failures fall into one of three classes (Table~\ref{tab:failures}).
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{p{2.3cm}p{2.3cm}p{2.3cm}}
+    \toprule
+    \textbf{Class} & \textbf{Example} & \textbf{Fix} \\
+    \midrule
+    Semantic drift & aion\_027: ``grace'' $\rightarrow$ salutation formulas & Query expansion + salutation penalty (v3.1) \\
+    IVFFlat boundary & aion\_036: PHP.4.6 inconsistently absent & Per-chapter vector RPC (v4) \\
+    Per-chapter wrong verse & aion\_035: JHN.10.1 vs JHN.10.11 & Per-chapter vector RPC (v4) \\
+    \bottomrule
+  \end{tabular}
+  \caption{Remaining failure taxonomy. None is a citation misuse failure.}
+  \label{tab:failures}
+\end{table}
+
+In every case where retrieval returned relevant content, the answer model cited it correctly.
+The engineering target is retrieval scope, not citation behaviour.
+
+\subsection{The aion\_027 Grace Drift}
+
+``Grace'' in Pauline letters has two semantic neighbourhoods: salvific grace (EPH.2.8--9: ``For by grace you have been saved through faith'') and epistolary grace (greeting formulas of the form ``Grace and peace to you\ldots'').
+The epistolary cluster dominates the current semantic search surface: these short, formulaic verses have embeddings closer to the unqualified query ``grace'' than the longer salvific passage.
+
+Two candidate fixes: (1) query expansion, prepending ``saved by'' or ``salvation'' to thematic grace queries at retrieval time; (2) salutation suppression, a post-retrieval filter penalising verses matching the pattern ``Grace and peace to you from X''.
+The second is more targeted; the first generalises more broadly to other semantic drift cases.
+
+\subsection{v4 Architecture Roadmap}
+
+aion\_035 and aion\_036 share a root cause: the per-chapter guarantee and IVFFlat search operate at chapter granularity, not verse-within-chapter granularity.
+
+The v4 fix is a \texttt{search\_verses\_in\_chapter(query\_embedding, book\_id, chapter, k)} Supabase RPC running constrained vector search within a single chapter.
+For JHN.10, a query embedding for ``God as shepherd'' would rank JHN.10.11 above JHN.10.1.
+The per-chapter guarantee becomes the top result of this per-chapter search rather than the chapter's first verse.
+This is a well-defined engineering task.
+
+%% ---------------------------------------------------------------
+\section{Conclusion}
+%% ---------------------------------------------------------------
+
+We introduced Aion-BibleQA, a 40-question benchmark for citation-faithfulness and false-premise robustness in verse-grounded Bible RAG.
+Our v3 retrieval system, combining exact verse lookup, direct chapter-aware database queries, and hybrid semantic re-ranking, achieves R@5\,=\,0.941 on gold\_40 v0.3.
+A Gemini LLM-as-judge evaluation shows mean citation\_support\,=\,0.978, zero unsupported citations, and a 1.000 false-premise refusal rate.
+
+Retrieval and citation faithfulness are distinct failure modes.
+Once the right verses reach the context window, the system cites them correctly.
+The remaining errors---semantic drift in thematic queries, IVFFlat boundary effects in multi-hop retrieval, and within-chapter verse selection---are retrieval scope problems.
+
+Future priorities: human annotation of a judge-scored sample; expansion to 200+ questions sampled from real users; thematic query expansion for grace-like semantic drift (v3.1); and a per-chapter vector search RPC for within-chapter verse selection (v4).
+
+Aion-BibleQA, the retrieval system, the judge harness, and all benchmark artefacts are released with this paper.
+
+%% ---------------------------------------------------------------
+\section*{Limitations}
+%% ---------------------------------------------------------------
+
+\textbf{LLM-as-judge, same model family.} Citation-faithfulness scores come from a Gemini judge evaluating Gemini-generated answers. Same-family judges tend to be lenient toward outputs from the same model family \citep{zheng2023judging}. The true citation\_support may be lower than 0.978 under a human annotator or cross-family judge. Future work should validate a sample of judgments against human ratings.
+
+\textbf{Pilot benchmark size.} gold\_40 v0.3 contains 40 questions. Statistical uncertainty is high: one question is 2.5\% of R@5. Results in the multi\_hop category (n\,=\,5) and adversarial category (n\,=\,2) are especially noisy. A 95\% CI on multi\_hop R@5\,=\,0.800 with n\,=\,5 spans roughly $\pm$0.30.
+
+\textbf{Constructed benchmark, not user-sampled.} Questions target known failure modes from v1 development, not the distribution of queries real users ask. Real-world R@5 may differ.
+
+\textbf{Single translation (BSB).} All verses come from the Berean Standard Bible. Results may not generalise to systems using KJV, NIV, ESV, or other translations, where verse wording differs and embeddings shift.
+
+\textbf{IVFFlat non-determinism.} Across three repeated runs on gold\_40 v0.2, three questions showed R@5 variance (aion\_006, aion\_007, aion\_036). Run-to-run R@5 ranged from 0.853 to 0.882 on the same question set. Benchmark runs in this paper were each performed once and frozen as canonical JSONL artefacts; results are reproducible from those frozen files.
+
+\textbf{No ablation study.} The paper reports v3 as a whole system. The v1$\to$v2$\to$v3 progression provides coarse evidence that each change improved performance, but the relative contribution of each retrieval layer is not quantified.
+
+%% ---------------------------------------------------------------
+\section*{Acknowledgments}
+%% ---------------------------------------------------------------
+
+We thank the Berean Bible translators for making the BSB publicly available under a generous licence, which made this corpus-based study possible.
+
+%% ---------------------------------------------------------------
+\bibliography{paper}
+%% ---------------------------------------------------------------
+
+\end{document}

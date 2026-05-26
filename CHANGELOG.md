@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Paper writing — full LaTeX draft (ACL format)
+- **Summary:** Converted all 9 paper markdown section files into a complete LaTeX paper using the ACL template. Created `research/paper/latex/acl_latex.tex` (7 pages, compiles clean) and `research/paper/latex/paper.bib` (11 verified BibTeX entries). All citations use natbib commands (\citet/\citep). Tables formatted with booktabs. Lima et al. (2025) marked as PLACEHOLDER pending verification.
+- **Files Changed:** research/paper/latex/acl_latex.tex (full paper), research/paper/latex/paper.bib (BibTeX)
+- **Verification:** `pdflatex` + `bibtex` + two pdflatex passes. Output: 7 pages, 0 errors, 0 undefined citations.
+- **Follow-ups:** Lima et al. 2025 citation needs manual verification. Consider adding Figure 1 (pipeline diagram). Human annotation for judge validation.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Citation verification — all [CITE] markers resolved
 - **Summary:** Verified all 11 paper citations in related_work.md and limitations.md. Tools used: ArXiv WebFetch, ACL Anthology, Google Scholar. One correction found: Izacard & Grave (FiD) was incorrectly listed as 2020/arXiv; actual venue is EACL 2021. All vague [verify] placeholders replaced with confirmed real papers. Full BibTeX block appended to related_work.md.
 - **Fixed:** Izacard & Grave venue 2020 → EACL 2021
