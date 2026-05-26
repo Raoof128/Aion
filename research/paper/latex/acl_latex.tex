@@ -11,6 +11,8 @@
 \usepackage{graphicx}
 \usepackage{booktabs}
 \usepackage{multirow}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
 
 \title{Aion-BibleQA: Evaluating Retrieval and Citation Faithfulness\\
        in Verse-Grounded Bible RAG Systems}
@@ -103,6 +105,60 @@ We include false-premise and adversarial categories in Aion-BibleQA to measure w
 
 Aion is a verse-grounded Bible QA system deployed as a Supabase Edge Function.
 Given a user query, the system parses any explicit Bible references, retrieves candidate verses, re-ranks them semantically, and generates a grounded answer citing specific verses.
+Figure~\ref{fig:pipeline} shows the full pipeline.
+
+\begin{figure}[t]
+\centering
+\begin{tikzpicture}[
+  spine/.style={draw, rounded corners=3pt, fill=white,
+                minimum width=32mm, minimum height=7mm,
+                align=center, font=\small},
+  layer/.style={draw, rounded corners=3pt, fill=gray!12,
+                minimum width=26mm, minimum height=7mm,
+                align=center, font=\scriptsize},
+  arr/.style={-{Stealth[length=3.5pt,width=2.5pt]}, semithick},
+  lbl/.style={font=\scriptsize\itshape}
+]
+  % Centre spine (x=0)
+  \node[spine] at (0, 0)     (q)   {User Query};
+  \node[spine] at (0,-1.2)   (p)   {Reference Parser};
+  \node[spine] at (0,-6.6)   (ctx) {Context Assembly\\[-2pt]{\tiny top-5 verses}};
+  \node[spine] at (0,-7.8)   (mdl) {Gemini Answer Model};
+  \node[spine] at (0,-9.0)   (ans) {Cited Answer};
+
+  % Left branch: explicit refs (x=-1.85)
+  \node[layer] at (-1.85,-2.7)  (l1) {L1: Exact Verse\\[-1pt]Lookup};
+  \node[layer] at (-1.85,-3.8)  (l2) {L2: Chapter\\[-1pt]DB Query};
+  \node[layer] at (-1.85,-4.9)  (l3) {L3: Semantic\\[-1pt]Re-rank};
+  \node[layer] at (-1.85,-6.0)  (cg) {Coverage\\[-1pt]Guarantee};
+
+  % Right branch: no refs (x=1.85)
+  \node[layer] at (1.85,-3.4)   (l4) {L4: Hybrid\\[-1pt]Semantic Search};
+
+  % Spine arrows
+  \draw[arr] (q)   -- (p);
+  \draw[arr] (ctx) -- (mdl);
+  \draw[arr] (mdl) -- (ans);
+
+  % Branch out from parser
+  \draw[arr] (p.south) -- ++(0,-0.25)
+      -| node[lbl,pos=0.25,above]{refs} (l1.north);
+  \draw[arr] (p.south) -- ++(0,-0.25)
+      -| node[lbl,pos=0.25,above]{no refs} (l4.north);
+
+  % Left chain
+  \draw[arr] (l1) -- (l2);
+  \draw[arr] (l2) -- (l3);
+  \draw[arr] (l3) -- (cg);
+
+  % Merge into context
+  \draw[arr] (cg.south)  -| (ctx.west);
+  \draw[arr] (l4.south)  |- (ctx.east);
+
+\end{tikzpicture}
+\caption{Aion v3 retrieval pipeline. Queries with explicit scripture references fork left through exact lookup (L1), chapter-aware DB query (L2), in-chapter semantic re-ranking (L3), and a per-chapter coverage guarantee. Queries without references fork right through hybrid semantic search (L4). Both paths merge at context assembly, which selects the top-5 verses for the answer model.}
+\label{fig:pipeline}
+\end{figure}
 
 \subsection{Reference Parsing}
 
