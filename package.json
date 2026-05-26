@@ -9,12 +9,14 @@
     "web": "expo start --web",
     "desktop": "tauri dev",
     "desktop:build": "tauri build",
-    "lint": "eslint app/ components/ lib/ tests/",
+    "lint": "eslint app/ components/ lib/ tests/ research/harness/",
     "lint:fix": "eslint app/ components/ lib/ tests/ --fix",
-    "format": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts'",
-    "format:check": "prettier --check 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts'",
+    "format": "prettier --write 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts' 'research/harness/**/*.ts'",
+    "format:check": "prettier --check 'app/**/*.{ts,tsx}' 'components/**/*.{ts,tsx}' 'lib/**/*.ts' 'tests/**/*.ts' 'research/harness/**/*.ts'",
     "type-check": "npx tsc --noEmit",
-    "test": "tsx --test tests/**/*.test.ts"
+    "test": "tsx --test tests/**/*.test.ts",
+    "research:benchmark": "tsx --env-file .env research/harness/run-benchmark.ts",
+    "research:metrics": "tsx --env-file .env research/harness/report-metrics.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",
