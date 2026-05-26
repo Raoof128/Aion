@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Research scaffold live run + reference-aware hybrid RAG (v1)
+- **Summary:** Completed the live benchmark loop and shipped the first retrieval architecture improvement. Two infrastructure fixes to unblock the run: Supabase CLI was on the wrong account (fixed via `SUPABASE_ACCESS_TOKEN` PAT from `.env`); `EXPO_PUBLIC_DEV_BYPASS` was blank while the remote secret had a real value (fixed by generating a new shared secret). Updated Gemini model from deprecated `gemini-3.1-flash-lite-preview` to stable `gemini-3.1-flash-lite`. First stub_10 run produced **Pilot Result 1** — explicit Bible references (John 3:16, Psalm 23:1) both scored R@5=0.00 because the hybrid RAG was treating them as free text for semantic search ("vibe-searching a street address"). Fixed by adding a 66-book reference parser that resolves `"John 3:16"` → `(JHN, 3, 16)` and performs exact `bible_verses` lookups before falling back to hybrid search. v1 result: **R@5 0.286 → 0.571, MRR 0.143 → 0.429, direct R@5 0.00 → 1.00**.
+- **Added:**
+  - `lib/bible-reference-parser.ts` — `parseReferences()` with 66-book alias map; handles full names, abbreviations, numbered books (1 John, 2 Timothy), verse ranges (Matt 6:14-15), multi-ref queries, case-insensitive matching
+  - `tests/bible-reference-parser.test.ts` — 20 unit tests
+  - `research/harness/diagnostics/reference-resolution.md` — documents Pilot Result 1: root cause, fix, before/after metrics
+  - `research/results/baseline_hybrid_v0_stub10.jsonl` — v0 frozen baseline
+  - `research/results/v1_hybrid_ref_stub10.jsonl` — v1 benchmark results
+- **Changed:**
+  - `supabase/functions/chat/index.ts` — Gemini model updated to `gemini-3.1-flash-lite`; inlined reference resolver (`ALIAS_MAP`, `parseReferences`, `lookupByRefs`); cache-miss path now branches: exact lookup if reference detected, hybrid search otherwise
+- **Verification:** 20/20 parser tests pass. Benchmark: 10/10 runs, 0 errors, R@5=0.571. `./check.sh` — format ✓, lint ✓, type-check ✓, 53/53 tests ✓.
+
 ### 2026-05-25 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Book background images for 9 Minor Prophets + Daniel

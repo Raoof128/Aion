@@ -6,8 +6,24 @@ These rules govern the development of the Aion project.
 - **Dependency Cleanliness:** Maintain clean package dependencies. Resolve peer dependency conflicts by aligning versions in `package.json` rather than relying on `--legacy-peer-deps` or `--force`.
 - **Cross-Platform Compatibility:** Keep cross-platform requirements in mind. The app runs on Expo (iOS, Android, Web) and Tauri (macOS, Windows, Linux).
 - **Linter & Formatter:** Ensure ESLint runs cleanly on `app/`, `components/`, and `lib/` directories. Use prettier for formatting.
+- **Supabase CLI Auth:** Always prefix `supabase` CLI commands with the PAT from `.env`. The CLI session is authenticated to a different account than the Aion project owner (`eynemyseadlkbzwtzrry`). Pattern: `PAT=$(grep '^SUPABASE_ACCESS_TOKEN=' .env | cut -d'=' -f2-) && SUPABASE_ACCESS_TOKEN="$PAT" supabase <command>`
 
 ## Change Log
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Research scaffold live run + Pilot Result 1 + reference resolver (hybrid_rag v1)
+- **Summary:** Unblocked the live benchmark after two blockers: (1) Supabase CLI was authenticated to the wrong account — fixed by using `SUPABASE_ACCESS_TOKEN` PAT from `.env` for all `supabase` commands; (2) `EXPO_PUBLIC_DEV_BYPASS` was empty while `DEV_BYPASS_SECRET` in Supabase had a real value — generated a new shared secret and set both simultaneously. Updated Gemini model from deprecated `gemini-3.1-flash-lite-preview` to stable `gemini-3.1-flash-lite` (GA March 2026). First successful benchmark run on `stub_10` produced **Pilot Result 1**: direct queries (`John 3:16`, `Psalm 23:1`) scored R@5=0.00 because the hybrid RAG treated references as free text for semantic/keyword search rather than resolving them as structured coordinates. Fixed by adding `lib/bible-reference-parser.ts` (66-book alias map, `parseReferences()`, verse range support) and wiring it into the Edge Function — if a reference is detected, `lookupByRefs()` queries `bible_verses` directly by `(book_id, chapter, verse)` before falling back to hybrid search. v1 benchmark result: R@5 0.286→0.571, MRR 0.143→0.429, direct R@5 0.00→1.00. Baseline frozen at `research/results/baseline_hybrid_v0_stub10.jsonl`.
+- **Files Changed:**
+  - supabase/functions/chat/index.ts — updated Gemini model to `gemini-3.1-flash-lite`; inlined `ParsedRef`, `ALIAS_MAP`, `REF_REGEX`, `parseReferences()`, `lookupByRefs()`; replaced hybrid-only cache-miss path with reference-aware branching path
+  - lib/bible-reference-parser.ts (created) — `ParsedRef` type, 66-book `ALIAS_MAP`, `REF_REGEX`, `parseReferences()`
+  - tests/bible-reference-parser.test.ts (created) — 20 tests (full names, abbreviations, numbered books, ranges, multi-ref, case-insensitive, null for non-refs)
+  - research/harness/diagnostics/reference-resolution.md (created) — documents the finding, root cause, fix, and expected outcome
+  - research/results/baseline_hybrid_v0_stub10.jsonl (created) — v0 baseline frozen (R@5=0.286, MRR=0.143)
+  - research/results/v1_hybrid_ref_stub10.jsonl (created) — v1 result (R@5=0.571, MRR=0.429)
+  - .env — `EXPO_PUBLIC_DEV_BYPASS` set to match new `DEV_BYPASS_SECRET` in Supabase
+- **Verification:** 20/20 parser tests pass. `npm run research:benchmark` — 10/10 questions, 0 errors. `npm run research:metrics` — R@5=0.571, P@5=0.143, MRR=0.429. `./check.sh` passes — format ✓, lint ✓, type-check ✓, 53/53 tests ✓.
+- **Follow-ups:** Thematic queries (forgiveness, anxiety) still R@5=0.00 — open research question for gold_40 annotation. Phase 3 LLM-as-judge (citation faithfulness) not yet implemented.
 
 ### 2026-05-25 (Australia/Sydney)
 **Raouf:**
