@@ -27,6 +27,10 @@ async function main() {
   console.log("Auth: anonymous session created\n");
 
   const out = createWriteStream(OUTPUT_PATH, { flags: "a" });
+  out.on("error", (err) => {
+    console.error(`Output stream error: ${err.message}`);
+    process.exit(1);
+  });
 
   let totalRecall = 0;
   let totalPrecision = 0;
@@ -69,7 +73,12 @@ async function main() {
       dataset_path: DATASET_PATH,
     };
 
-    out.write(JSON.stringify(result) + "\n");
+    await new Promise<void>((resolve, reject) => {
+      out.write(JSON.stringify(result) + "\n", (err) => {
+        if (err) reject(err);
+        else resolve();
+      });
+    });
 
     if (sse.error) {
       console.log(`ERROR: ${sse.error} (HTTP ${sse.http_status ?? "N/A"})`);
