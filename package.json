@@ -16,7 +16,9 @@
     "type-check": "npx tsc --noEmit",
     "test": "tsx --test tests/**/*.test.ts",
     "research:benchmark": "tsx --env-file .env research/harness/run-benchmark.ts",
-    "research:metrics": "tsx --env-file .env research/harness/report-metrics.ts"
+    "research:metrics": "tsx --env-file .env research/harness/report-metrics.ts",
+    "research:judge": "tsx --env-file .env research/harness/judge-citation.ts",
+    "research:judge-report": "tsx --env-file .env research/harness/report-judge.ts"
   },
   "dependencies": {
     "@expo-google-fonts/inter": "^0.4.2",

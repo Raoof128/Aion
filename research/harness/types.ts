@@ -33,14 +33,20 @@ export type RunResult = {
   recall_at_5: number | null;
   precision_at_5: number | null;
   mrr: number | null;
-  citation_validity: null;
-  citation_support: null;
-  false_premise_refusal: null;
+  citation_validity: number | null;
+  citation_support: number | null;
+  false_premise_refusal: number | null;
   latency_ms: number;
   http_status: number | null;
   error: string | null;
   run_at: string;
   dataset_path: string;
+};
+
+export type JudgedResult = RunResult & {
+  judge_reasoning: string | null;
+  judge_model: string | null;
+  judged_at: string | null;
 };
 
 export type SSEParseResult = {
