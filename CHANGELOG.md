@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-27 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Paper full audit — stop-slop + ml-paper-writing skills
+- **Summary:** Applied both paper skills to `acl_latex.tex`. Fixed 12 issues: 7 em dashes in prose → parentheses or removed; removed "To our knowledge," hedge; active-voiced 3 passive openers; cut adverb "completely"; converted Conclusion future-work semicolon run-on into a 4-item `\begin{itemize}`; added mandatory ACL `\section*{Ethics Statement}`; restructured 1 throat-clearing "Table shows this:" to direct sentence. Compilation: 0 errors, 3 pre-existing cosmetic BibTeX warnings (unchanged).
+- **Files Changed:** research/paper/latex/acl_latex.tex
+- **Verification:** `pdflatex` + `bibtex` + two `pdflatex` passes. Zero LaTeX errors.
+- **Follow-ups:** Human judge annotation sample. v3.1 grace drift fix. v4 per-chapter vector RPC.
+
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Paper writing — full LaTeX draft (ACL format)

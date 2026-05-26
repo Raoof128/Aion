@@ -10,6 +10,14 @@ These rules govern the development of the Aion project.
 
 ## Change Log
 
+### 2026-05-27 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Paper full audit — stop-slop + ml-paper-writing skills
+- **Summary:** Applied both paper skills to `acl_latex.tex`. Fixed 12 issues: 7 em dashes in prose → parentheses; removed "To our knowledge," hedge; replaced 3 passive/vague declarative openers with active voice; cut adverb "completely"; converted Conclusion future-work run-on into 4-item bullet list; added mandatory ACL `\section*{Ethics Statement}`; changed 1 throat-clearing "Table shows this:" to direct prose. Zero LaTeX errors post-audit.
+- **Files Changed:** research/paper/latex/acl_latex.tex
+- **Verification:** `pdflatex` + `bibtex` + two `pdflatex` passes. Zero errors, 3 pre-existing cosmetic BibTeX warnings (arXiv-only entries missing journal/booktitle fields).
+- **Follow-ups:** Human judge annotation sample. v3.1 grace drift fix. v4 per-chapter vector RPC.
+
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Paper writing — full LaTeX draft (ACL format)
