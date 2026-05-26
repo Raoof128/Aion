@@ -12,6 +12,14 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Citation verification — all [CITE] markers resolved
+- **Summary:** Verified all 11 paper citations via ArXiv abstract pages and ACL Anthology. One venue correction: Izacard & Grave was listed as 2020/arXiv — actual venue is EACL 2021. G-Eval confirmed EMNLP 2023. RAGAS confirmed arXiv-only. Replaced vague [verify] markers: false-premise QA → Hu et al. ACL 2023; Bible alignment → Resnik et al. 1999 + Akerman et al. 2023; multi-hop RAG → Tang & Yang 2024. All BibTeX entries appended to related_work.md. Zheng et al. 2023 inline citation fixed in limitations.md. Zero [CITE] markers remain.
+- **Files Changed:** research/paper/related_work.md, research/paper/limitations.md
+- **Verification:** Each paper checked against ArXiv abstract page or ACL Anthology canonical page.
+- **Follow-ups:** When converting to LaTeX, extract BibTeX block into paper.bib.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Full audit of all 3 research phases — metric verification
 - **Summary:** Ran independent Python audit recomputing all metrics from raw JSONL artefacts. Findings: Phase 1 (R@5=0.676 ✅), Phase 2a/v2 (R@5=0.882, MRR=0.700 ✅), Phase 2b/v3-on-v0.2 (R@5=0.882 ✅, MRR=0.712→corrected to 0.714), Phase 2c/v3-on-v0.3 (R@5=0.941, MRR=0.773 ✅), Phase 3 judge (cs=0.978, fp_refusal=1.000 ✅), all Table 2 per-category numbers ✅. One discrepancy: v3/v0.2 MRR was incorrectly stated as 0.712 in paper drafts; actual = 0.7142 (rounds to 0.714). Fixed in method.md and results.md. Additional finding: v3_direct_chapter_gold40_v02_final.jsonl contains 3 development runs (120 rows); paper correctly uses single-run R@5=0.882. IVFFlat variance quantified: 3 questions flip across 3 runs (aion_006, aion_007, aion_036); run-to-run R@5 range = 0.853–0.882. Added to limitations.md.
 - **Files Changed:**

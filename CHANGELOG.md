@@ -8,6 +8,16 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Citation verification — all [CITE] markers resolved
+- **Summary:** Verified all 11 paper citations in related_work.md and limitations.md. Tools used: ArXiv WebFetch, ACL Anthology, Google Scholar. One correction found: Izacard & Grave (FiD) was incorrectly listed as 2020/arXiv; actual venue is EACL 2021. All vague [verify] placeholders replaced with confirmed real papers. Full BibTeX block appended to related_work.md.
+- **Fixed:** Izacard & Grave venue 2020 → EACL 2021
+- **Replaced [verify] with:** Hu et al. 2023 (ACL, false-premise QA), Resnik et al. 1999 + Akerman et al. 2023 (Bible NLP), Tang & Yang 2024 (multi-hop RAG)
+- **Changed:** research/paper/related_work.md — citations resolved + BibTeX block added; research/paper/limitations.md — inline [CITE] replaced
+- **Verification:** Each paper checked against ArXiv or ACL Anthology.
+- **Follow-ups:** LaTeX conversion → extract BibTeX into paper.bib.
+
+### 2026-05-26 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Full audit — 3-phase metric verification + paper corrections
 - **Summary:** Independent Python audit recomputed all metrics from raw JSONL artefacts. All major paper claims verified. One correction: v3/v0.2 MRR = 0.714, not 0.712 (rounding error in paper draft). IVFFlat variance quantified: aion_006/007/036 flip across 3 repeated runs of v3/v0.2 (run-to-run R@5 = 0.853–0.882). v3_direct_chapter_gold40_v02_final.jsonl confirmed to contain 3 development runs; paper's R@5=0.882 is correct from single-run canonical measurement.
 - **Fixed:**
