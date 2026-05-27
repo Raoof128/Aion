@@ -8,10 +8,10 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-27 (Australia/Sydney)
 **Raouf:**
-- **Scope:** Paper full audit — stop-slop + ml-paper-writing skills
-- **Summary:** Applied both paper skills to `acl_latex.tex`. Fixed 12 issues: 7 em dashes in prose → parentheses or removed; removed "To our knowledge," hedge; active-voiced 3 passive openers; cut adverb "completely"; converted Conclusion future-work semicolon run-on into a 4-item `\begin{itemize}`; added mandatory ACL `\section*{Ethics Statement}`; restructured 1 throat-clearing "Table shows this:" to direct sentence. Compilation: 0 errors, 3 pre-existing cosmetic BibTeX warnings (unchanged).
-- **Files Changed:** research/paper/latex/acl_latex.tex
-- **Verification:** `pdflatex` + `bibtex` + two `pdflatex` passes. Zero LaTeX errors.
+- **Scope:** Paper full audit — three-pass stop-slop + ml-paper-writing (50/50)
+- **Summary:** Three progressive audit passes reaching 50/50 stop-slop. Pass 1: em dashes → parentheses, passive → active, throat-clearing removed, adverb cut, Conclusion future-work → itemize, ACL Ethics Statement added. Pass 2: 3 more passive sentences active-voiced, main-results sentence sharpened. Pass 3: 12 micro-cuts — setup filler sentence removed, meta-joiners cut, "Table N shows…" openers restructured to claim-first with inline refs, redundant qualifiers (any/full/always/complementary/faithfulness-like) cut. PDF recompiled and committed.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf
+- **Verification:** `pdflatex` × 3 passes. Zero errors. 7 pages.
 - **Follow-ups:** Human judge annotation sample. v3.1 grace drift fix. v4 per-chapter vector RPC.
 
 ### 2026-05-26 (Australia/Sydney)
