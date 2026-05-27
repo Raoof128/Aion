@@ -6,6 +6,13 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-27 (Australia/Sydney) — PAPER MILESTONE COMPLETE
+**Raouf:**
+- **Scope:** Paper milestone — ACL submission-ready
+- **Summary:** `research/paper/latex/acl_latex.tex` is submission-ready at commit `477b079`. 7-page ACL-format paper: 12 verified citations, TikZ Figure 1, 5 booktabs tables, 6-item Limitations section with quantified CI bounds, ACL Ethics Statement, 50/50 stop-slop score. Locked results: R@5=0.941, MRR=0.773, mean citation_support=0.978, fp_refusal=1.000 (6/6), unsupported claim rate=0.000. Before arXiv: (1) human annotation of judge-scored sample; (2) benchmark expansion to 200+ user-sampled questions; (3) v3.1 grace semantic drift fix; (4) v4 per-chapter vector RPC.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf
+- **Verification:** `pdflatex` × final pass. Zero errors. 7 pages.
+
 ### 2026-05-27 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Paper full audit — three-pass stop-slop + ml-paper-writing (50/50)
@@ -16,11 +23,11 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
-- **Scope:** Paper writing — full LaTeX draft (ACL format)
-- **Summary:** Converted all 9 paper markdown section files into a complete LaTeX paper using the ACL template. Created `research/paper/latex/acl_latex.tex` (7 pages, compiles clean) and `research/paper/latex/paper.bib` (11 verified BibTeX entries). All citations use natbib commands (\citet/\citep). Tables formatted with booktabs. Lima et al. (2025) marked as PLACEHOLDER pending verification.
-- **Files Changed:** research/paper/latex/acl_latex.tex (full paper), research/paper/latex/paper.bib (BibTeX)
-- **Verification:** `pdflatex` + `bibtex` + two pdflatex passes. Output: 7 pages, 0 errors, 0 undefined citations.
-- **Follow-ups:** Lima et al. 2025 citation needs manual verification. Consider adding Figure 1 (pipeline diagram). Human annotation for judge validation.
+- **Scope:** Paper writing — full LaTeX draft (ACL format) + Figure 1 + citation resolution
+- **Summary:** Converted all 9 paper markdown section files into `research/paper/latex/acl_latex.tex` (7 pages, ACL format, booktabs tables, natbib citations). `paper.bib` contains 12 verified BibTeX entries. Lima et al. (2025) placeholder resolved via Scholar Gateway — confirmed as Analytics 4(2):13, MDPI 2025 (commit `1dff937`). TikZ Figure 1 (v3 pipeline diagram: left branch explicit refs → L1/L2/L3/coverage guarantee, right branch no-refs → L4 hybrid, both merge at context assembly) added in commit `ddd9318`. ACL template support files (`acl.sty`, `acl_natbib.bst`, etc.) and `research/paper/latex/.gitignore` (suppressing build artefacts) committed in `94679e5`.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/paper.bib, research/paper/latex/acl_latex.pdf, research/paper/latex/.gitignore, ACL template support files
+- **Verification:** `pdflatex` + `bibtex` + two pdflatex passes. Zero errors. 7 pages.
+- **Follow-ups:** Human judge annotation sample. v3.1 grace drift fix. v4 per-chapter vector RPC.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**

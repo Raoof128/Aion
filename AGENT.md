@@ -10,6 +10,13 @@ These rules govern the development of the Aion project.
 
 ## Change Log
 
+### 2026-05-27 (Australia/Sydney) — PAPER MILESTONE COMPLETE
+**Raouf:**
+- **Scope:** Paper milestone — ACL submission-ready
+- **Summary:** `research/paper/latex/acl_latex.tex` is submission-ready at commit `477b079`. 7-page ACL-format paper, 12 verified citations, TikZ Figure 1, 5 tables, Limitations (6 items with CI bounds), Ethics Statement, 50/50 stop-slop score. Key results locked: R@5=0.941, MRR=0.773, citation_support=0.978, fp_refusal=1.000 (6/6). Next gates before arXiv: (1) human annotation of a judge-scored sample; (2) expand benchmark to 200+ user-sampled questions; (3) v3.1 grace drift fix; (4) v4 per-chapter vector RPC.
+- **Files Changed:** research/paper/latex/acl_latex.tex (final), research/paper/latex/acl_latex.pdf
+- **Verification:** `pdflatex` × final pass. Zero errors. 7 pages, 170 207 bytes.
+
 ### 2026-05-27 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Paper full audit — three-pass stop-slop + ml-paper-writing (50/50)
@@ -20,11 +27,11 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
-- **Scope:** Paper writing — full LaTeX draft (ACL format)
-- **Summary:** Full paper written into research/paper/latex/acl_latex.tex. 7 pages, compiles clean with pdflatex + bibtex. All 11 citations use verified BibTeX keys. Lima et al. (2025) is marked [PLACEHOLDER] in paper.bib — needs verification before submission.
-- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/paper.bib
+- **Scope:** Paper writing — full LaTeX draft (ACL format) + Figure 1 + citation resolution
+- **Summary:** Full paper written into `research/paper/latex/acl_latex.tex` (7 pages, ACL format). 12 verified BibTeX entries in `paper.bib`. Lima et al. (2025) resolved via Scholar Gateway (Analytics 4(2):13, MDPI 2025 — real paper). TikZ Figure 1 (pipeline diagram, left branch explicit refs → L1–L4, right branch no-refs → L4, merged at context assembly) added in `ddd9318`. ACL template support files and `.gitignore` committed in `94679e5`.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/paper.bib, research/paper/latex/acl_latex.pdf, research/paper/latex/.gitignore, ACL template support files
 - **Verification:** pdflatex + bibtex + two pdflatex passes. Zero errors, zero undefined citations.
-- **Follow-ups:** Verify Lima et al. 2025 citation. Add pipeline figure. Human judge validation sample.
+- **Follow-ups:** Human judge annotation sample. v3.1 grace drift fix. v4 per-chapter vector RPC.
 
 ### 2026-05-26 (Australia/Sydney)
 **Raouf:**
