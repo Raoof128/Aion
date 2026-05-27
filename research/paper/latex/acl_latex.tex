@@ -222,7 +222,7 @@ The architecture change fixes aion\_035 (Psalm 23 + John 10 multi-hop) but corre
 \textbf{Dataset:} \texttt{aion\_bibleqa\_gold\_40\_v0.3.jsonl}, 40 questions across 6 categories (Table~\ref{tab:categories}).
 Each question has a \texttt{gold\_verse} (primary expected verse coordinate, e.g., \texttt{JHN.3.16}) and an \texttt{acceptable\_verse\_clusters} list.
 R@5\,=\,1 if any retrieved verse matches the gold or any cluster member.
-All 40 questions were verified against the live \texttt{bible\_verses} table (BSB translation).
+We verified all 40 questions against the live \texttt{bible\_verses} table (BSB translation).
 
 \begin{table}[t]
   \centering
@@ -251,7 +251,7 @@ All 40 questions were verified against the live \texttt{bible\_verses} table (BS
 
 \textbf{MRR (Mean Reciprocal Rank):} $1/r$ where $r$ is the rank of the first matching verse in the ranked list; 0 if no match in top-5.
 
-Both metrics are computed per row; averages reported per category and overall.
+We compute both metrics per row and report averages per category and overall.
 
 \subsection{Citation-Faithfulness Evaluation}
 
@@ -265,7 +265,7 @@ The judge produces a JSON response with two fields:
   \item \texttt{false\_premise\_refusal} (0 or 1) for false\_premise/adversarial rows
 \end{itemize}
 
-\textbf{Implementation:} All 40 rows judged in a single pass with three-attempt retry per row and exponential backoff; 0 judge call failures.
+\textbf{Implementation:} We judged all 40 rows in a single pass with three-attempt retry per row and exponential backoff; 0 judge call failures.
 
 \subsection{Aggregate Metrics}
 
@@ -292,7 +292,7 @@ All benchmark runs are frozen as JSONL artefacts; results are reproducible from 
 \subsection{Main Results}
 
 Table~\ref{tab:main} shows overall metrics for v3 on gold\_40 v0.3.
-R@5\,=\,0.941, citation\_support\,=\,0.978, and fp\_refusal\,=\,1.000 together show that where the system retrieves the right content, it uses that content without citation error.
+R@5\,=\,0.941, citation\_support\,=\,0.978, and fp\_refusal\,=\,1.000 together establish that retrieval correctness predicts citation correctness: the system cites retrieved verses correctly when retrieval succeeds.
 
 \begin{table}[t]
   \centering
@@ -361,7 +361,7 @@ The two metrics diverge in multi\_hop: R@5\,=\,0.800 while citation\_support\,=\
 A system can retrieve the wrong verse (R@5\,=\,0) yet cite whatever it retrieved correctly (cs\,=\,1.00): aion\_027 illustrates this.
 Conversely, a system can achieve R@5\,=\,1 while citing the wrong verse within a chapter (cs\,=\,0.50): aion\_035 illustrates this.
 
-Both metrics are necessary. High R@5 does not prevent citation misuse; high citation\_support does not mean relevant content was retrieved. The Phase 3 evaluation protocol measures both.
+Both metrics are necessary. High R@5 does not prevent citation misuse; high citation\_support does not mean relevant content was retrieved.
 
 \subsection{Failure Taxonomy}
 
