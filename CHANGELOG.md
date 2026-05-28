@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-28 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Paper — full second audit + fixes (scope calibration, reproducibility, methodology)
+- **Summary:** Applied three-skill audit (ml-paper-writing + ara-rigor-reviewer + stop-slop). 13 targeted edits to `acl_latex.tex`: (1) abstract "establishes" → "suggests" (scope calibration); (2) contributions 5→4 — merged items 3&4; (3) added judge rubric Table 4 with 5-level citation_support scoring scale; (4) named embedding model (`text-embedding-3-small`, OpenAI, 1536-dim halfvec); (5) results "establishing that" → "suggesting that"; (6) "are solved" / "is perfect" → neutral phrasing with honest n=2 caveat; (7) Table 2 caption gains 95% Wilson CI bounds [0.80, 0.97] overall, [0.38, 0.96] multi_hop; (8) Discussion pull-quote sentences flattened; (9) long `\texttt{}` identifier broken to fix overfull; (10) Constructed-benchmark limitation gains evaluator-developer overlap sentence; (11) all 3 overfull `\hbox` warnings eliminated via `@{}` outer padding removal, `\emergencystretch=3em`, and `\hyphenation{}` declarations. Zero errors. Zero undefined refs.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf
+- **Verification:** `pdflatex` × 2 passes. Zero errors. Zero `Overfull \hbox`. 7 pages, 170 945 bytes.
+- **Follow-ups:** Human annotation of judge-scored sample. v3.1 grace drift fix. v4 per-chapter vector RPC. Benchmark expansion to 200+ user-sampled questions.
+
+### 2026-05-28 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book background images — remaining NT books
 - **Summary:** Added 16 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. This completes the remaining New Testament book backgrounds (Luke through Philemon).
 - **Files Changed:**
