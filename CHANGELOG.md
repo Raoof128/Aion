@@ -6,6 +6,31 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-28 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Book background images — remaining NT books
+- **Summary:** Added 16 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. This completes the remaining New Testament book backgrounds (Luke through Philemon).
+- **Files Changed:**
+  - assets/1Corinthians.png (created)
+  - assets/1Thessalonians.png (created)
+  - assets/1Timothy.png (created)
+  - assets/2Corinthians.png (created)
+  - assets/2Thessalonians.png (created)
+  - assets/2Timothy.png (created)
+  - assets/Acts.png (created)
+  - assets/Colossians.png (created)
+  - assets/Ephesians.png (created)
+  - assets/Galatians.png (created)
+  - assets/John.png (created)
+  - assets/Luke.png (created)
+  - assets/Philemon.png (created)
+  - assets/Philippians.png (created)
+  - assets/Romans.png (created)
+  - assets/Titus.png (created)
+  - app/reader/[bookId]/[chapter].tsx — Added cases LUK, JHN, ACT, ROM, 1CO, 2CO, GAL, EPH, PHP, COL, 1TH, 2TH, 1TI, 2TI, TIT, PHM to bgImageSource switch
+- **Verification:** `./check.sh` passes successfully with all checks verified (formatting, linting, type-checking, and all 79 tests passing).
+- **Follow-ups:** None.
+
 ### 2026-05-27 (Australia/Sydney) — PAPER MILESTONE COMPLETE
 **Raouf:**
 - **Scope:** Paper milestone — ACL submission-ready

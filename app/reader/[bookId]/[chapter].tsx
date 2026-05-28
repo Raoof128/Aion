@@ -356,6 +356,38 @@ export default function ChapterReaderScreen() {
         return require("../../../assets/Matthew.png");
       case "MRK":
         return require("../../../assets/Mark.png");
+      case "LUK":
+        return require("../../../assets/Luke.png");
+      case "JHN":
+        return require("../../../assets/John.png");
+      case "ACT":
+        return require("../../../assets/Acts.png");
+      case "ROM":
+        return require("../../../assets/Romans.png");
+      case "1CO":
+        return require("../../../assets/1Corinthians.png");
+      case "2CO":
+        return require("../../../assets/2Corinthians.png");
+      case "GAL":
+        return require("../../../assets/Galatians.png");
+      case "EPH":
+        return require("../../../assets/Ephesians.png");
+      case "PHP":
+        return require("../../../assets/Philippians.png");
+      case "COL":
+        return require("../../../assets/Colossians.png");
+      case "1TH":
+        return require("../../../assets/1Thessalonians.png");
+      case "2TH":
+        return require("../../../assets/2Thessalonians.png");
+      case "1TI":
+        return require("../../../assets/1Timothy.png");
+      case "2TI":
+        return require("../../../assets/2Timothy.png");
+      case "TIT":
+        return require("../../../assets/Titus.png");
+      case "PHM":
+        return require("../../../assets/Philemon.png");
       default:
         return null;
     }
