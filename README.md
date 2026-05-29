@@ -28,7 +28,11 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 ## Screenshots
 
-> **TODO:** Add screenshots of the chat, reader, and settings interfaces.
+<div align="center">
+  <img src="assets/reader_screenshot.png" width="30%" alt="Reader view" />
+  <img src="assets/chat_screenshot.png" width="30%" alt="Chat interface" />
+  <img src="assets/settings_screenshot.png" width="30%" alt="Settings menu" />
+</div>
 
 ## Tech Stack
 

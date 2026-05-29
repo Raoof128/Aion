@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-29 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Application Screenshots
+- **Summary:** Generated and embedded screenshots of the chat, reader, and settings tabs into the `README.md` to replace the text placeholder. Screenshots were captured dynamically via a local Playwright web automation script running against the Expo development server.
+- **Files Changed:** `README.md`, `assets/chat_screenshot.png`, `assets/reader_screenshot.png`, `assets/settings_screenshot.png`
+- **Verification:** Images render locally in markdown preview.
+- **Follow-ups:** None.
+
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Documentation Audit
 - **Summary:** Performed a comprehensive documentation audit. Created missing docs (`SETUP.md`, `API.md`, `TROUBLESHOOTING.md`). Updated `README.md` (replaced inline setup instructions with `SETUP.md` link, fixed app icons book count to 66, updated Gemini LLM name, added screenshots TODO, updated file tree). Updated `ARCHITECTURE.md` (fixed Gemini LLM name and diagram). Verified no regressions.
 - **Files Changed:** `README.md`, `docs/ARCHITECTURE.md`, `docs/SETUP.md`, `docs/API.md`, `docs/TROUBLESHOOTING.md`
