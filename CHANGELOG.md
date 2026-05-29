@@ -8,6 +8,24 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-29 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background images — final NT books
+- **Summary:** Added 9 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. Renamed and stripped trailing spaces from `1John .png` and `Jude .png` to maintain naming consistency. This completes the final batch of New Testament book backgrounds (Hebrews through Revelation).
+- **Files Changed:**
+  - assets/Hebrews.png (created)
+  - assets/James.png (created)
+  - assets/1Peter.png (created)
+  - assets/2Peter.png (created)
+  - assets/1John.png (created)
+  - assets/2John.png (created)
+  - assets/3John.png (created)
+  - assets/Jude.png (created)
+  - assets/Revelation.png (created)
+  - app/reader/[bookId]/[chapter].tsx — Added cases HEB, JAS, 1PE, 2PE, 1JN, 2JN, 3JN, JUD, REV to bgImageSource switch
+- **Verification:** `./check.sh` passes successfully with all checks verified (formatting, linting, type-checking, and all 79 tests passing).
+- **Follow-ups:** None.
+
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Research + Paper — Phase 4 multi-judge robustness (full 40-row cross-family GPT panel) and paper reframe to a reproducible automated-evaluation benchmark
 - **Summary:** Reframed the evaluation as a reproducible *automated* multi-model judge protocol (no expert-human claim), directly answering the same-family-bias weakness. Harness: `judge-citation-gpt.ts` (cross-family OpenAI `gpt-4.1`, identical rubric/prompt, env flag `GPT_JUDGE_ALL=1` for the full benchmark), `judge-citation-claude.ts` (third cross-family judge, ready-to-run, **unrun** — no ANTHROPIC_API_KEY; never fabricated), plus `build-human-packet.ts` / `report-multijudge.ts` from the earlier sample pass (human layer now optional). **Ran GPT on all 40 rows, 0 errors.** Two-judge panel: Gemini mean cs=0.978 vs GPT 0.941; both unsupported=0.000, decorative=0.000, refusal=1.000 (6/6); exact agreement 31/40, within-one-rubric-step **40/40** (all 9 disagreements are one 0.25 level, none crossing 0.5). **Paper edits (`acl_latex.tex`):** abstract + contribution-3 cross-family clauses; new Results section "Multi-Judge Robustness" with Table `tab:multijudge` (label `sec:multijudge`); Experimental Setup now lists both judges; Limitations rewritten ("Automated judging, no expert human validation" + "Coarse, not controlled, ablation"); Table 1 renamed "Coarse Retrieval Ablation"; conclusion future-work bullet reframed. Paper now 8 pages (was 7).
 - **Files Changed:** research/harness/judge-citation-gpt.ts (full-run flag), research/harness/judge-citation-claude.ts (new, ready/unrun), research/harness/build-human-packet.ts (new), research/harness/report-multijudge.ts (new), research/results/gpt_judge_all40_v03.jsonl (new), research/results/gpt_judge_sample15_v03.jsonl (new), research/results/human_validation_15.csv (new), research/judges/human_validation/reviewer_packet_BLIND.md (new), research/results/phase4_multijudge_validation_summary.md (new), research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf

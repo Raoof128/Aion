@@ -388,6 +388,24 @@ export default function ChapterReaderScreen() {
         return require("../../../assets/Titus.png");
       case "PHM":
         return require("../../../assets/Philemon.png");
+      case "HEB":
+        return require("../../../assets/Hebrews.png");
+      case "JAS":
+        return require("../../../assets/James.png");
+      case "1PE":
+        return require("../../../assets/1Peter.png");
+      case "2PE":
+        return require("../../../assets/2Peter.png");
+      case "1JN":
+        return require("../../../assets/1John.png");
+      case "2JN":
+        return require("../../../assets/2John.png");
+      case "3JN":
+        return require("../../../assets/3John.png");
+      case "JUD":
+        return require("../../../assets/Jude.png");
+      case "REV":
+        return require("../../../assets/Revelation.png");
       default:
         return null;
     }

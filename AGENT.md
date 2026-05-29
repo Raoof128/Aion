@@ -12,6 +12,24 @@ These rules govern the development of the Aion project.
 
 ### 2026-05-29 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Book background images — final NT books
+- **Summary:** Added 9 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. Renamed and stripped trailing spaces from `1John .png` and `Jude .png` to maintain naming consistency. This completes the final batch of New Testament book backgrounds (Hebrews through Revelation).
+- **Files Changed:**
+  - assets/Hebrews.png (created)
+  - assets/James.png (created)
+  - assets/1Peter.png (created)
+  - assets/2Peter.png (created)
+  - assets/1John.png (created)
+  - assets/2John.png (created)
+  - assets/3John.png (created)
+  - assets/Jude.png (created)
+  - assets/Revelation.png (created)
+  - app/reader/[bookId]/[chapter].tsx — Added cases HEB, JAS, 1PE, 2PE, 1JN, 2JN, 3JN, JUD, REV to bgImageSource switch
+- **Verification:** `./check.sh` passes successfully with all checks verified (formatting, linting, type-checking, and all 79 tests passing).
+- **Follow-ups:** None.
+
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Research + Paper — Phase 4 multi-judge robustness (full 40-row cross-family GPT panel) + paper reframe to reproducible automated-evaluation benchmark
 - **Summary:** Reframed evaluation as a reproducible *automated* multi-model judge protocol (no expert-human claim). Harness: `judge-citation-gpt.ts` (OpenAI `gpt-4.1`, identical rubric, `GPT_JUDGE_ALL=1` full-run flag), `judge-citation-claude.ts` (third judge, ready/**unrun** — no ANTHROPIC_API_KEY), `build-human-packet.ts` + `report-multijudge.ts` (human layer now optional). Ran GPT on all 40 (0 errors). Two-judge panel: Gemini cs=0.978 vs GPT 0.941; both unsupported=0.000, refusal=6/6; exact 31/40, within-one-step **40/40**. Paper edited: abstract/contribution clauses, new "Multi-Judge Robustness" section (Table `tab:multijudge`, `sec:multijudge`), both judges in setup, Limitations rewritten, Table 1 → "Coarse Retrieval Ablation". Now 8 pages. Human scores never fabricated.
 - **Files Changed:** research/harness/{judge-citation-gpt.ts (flag), judge-citation-claude.ts (new), build-human-packet.ts (new), report-multijudge.ts (new)}, research/results/{gpt_judge_all40_v03.jsonl, gpt_judge_sample15_v03.jsonl, human_validation_15.csv, phase4_multijudge_validation_summary.md} (new), research/judges/human_validation/reviewer_packet_BLIND.md (new), research/paper/latex/acl_latex.{tex,pdf}
