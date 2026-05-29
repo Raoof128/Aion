@@ -6,6 +6,22 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Research + Paper — Phase 4 multi-judge robustness (full 40-row cross-family GPT panel) and paper reframe to a reproducible automated-evaluation benchmark
+- **Summary:** Reframed the evaluation as a reproducible *automated* multi-model judge protocol (no expert-human claim), directly answering the same-family-bias weakness. Harness: `judge-citation-gpt.ts` (cross-family OpenAI `gpt-4.1`, identical rubric/prompt, env flag `GPT_JUDGE_ALL=1` for the full benchmark), `judge-citation-claude.ts` (third cross-family judge, ready-to-run, **unrun** — no ANTHROPIC_API_KEY; never fabricated), plus `build-human-packet.ts` / `report-multijudge.ts` from the earlier sample pass (human layer now optional). **Ran GPT on all 40 rows, 0 errors.** Two-judge panel: Gemini mean cs=0.978 vs GPT 0.941; both unsupported=0.000, decorative=0.000, refusal=1.000 (6/6); exact agreement 31/40, within-one-rubric-step **40/40** (all 9 disagreements are one 0.25 level, none crossing 0.5). **Paper edits (`acl_latex.tex`):** abstract + contribution-3 cross-family clauses; new Results section "Multi-Judge Robustness" with Table `tab:multijudge` (label `sec:multijudge`); Experimental Setup now lists both judges; Limitations rewritten ("Automated judging, no expert human validation" + "Coarse, not controlled, ablation"); Table 1 renamed "Coarse Retrieval Ablation"; conclusion future-work bullet reframed. Paper now 8 pages (was 7).
+- **Files Changed:** research/harness/judge-citation-gpt.ts (full-run flag), research/harness/judge-citation-claude.ts (new, ready/unrun), research/harness/build-human-packet.ts (new), research/harness/report-multijudge.ts (new), research/results/gpt_judge_all40_v03.jsonl (new), research/results/gpt_judge_sample15_v03.jsonl (new), research/results/human_validation_15.csv (new), research/judges/human_validation/reviewer_packet_BLIND.md (new), research/results/phase4_multijudge_validation_summary.md (new), research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf
+- **Verification:** `./check.sh` → format ✓ lint ✓ types ✓ 79 tests ✓. GPT all-40 run: 40/40 judged, 0 errors. `latexmk -pdf`: exit 0, zero errors, zero undefined refs/citations, zero overfull hbox, 8 pages, 175 725 bytes.
+- **Follow-ups:** Optional third judge — add ANTHROPIC_API_KEY and run `judge-citation-claude.ts`, then extend `tab:multijudge`. Confirm 8-page limit against target workshop. Expert theological annotation remains future work.
+
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Paper — final audit pass (numeric precision)
+- **Summary:** Third and final full audit using ml-paper-writing + stop-slop skills. Independently re-verified every headline number against the frozen JSONL/summary artefacts: R@5=0.941 (32/34), MRR=0.773, mean citation_support=0.978 ((32×1.0+0.75+0.50)/34), per-category cs (thematic 0.979=11.75/12, multi_hop 0.900=4.5/5), fp_refusal=1.000 (6/6), and both Wilson CIs (overall [0.80,0.97], multi_hop [0.38,0.96]) — all reproduce exactly. All 12 bib entries are cited; zero uncited refs. One genuine imprecision found and fixed: Limitations claimed "one question is 2.5% of R@5" (treats denominator as 40), but R@5 averages over the 34 non-refusal rows, so one question shifts it by ~3% (1/34). Prose already at 50/50 stop-slop — no further cuts. No other discrepancies.
+- **Files Changed:** research/paper/latex/acl_latex.tex, research/paper/latex/acl_latex.pdf
+- **Verification:** `latexmk -pdf` clean rebuild. exit=0, zero errors, zero undefined refs/citations, zero `Overfull \hbox`, 7 pages, 171 061 bytes.
+- **Follow-ups:** Pre-arXiv blockers unchanged: human annotation of judge-scored sample; benchmark expansion to 200+ user-sampled questions; v3.1 grace drift fix; v4 per-chapter vector RPC.
+
 ### 2026-05-28 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Paper — full second audit + fixes (scope calibration, reproducibility, methodology)

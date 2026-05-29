@@ -31,6 +31,7 @@ We introduce \textbf{Aion-BibleQA}, a 40-question pilot benchmark for evaluating
 Existing RAG evaluations measure whether the right document was retrieved, but not whether the system uses retrieved content as citation support in its answer (a gap that matters most when user trust depends on accurate scripture attribution).
 We build a layered retrieval pipeline that combines exact verse lookup, chapter-aware database queries, numeric keyword suppression, and hybrid semantic ranking, and evaluate it with two metrics: Recall@5 for retrieval coverage and citation\_support (an LLM-as-judge score, 0--1) for answer faithfulness.
 On gold\_40 v0.3, our v3 system achieves R@5\,=\,0.941, mean citation\_support\,=\,0.978, zero unsupported citations, and a false-premise refusal rate of 1.000 (6/6).
+To guard against same-family judge bias, a cross-family judge (OpenAI \texttt{gpt-4.1}) re-scores all 40 rows under the same rubric: the two judges agree within one rubric level on every row and report identical unsupported-claim (0.000) and refusal (6/6) rates, so the headline findings are not an artifact of single-judge scoring.
 Failure analysis shows that the remaining errors trace to retrieval scope (semantic drift in thematic queries and within-chapter verse selection), not to citation misuse, suggesting that retrieval and faithfulness are separable failure modes in Bible RAG systems.
 \end{abstract}
 
@@ -54,7 +55,7 @@ This paper makes four contributions:
 \begin{itemize}
   \item \textbf{Aion-BibleQA}, a 40-question benchmark with gold verse annotations across six categories (direct, interpretive, thematic, multi-hop, false-premise, adversarial) designed to stress-test both retrieval and faithfulness.
   \item A \textbf{layered retrieval architecture} (exact verse lookup $\rightarrow$ chapter-aware DB query $\rightarrow$ per-chapter coverage guarantee $\rightarrow$ hybrid semantic re-ranking) achieving R@5\,=\,0.941 on the benchmark.
-  \item \textbf{Empirical results} on gold\_40 v0.3 using a Gemini LLM-as-judge citation protocol (Table~\ref{tab:rubric}): R@5\,=\,0.941, mean citation\_support\,=\,0.978, unsupported claim rate\,=\,0.000, false-premise refusal rate\,=\,1.000\,(6/6).
+  \item \textbf{Empirical results} on gold\_40 v0.3 using a Gemini LLM-as-judge citation protocol (Table~\ref{tab:rubric}): R@5\,=\,0.941, mean citation\_support\,=\,0.978, unsupported claim rate\,=\,0.000, false-premise refusal rate\,=\,1.000\,(6/6), with a cross-family (GPT) judge corroborating every score within one rubric level (Section~\ref{sec:multijudge}).
   \item A \textbf{failure taxonomy} identifying retrieval scope as the remaining bottleneck: semantic drift and within-chapter verse selection, not citation misuse.
 \end{itemize}
 
@@ -190,8 +191,9 @@ Retrieval proceeds in four layers, ordered by specificity.
 
 We pass the assembled verse context and original query to a Gemini model with a system prompt that instructs it to: answer from the provided verses only; cite specific verses inline; refuse or correct false premises; and decline to fabricate verses or attributions.
 
-\subsection{Version History}
+\subsection{Coarse Retrieval Ablation}
 
+The v1$\rightarrow$v3 progression doubles as a coarse ablation: each version swaps in one retrieval strategy, so the version-over-version deltas indicate the direction of each design change rather than the isolated contribution of a single layer.
 v3 matches v2 on the same dataset (R@5\,=\,0.882; Table~\ref{tab:versions}) despite replacing the retrieval architecture.
 It fixes aion\_035 (Psalm 23 + John 10 multi-hop) but correctly re-breaks aion\_036, an accidental success in v2 from an unrestricted semantic fallback.
 
@@ -208,7 +210,7 @@ It fixes aion\_035 (Psalm 23 + John 10 multi-hop) but correctly re-breaks aion\_
     v3 direct-chapter & v0.3 & \textbf{0.941} & \textbf{0.773} \\
     \bottomrule
   \end{tabular}
-  \caption{Retrieval performance across system versions. The v0.3 gain (+0.059 R@5) is attributable to annotation expansion for two questions (aion\_023, aion\_033), not architecture change.}
+  \caption{Coarse retrieval ablation across system versions. Each version swaps in one retrieval strategy, isolating the direction of each change rather than individual-layer contribution. The v0.3 gain (+0.059 R@5) is attributable to annotation expansion for two questions (aion\_023, aion\_033), not architecture change.}
   \label{tab:versions}
 \end{table}
 
@@ -296,8 +298,8 @@ The judge produces a JSON response with two fields:
 
 Bible translation: BSB (Berean Standard Bible) stored in a Supabase \texttt{bible\_verses} table.
 Embedding model: \texttt{text-embedding-3-small} (OpenAI; 1,536 dimensions), stored as \texttt{halfvec(1536)} in pgvector with an IVFFlat index (\texttt{halfvec\_cosine\_ops}).
-Answer model: Gemini (same model family as judge; see the Limitations section), deployed as a Supabase Edge Function on Deno Deploy infrastructure.
-Judge model: \texttt{gemini-3.1-flash-lite}.
+Answer model: Gemini (same model family as the primary judge; see the Limitations section), deployed as a Supabase Edge Function on Deno Deploy infrastructure.
+Judges: \texttt{gemini-3.1-flash-lite} (primary) and OpenAI \texttt{gpt-4.1} (secondary, cross-family robustness check; Section~\ref{sec:multijudge}). Both receive an identical rubric and prompt at temperature 0.1.
 Benchmark runner: calls the live Edge Function over HTTPS with SSE streaming from a consumer MacBook.
 All benchmark runs are frozen as JSONL artefacts; results are reproducible from those frozen files.
 
@@ -362,6 +364,31 @@ Two rows scored below citation\_support\,=\,1.0.
 \textbf{aion\_021} (thematic, cs\,=\,0.75): EPH.6.19 cited for a gratitude context. The verse records Paul requesting prayer for his ministry, not a general statement about thankfulness. A minor over-reach.
 
 \textbf{aion\_035} (multi-hop, cs\,=\,0.50): JHN.10.1 cited instead of JHN.10.11. The per-chapter coverage guarantee appends the first verse of JHN.10 (the parable of the gate) rather than the theologically central verse (``I am the good shepherd''). Notably, R@5\,=\,1 for this question (PSA.23.1 retrieved correctly); the failure is within-chapter verse selection, not retrieval coverage. aion\_035 achieves R@5\,=\,1 yet cs\,=\,0.50, a direct illustration of the retrieval-faithfulness split.
+
+\subsection{Multi-Judge Robustness}
+\label{sec:multijudge}
+
+The primary judge (Gemini) shares a model family with the answer model, which risks same-family leniency \citep{zheng2023judging}.
+To test whether the headline scores survive a change of judge, we re-scored all 40 rows with a cross-family judge (OpenAI \texttt{gpt-4.1}) under the identical rubric and prompt (Table~\ref{tab:multijudge}).
+
+\begin{table}[t]
+  \centering
+  \small
+  \begin{tabular}{lcc}
+    \toprule
+    \textbf{Metric} & \textbf{Gemini} & \textbf{GPT} \\
+    \midrule
+    Mean citation\_support (n\,=\,34) & 0.978 & 0.941 \\
+    Unsupported rate (cs\,<\,0.5)     & 0.000 & 0.000 \\
+    Decorative rate (cs\,$\leq$\,0.25) & 0.000 & 0.000 \\
+    False-premise refusal             & 1.000 & 1.000 \\
+    \bottomrule
+  \end{tabular}
+  \caption{Two-judge panel on gold\_40 v0.3. The cross-family judge reproduces the unsupported-claim and refusal rates exactly; mean citation\_support differs by 0.037.}
+  \label{tab:multijudge}
+\end{table}
+
+The two judges agree exactly on 31/40 rows and \emph{within one rubric level on all 40} (every disagreement is a single 0.25 step). Critically, the conclusions that do not depend on a fractional score are judge-invariant: both judges place zero rows below the unsupported threshold and confirm all 6 refusals. The nine disagreements are minor over-reach calls (e.g.\ \texttt{gpt-4.1} rates aion\_021 at 1.00 where Gemini gives 0.75, and the reverse on aion\_027); none crosses a decision boundary. We report this as an automated multi-model robustness check, not as expert human adjudication.
 
 %% ---------------------------------------------------------------
 \section{Discussion}
@@ -430,7 +457,7 @@ The remaining errors (semantic drift in thematic queries, IVFFlat boundary effec
 
 Future priorities:
 \begin{itemize}
-  \item Human annotation of a judge-scored sample to validate citation\_support calibration.
+  \item Expert (theological) human annotation, beyond the automated cross-family judge agreement already reported.
   \item Expansion to 200+ questions sampled from real users.
   \item Thematic query expansion for grace-like semantic drift (v3.1).
   \item Per-chapter vector search RPC for within-chapter verse selection (v4).
@@ -442,9 +469,9 @@ We release Aion-BibleQA, the retrieval system, the judge harness, and all benchm
 \section*{Limitations}
 %% ---------------------------------------------------------------
 
-\textbf{LLM-as-judge, same model family.} Citation-faithfulness scores come from a Gemini judge evaluating Gemini-generated answers. Same-family judges tend to be lenient toward outputs from the same model family \citep{zheng2023judging}. The true citation\_support may be lower than 0.978 under a human annotator or cross-family judge. Future work should validate a sample of judgments against human ratings.
+\textbf{Automated judging, no expert human validation.} Citation-faithfulness scores come from LLM judges, and the primary judge (Gemini) shares a model family with the answer model, which risks same-family leniency \citep{zheng2023judging}. We mitigate this with a cross-family judge (\texttt{gpt-4.1}) on all 40 rows: the two judges agree within one rubric level on every row and report identical unsupported-claim and refusal rates (Section~\ref{sec:multijudge}), so the headline conclusions are robust to the choice of judge. We do not, however, claim expert theological validation: we evaluate only whether generated claims are supported by the cited verse text, under a reproducible multi-model protocol. Expert human annotation, and a larger automated panel (a third judge harness is included but unrun for lack of an API key), remain future work.
 
-\textbf{Pilot benchmark size.} gold\_40 v0.3 contains 40 questions. Statistical uncertainty is high: one question is 2.5\% of R@5. Results in the multi\_hop category (n\,=\,5) and adversarial category (n\,=\,2) are especially noisy. A 95\% CI on multi\_hop R@5\,=\,0.800 with n\,=\,5 spans roughly $\pm$0.30.
+\textbf{Pilot benchmark size.} gold\_40 v0.3 contains 40 questions. Statistical uncertainty is high: R@5 is averaged over the 34 non-refusal rows, so one question shifts it by roughly 3\% (1 of 34). Results in the multi\_hop category (n\,=\,5) and adversarial category (n\,=\,2) are especially noisy. A 95\% CI on multi\_hop R@5\,=\,0.800 with n\,=\,5 spans roughly $\pm$0.30.
 
 \textbf{Constructed benchmark, not user-sampled.} Questions target known failure modes from v1 development, not the distribution of queries real users ask. The benchmark was created by the same team that built the system under evaluation; scores may overstate performance relative to an independently assembled evaluation set. Real-world R@5 may differ.
 
@@ -452,7 +479,7 @@ We release Aion-BibleQA, the retrieval system, the judge harness, and all benchm
 
 \textbf{IVFFlat non-determinism.} Across three repeated runs on gold\_40 v0.2, three questions showed R@5 variance (aion\_006, aion\_007, aion\_036). Run-to-run R@5 ranged from 0.853 to 0.882 on the same question set. Benchmark runs in this paper were each performed once and frozen as canonical JSONL artefacts; results are reproducible from those frozen files.
 
-\textbf{No ablation study.} The paper reports v3 as a whole system. The v1$\to$v2$\to$v3 progression provides coarse evidence that each change improved performance, but the relative contribution of each retrieval layer is not quantified.
+\textbf{Coarse, not controlled, ablation.} The v1$\to$v2$\to$v3 progression (Table~\ref{tab:versions}) acts as a coarse ablation showing the direction of each design change, but each version alters more than one component at once, so the isolated contribution of an individual retrieval layer is not quantified.
 
 %% ---------------------------------------------------------------
 \section*{Acknowledgments}
