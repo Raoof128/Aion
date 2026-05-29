@@ -32,6 +32,8 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
   <img src="assets/reader_screenshot.png" width="30%" alt="Reader view" />
   <img src="assets/chat_screenshot.png" width="30%" alt="Chat interface" />
   <img src="assets/settings_screenshot.png" width="30%" alt="Settings menu" />
+  <br />
+  <em>Reader, Chat, and Settings interfaces</em>
 </div>
 
 ## Tech Stack
