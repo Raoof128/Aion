@@ -28,7 +28,7 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 ## Screenshots
 
-> _Screenshots coming soon._
+> **TODO:** Add screenshots of the chat, reader, and settings interfaces.
 
 ## Tech Stack
 
@@ -37,7 +37,7 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 - **Backend:** Supabase (PostgreSQL + pgvector + Edge Functions)
 - **Auth:** Supabase Anonymous Auth
 - **Embedding Model:** OpenAI `text-embedding-3-small` (stored as `halfvec(1536)`)
-- **Chat LLM:** Gemini 3.1 Flash Lite Preview
+- **Chat LLM:** Gemini 3.1 Flash Lite
 - **Voice Transcription:** OpenAI Whisper (native platforms)
 - **Data Source:** [bible.helloao.org](https://bible.helloao.org/docs/) (BSB translation)
 - **Client Caching:** @tanstack/react-query
@@ -105,7 +105,7 @@ Aion/
 │   ├── types.ts                    # TypeScript interfaces
 │   └── utils.ts                    # Relative time formatting utility
 ├── assets/                         # Images and fonts
-│   └── *.png                       # App icons + per-book background images (30+ books)
+│   └── *.png                       # App icons + per-book background images (all 66 books)
 ├── src-tauri/                      # Tauri desktop app wrapper
 │   ├── src/                        # Rust entry points
 │   ├── icons/                      # App icons (all platforms)
@@ -128,106 +128,18 @@ Aion/
 │   └── utils.test.ts
 ├── check.sh                        # Quality gate: format → lint → type-check → test
 └── docs/
-    ├── ARCHITECTURE.md
-    ├── ENVIRONMENT.md
-    ├── TESTING.md
-    └── DEPLOYMENT.md
+    ├── API.md                      # Edge Function & PostgREST API docs
+    ├── ARCHITECTURE.md             # System architecture & data flow
+    ├── DEPLOYMENT.md               # Production deployment guide
+    ├── ENVIRONMENT.md              # Environment variables list
+    ├── SETUP.md                    # Local setup instructions
+    ├── TESTING.md                  # Test suite documentation
+    └── TROUBLESHOOTING.md          # Common development issues
 ```
 
 ## Setup
 
-### Prerequisites
-
-- Node.js 22+ (CI runs on 22; 20+ works locally)
-- Expo CLI (`npm install -g expo-cli`)
-- Supabase CLI (`npm install -g supabase`)
-- A Supabase project with pgvector enabled
-- OpenAI API key (embeddings + Whisper voice transcription)
-- Google AI (Gemini) API key
-
-### 1. Install Dependencies
-
-```bash
-npm install
-cd scripts && npm install && cd ..
-```
-
-### 2. Configure Environment
-
-Copy the example files and fill in your credentials:
-
-```bash
-cp .env.example .env
-cp scripts/.env.example scripts/.env
-```
-
-Edit `.env`:
-
-```
-EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_OPENAI_KEY=your-openai-key    # Required for voice-to-text on iOS/Android
-EXPO_PUBLIC_DEV_BYPASS=your-dev-secret    # Remove for production builds
-```
-
-Edit `scripts/.env`:
-
-```
-SUPABASE_URL=https://your-project.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
-OPENAI_API_KEY=your-openai-key
-```
-
-See [docs/ENVIRONMENT.md](docs/ENVIRONMENT.md) for a full description of every variable.
-
-### 3. Database Setup
-
-Apply all migrations in order via `supabase db push` or your Supabase SQL Editor:
-
-1. `supabase/migrations/20260402080000_initial_schema.sql` — Tables, indexes, RLS, hybrid search function
-2. `supabase/migrations/20260402081000_rate_limits.sql` — Rate limiting, response cache, global usage
-3. `supabase/migrations/20260403010000_user_verse_data.sql` — Highlights, bookmarks, and notes tables
-4. `supabase/migrations/20260524000000_backend_hardening.sql` — Security hardening, FK constraints, triggers
-5. `supabase/migrations/20260524000001_optimize_embeddings.sql` — halfvec migration, IVFFlat index rebuild
-
-Enable **Anonymous Sign-Ins** in Supabase Dashboard > Authentication > Providers.
-
-### 4. Edge Function Secrets
-
-```bash
-supabase secrets set \
-  OPENAI_API_KEY="your-key" \
-  GEMINI_API_KEY="your-key" \
-  DEV_BYPASS_SECRET="your-secret"
-```
-
-### 5. Deploy Edge Function
-
-```bash
-supabase functions deploy chat --no-verify-jwt
-```
-
-### 6. Ingest Bible Data
-
-```bash
-cd scripts
-npx tsx ingest.ts
-```
-
-This fetches the entire BSB Bible from bible.helloao.org, generates embeddings via OpenAI, and upserts to Supabase. Takes ~20 minutes, costs ~$0.02. Result: 31,086 verses across all 66 books.
-
-### 7. Run the App
-
-```bash
-# Mobile (iOS/Android via Expo Go)
-npx expo start
-
-# Web browser
-npx expo start --web
-
-# Desktop (requires Rust installed)
-npm run desktop
-```
+Please refer to the comprehensive setup instructions in [docs/SETUP.md](docs/SETUP.md).
 
 ## Development
 

@@ -37,7 +37,7 @@
 ┌──────────────┐    ┌──────────────────┐
 │  OpenAI API  │    │  Gemini 3.1      │
 │  (embeddings │    │  Flash Lite      │
-│  + Whisper)  │    │  Preview         │
+│  + Whisper)  │    │                  │
 └──────────────┘    └──────────────────┘
 ```
 
@@ -54,7 +54,7 @@
 | Database | PostgreSQL + pgvector | Relational data + vector embeddings |
 | Auth | Supabase Anonymous Auth | Zero-friction device-level identity |
 | Embeddings | OpenAI text-embedding-3-small | 1536-dimension text vectors (stored as halfvec) |
-| Chat LLM | Gemini 3.1 Flash Lite Preview | Fast, cost-effective conversational AI |
+| Chat LLM | Gemini 3.1 Flash Lite | Fast, cost-effective conversational AI |
 | Voice Transcription | OpenAI Whisper | Native iOS/Android voice-to-text |
 | Data Source | bible.helloao.org | BSB Bible translation (31,086 verses, all 66 books) |
 

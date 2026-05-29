@@ -8,6 +8,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ### 2026-05-29 (Australia/Sydney)
 **Raouf:**
+- **Scope:** Documentation Audit
+- **Summary:** Performed a comprehensive documentation audit. Created missing docs (`SETUP.md`, `API.md`, `TROUBLESHOOTING.md`). Updated `README.md` (replaced inline setup instructions with `SETUP.md` link, fixed app icons book count to 66, updated Gemini LLM name, added screenshots TODO, updated file tree). Updated `ARCHITECTURE.md` (fixed Gemini LLM name and diagram). Verified no regressions.
+- **Files Changed:** `README.md`, `docs/ARCHITECTURE.md`, `docs/SETUP.md`, `docs/API.md`, `docs/TROUBLESHOOTING.md`
+- **Verification:** `./check.sh` passes successfully with all checks verified (format, lint, types, tests).
+- **Follow-ups:** None.
+
+### 2026-05-29 (Australia/Sydney)
+**Raouf:**
 - **Scope:** Book background images — final NT books
 - **Summary:** Added 9 new book background images from the external `Aion_Replacement` directory and mapped them inside the chapter reader's background source selector. Renamed and stripped trailing spaces from `1John .png` and `Jude .png` to maintain naming consistency. This completes the final batch of New Testament book backgrounds (Hebrews through Revelation).
 - **Files Changed:**
