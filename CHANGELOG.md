@@ -6,6 +6,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-06-04 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Research Paper — full audit, reviewer-response fixes, deanonymization, Zenodo DOI
+- **Summary:** Multi-pass audit and revision of `acl_latex.tex` in two rounds. **Round 1 (fresh-eyes numeric audit):** Recomputed all per-category MRR values from the frozen `v3_direct_chapter_gold40_v03.jsonl` — found Table 2 MRR values were wrong (interpretive 1.000→0.929, thematic 0.667→0.524, multi_hop 0.600→0.700); overall MRR=0.773 confirmed correct. Updated §5.2 to note aion_006 at rank 2. All R@5, citation_support, fp_refusal, and Table 3 historical values verified correct. **Round 2 (GPT-5.5 reviewer-response fixes):** (1) Added **Appendix A** with verbatim system prompt and emergent-refusal design note; (2) Added **multi-hop all-required chapter coverage** note — aion_034 passes R@5 but misses ROM.3 chapter entirely; (3) Fixed **"citation misuse" language** to unsupported/decorative citation only; (4) Softened **ethics statement** — misattribution can mislead users; (5) Added **judge expected_behaviour caveat** — category-level guidance, not gold verse coordinates; (6) Added **abstract scope brake** — pilot evidence, not general estimate; (7) Softened **"once retrieval scope is correct"** → "in this pilot, citation failures disappear when the retrieved verse set contains the required evidence"; (8) Fixed **v4 roadmap** — "would" → "intended effect, not experimentally confirmed"; (9) Fixed emergent refusal wording; (10) Updated **BSB license** — dedicated to public domain; (11) Added **BibTeX entries** for `gemini-3.1-flash-lite`, `gpt-4.1`, and Zenodo dataset; (12) Added **Zenodo DOI 10.5281/zenodo.20522874** to conclusion release statement; (13) Fixed all remaining BE spellings (summarisation, normalises, nearest-neighbour, behaviour, artefacts, neighbourhoods, penalising, generalises, parameterised, licence). **Deanonymization:** `[review]` → `[preprint]`; author block set to Mohammad Raouf Abedini, Department of Computing, Macquarie University, Sydney, Australia. **PDF metadata:** `\hypersetup` block added — Title, Author, Subject, Keywords now populated. **Desktop PDF** overwritten. **README** DOI badge added.
+- **Files Changed:**
+  - `research/paper/latex/acl_latex.tex` — all above changes; Appendix A; preprint mode; real author block; `\hypersetup`
+  - `research/paper/latex/paper.bib` — 3 new entries (gemini-3.1-flash-lite, gpt-4.1, Zenodo); Zenodo author deanonymized
+  - `research/paper/latex/acl_latex.pdf` — recompiled (8 pages, 173 KB)
+  - `research/paper/results.md` — Table 2 MRR corrected; §5.2 interpretive paragraph updated
+  - `~/Desktop/aion-bibleqa-citation-faithfulness-bible-rag.pdf` — overwritten with named preprint
+  - `README.md` — Zenodo DOI badge added
+- **Verification:** `pdflatex` + `bibtex` + `pdflatex` × 2. Zero errors. Zero undefined citations. 8 pages, 173 492 bytes. `pdfinfo` confirms all metadata fields populated.
+- **Follow-ups:** Expert theological annotation of judge-scored sample. Benchmark expansion to 200+ user-sampled questions. v3.1 grace drift fix. v4 per-chapter vector RPC.
+
 ### 2026-05-29 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Application Screenshots (Chat)
