@@ -4,7 +4,7 @@
 ![React Native](https://img.shields.io/badge/React%20Native-20232A?logo=react&logoColor=61DAFB)
 ![Supabase](https://img.shields.io/badge/Supabase-3ECF8E?logo=supabase&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-yellow)
-[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.20522874.svg)](https://doi.org/10.5281/zenodo.20522874)
+[![DOI](https://img.shields.io/badge/DOI-10.5281%2Fzenodo.20522874-blue)](https://doi.org/10.5281/zenodo.20522874)
 
 AI-powered Bible companion using Agentic Hybrid RAG (Retrieval-Augmented Generation).
 
