@@ -12,7 +12,6 @@ These are read at build time by Expo. All `EXPO_PUBLIC_` prefixed variables are 
 |----------|----------|-------------|
 | `EXPO_PUBLIC_SUPABASE_URL` | Yes | Supabase project URL (e.g. `https://abcdef.supabase.co`) |
 | `EXPO_PUBLIC_SUPABASE_ANON_KEY` | Yes | Supabase anonymous (public) API key — safe to expose |
-| `EXPO_PUBLIC_OPENAI_KEY` | Yes | OpenAI API key — used **client-side** on iOS/Android for Whisper voice transcription. Not needed on web (uses Web Speech API). |
 | `EXPO_PUBLIC_DEV_BYPASS` | No | Secret string sent as `x-dev-bypass` header to skip rate limiting during development. **Remove or leave empty for any production/App Store build.** |
 
 ### Example `.env`
@@ -20,13 +19,14 @@ These are read at build time by Expo. All `EXPO_PUBLIC_` prefixed variables are 
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_OPENAI_KEY=your-openai-key
 EXPO_PUBLIC_DEV_BYPASS=
 ```
 
 Copy from the example: `cp .env.example .env`
 
-> **Security note:** `EXPO_PUBLIC_OPENAI_KEY` is embedded in the client bundle. It is exposed at the network level (visible in request headers from the device). Keep usage scoped to Whisper transcription only; monitor for abuse in your OpenAI dashboard. For higher-security deployments, proxy Whisper through a server-side function instead.
+> **No OpenAI key in the client.** Native voice input posts the recording to the `transcribe` Edge Function with the user's Supabase session JWT; the function calls Whisper with the server-side `OPENAI_API_KEY` secret. Web uses the browser Web Speech API.
+
+The research harness reads `GEMINI_API_KEY` (Gemini judge) and `OPENAI_API_KEY` (GPT judge) from the same `.env`. Neither has the `EXPO_PUBLIC_` prefix, so neither is bundled.
 
 ---
 
@@ -65,7 +65,7 @@ supabase secrets set \
 
 | Secret | Purpose |
 |--------|---------|
-| `OPENAI_API_KEY` | Generates query embeddings inside the Edge Function |
+| `OPENAI_API_KEY` | Query embeddings (`chat`) and Whisper transcription for native voice input (`transcribe`) |
 | `GEMINI_API_KEY` | Calls Gemini 3.1 Flash Lite for streaming chat responses |
 | `DEV_BYPASS_SECRET` | Must match `EXPO_PUBLIC_DEV_BYPASS` to allow rate limit bypass |
 | `SUPABASE_URL` | Auto-injected by Supabase — do not set manually |

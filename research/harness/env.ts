@@ -32,10 +32,17 @@ export const JUDGE_OUTPUT =
   process.env.JUDGE_OUTPUT ||
   "research/results/v3_direct_chapter_gold40_v03_judged.jsonl";
 
-if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
-  console.error(
-    "Error: EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must be set.\n" +
-      "Run with: tsx --env-file .env research/harness/run-benchmark.ts",
-  );
-  process.exit(1);
+/**
+ * Exits unless Supabase credentials are set. Called only by modules that talk to
+ * the live backend, so the offline reporters (report-metrics, report-judge) can
+ * recompute scores from the frozen JSONL artefacts without any credentials.
+ */
+export function requireSupabaseEnv(): void {
+  if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+    console.error(
+      "Error: EXPO_PUBLIC_SUPABASE_URL and EXPO_PUBLIC_SUPABASE_ANON_KEY must be set.\n" +
+        "Run with: tsx --env-file .env research/harness/run-benchmark.ts",
+    );
+    process.exit(1);
+  }
 }

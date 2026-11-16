@@ -10,6 +10,32 @@ AI-powered Bible companion using Agentic Hybrid RAG (Retrieval-Augmented Generat
 
 Users interact through a Perplexity-style chat interface with dynamic prompt suggestions and rich verse cards. All AI responses are grounded in actual Bible data retrieved via combined keyword and semantic search.
 
+## Research: Aion-BibleQA
+
+Aion is also the system under test for a small benchmark on **retrieval quality, citation faithfulness and false-premise robustness** in verse-grounded RAG.
+
+- **Preprint:** [research/paper/latex/acl_latex.pdf](research/paper/latex/acl_latex.pdf) · DOI [10.5281/zenodo.20522874](https://doi.org/10.5281/zenodo.20522874)
+- **Benchmark:** 40 hand-annotated questions across six categories ([gold_40 v0.3](research/datasets/aion_bibleqa_gold_40_v0.3.jsonl), [annotation guidelines](research/datasets/annotation_guidelines.md))
+- **Harness, judges, frozen results:** [research/](research/README.md)
+
+| Metric (gold_40 v0.3, v3 system) | Score |
+| --- | --- |
+| Recall@5 (34 retrieval questions) | 0.941 |
+| MRR | 0.773 |
+| Mean citation support (LLM judge, 0–1 rubric) | 0.978 |
+| Unsupported citations (score < 0.5) | 0 / 34 |
+| False-premise and adversarial refusals | 6 / 6 |
+
+**Recompute the headline numbers offline.** No API keys and no network access needed; the scripts read the frozen JSONL artefacts committed in `research/results/`:
+
+```bash
+npm ci
+npm run research:metrics -- research/results/v3_direct_chapter_gold40_v03.jsonl   # R@5, P@5, MRR
+npm run research:judge-report                                                     # citation support, refusals
+```
+
+**Scope.** This is a pilot: 40 questions written by the system's author, one translation (BSB), single frozen runs over a non-deterministic IVFFlat index, and automated LLM judges rather than expert human annotation. The paper's Limitations section quantifies each of these. Open failures (`aion_027`, `aion_035`, `aion_036`) are listed in [research/README.md](research/README.md#open-failures).
+
 ## Features
 
 - **Conversational Bible Q&A** — Ask questions in plain language and receive contextual answers grounded in scripture
@@ -18,7 +44,7 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 - **Bible reader** — Browse all 66 books, select chapters, and read with custom per-book background art
 - **Rich verse cards** — Inline Bible verse display with book, chapter, and verse attribution
 - **Verse highlights & bookmarks** — Colour-coded highlighting and bookmarking persisted per user
-- **Voice-to-text** — Mic input via Web Speech API (web) or OpenAI Whisper (iOS/Android)
+- **Voice-to-text** — Mic input via Web Speech API (web) or OpenAI Whisper through a server-side Edge Function (iOS/Android)
 - **Text-to-speech** — Read-aloud support via platform TTS engines
 - **Daily verse notifications** — Push notification with a rotating verse of the day
 - **Prompt suggestions** — Dynamic suggestion pills on the home screen to inspire exploration
@@ -122,7 +148,11 @@ Aion/
 │   └── fix-incomplete.ts           # Targeted re-ingest for incomplete books
 ├── supabase/
 │   ├── migrations/                 # 5 SQL migration files (see Setup)
-│   └── functions/chat/index.ts     # RAG Edge Function (Deno runtime)
+│   └── functions/
+│       ├── chat/index.ts           # RAG Edge Function (Deno runtime)
+│       ├── record-open/index.ts    # Daily-streak recording
+│       └── transcribe/index.ts     # Whisper proxy for native voice input
+├── research/                       # Aion-BibleQA benchmark, harness, judges, frozen results, paper
 ├── tests/                          # Node.js test suite (tsx runner, 79 tests)
 │   ├── bible-data.test.ts
 │   ├── bible-reference-parser.test.ts
@@ -183,7 +213,7 @@ See [docs/TESTING.md](docs/TESTING.md) for details on the test suite and [docs/D
 
 ## Security
 
-- **API keys server-side only:** OpenAI, Gemini, and service_role keys stored as Edge Function secrets
+- **API keys server-side only:** OpenAI (embeddings and Whisper), Gemini and `service_role` keys are Edge Function secrets. Native voice input goes through the authenticated `transcribe` function (2 MB cap), so no OpenAI key ships in the app
 - **IP-based rate limiting:** 5/min burst, 30/3hrs per IP, 200/day global cap
 - **Response cache:** Exact-match queries served from DB at zero LLM cost
 - **Message length cap:** 500 characters max to prevent token-stuffing

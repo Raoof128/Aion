@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./env.ts";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, requireSupabaseEnv } from "./env.ts";
+
+requireSupabaseEnv();
 
 /** Signs in anonymously and returns a short-lived JWT for the benchmark session. */
 export async function getAnonToken(): Promise<string> {

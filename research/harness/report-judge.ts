@@ -5,8 +5,8 @@
  * false-premise refusal, and per-category breakdowns.
  *
  * Usage:
- *   tsx --env-file .env research/harness/report-judge.ts
- *   tsx --env-file .env research/harness/report-judge.ts path/to/judged.jsonl
+ *   tsx research/harness/report-judge.ts
+ *   tsx research/harness/report-judge.ts path/to/judged.jsonl
  */
 
 import { createReadStream } from "node:fs";

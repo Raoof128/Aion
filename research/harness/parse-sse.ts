@@ -1,6 +1,8 @@
-import { SUPABASE_URL, DEV_BYPASS_SECRET } from "./env.ts";
+import { SUPABASE_URL, DEV_BYPASS_SECRET, requireSupabaseEnv } from "./env.ts";
 import { normaliseCoord } from "./metrics-retrieval.ts";
 import type { SSEParseResult } from "./types.ts";
+
+requireSupabaseEnv();
 
 /**
  * Sends a question to the Aion chat Edge Function and parses the SSE stream.

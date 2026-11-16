@@ -3,14 +3,25 @@
 **Project:** Aion-BibleQA-Faithfulness  
 **Framing:** Benchmark and evaluation framework for citation faithfulness and false-premise robustness in verse-grounded Bible RAG.
 
-## Quick start
+## Reproduce the reported numbers (offline)
+
+The frozen run outputs in `results/` are the canonical artefacts. These commands recompute every headline number from them with no API keys and no network access (run `npm ci` first):
 
 ```bash
-# Run benchmark against stub dataset
-npm run research:benchmark
+npm run research:metrics -- research/results/v3_direct_chapter_gold40_v03.jsonl   # R@5=0.941, MRR=0.773
+npm run research:judge-report                                                     # citation_support=0.978, refusal 6/6
+npm run research:metrics -- research/results/v2_chapter_ref_gold40_v02.jsonl      # earlier rows of the progression table
+```
 
-# Print metrics from last run
-npm run research:metrics
+`tests/research-metrics.test.ts` covers the retrieval-metric functions and runs as part of `./check.sh`.
+
+## Re-run live (needs credentials)
+
+`run-benchmark.ts` calls the deployed Edge Function and `judge-citation*.ts` call model APIs, so they need a `.env` (see `.env.example`). Live reruns can differ from the frozen files near the IVFFlat rank boundary; see the paper's Limitations.
+
+```bash
+npm run research:benchmark -- --dataset research/datasets/aion_bibleqa_gold_40_v0.3.jsonl --out research/results/raw_runs.jsonl
+npm run research:judge     # Gemini citation judge
 ```
 
 ## Folder structure
@@ -64,7 +75,15 @@ Canonical artefacts: `research/results/phase3_citation_faithfulness_gold40_v03.j
 | aion_035 | multi_hop | `per_chapter_guarantee_wrong_verse` — JHN.10.1 guaranteed instead of JHN.10.11 | v4 |
 | aion_036 | multi_hop | `IVFFlat_boundary` — PHP.4.6 + MAT.6.25 inconsistently absent | v4 (per-chapter vector RPC) |
 
+## Cross-family judge (paper, Multi-Judge Robustness section)
+
+The paper reports a second judge (OpenAI `gpt-4.1`, identical rubric) over all 40 rows: exact agreement 31/40, within one rubric step 40/40, unsupported rate 0.000 and refusals 6/6 under both judges. Harness: `harness/judge-citation-gpt.ts`; agreement report: `npm run research:multijudge`.
+
+**Artefact status:** the raw GPT judge output (`results/gpt_judge_all40_v03.jsonl`) was excluded by an earlier `.gitignore` rule and is not yet in the repository, so this table cannot currently be recomputed offline. To regenerate it: `GPT_JUDGE_ALL=1 npx tsx --env-file .env research/harness/judge-citation-gpt.ts`. A third judge harness (`judge-citation-claude.ts`) is included but has not been run.
+
 ## Paper
 
-`research/paper/` — full paper skeleton (8 sections, DRAFT).  
-Title: *Aion: A Benchmark for Citation-Faithfulness and False-Premise Robustness in Verse-Grounded Bible RAG*
+- **Canonical version:** `paper/latex/acl_latex.tex` and the compiled `paper/latex/acl_latex.pdf` (8 pages, ACL format), published as DOI [10.5281/zenodo.20522874](https://doi.org/10.5281/zenodo.20522874).
+- `paper/*.md` are the earlier section-by-section drafts and predate the multi-judge section and the final audit. Where they differ from the LaTeX, the LaTeX is correct.
+
+Title: *Aion-BibleQA: Evaluating Retrieval and Citation Faithfulness in Verse-Grounded Bible RAG Systems*

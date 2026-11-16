@@ -41,8 +41,8 @@ echo -e "\n4. Running Unit & Integration Tests..."
 TMPFILE=$(mktemp)
 npm run test 2>&1 | tee "$TMPFILE"
 TEST_EXIT=${PIPESTATUS[0]}
-PASS_COUNT=$(grep "^# pass " "$TMPFILE" | awk '{print $3}')
-FAIL_COUNT=$(grep "^# fail " "$TMPFILE" | awk '{print $3}')
+PASS_COUNT=$(grep -E "^(#|ℹ) pass " "$TMPFILE" | awk '{print $3}')
+FAIL_COUNT=$(grep -E "^(#|ℹ) fail " "$TMPFILE" | awk '{print $3}')
 rm -f "$TMPFILE"
 if [ "$TEST_EXIT" -eq 0 ]; then
   echo -e "${GREEN}✓ All ${PASS_COUNT} tests passed successfully${NC}"

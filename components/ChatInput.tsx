@@ -5,8 +5,11 @@ import * as Haptics from "expo-haptics";
 import { useAudioRecorder, RecordingPresets, AudioModule } from "expo-audio";
 import { ArrowUp, Mic, MicOff } from "lucide-react-native";
 import { colors, fonts } from "../lib/theme";
+import { supabase } from "../lib/supabase";
 
-const OPENAI_KEY = process.env.EXPO_PUBLIC_OPENAI_KEY || "";
+// Native voice input is transcribed by the `transcribe` Edge Function, which holds
+// the OpenAI key server-side. No OpenAI key ships in the client bundle.
+const TRANSCRIBE_URL = `${(process.env.EXPO_PUBLIC_SUPABASE_URL || "").replace(/\/$/, "")}/functions/v1/transcribe`;
 
 interface ChatInputProps {
   onSend: (message: string) => void;
@@ -77,7 +80,7 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
     setIsListening(true);
   };
 
-  // Native: record with expo-audio, transcribe with OpenAI Whisper
+  // Native: record with expo-audio, transcribe server-side (Whisper via Edge Function)
   const toggleVoiceNative = async () => {
     if (isListening) {
       audioRecorder.stop();
@@ -87,13 +90,17 @@ export function ChatInput({ onSend, disabled }: ChatInputProps) {
       if (!uri) return;
 
       try {
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
+        if (!session) return;
+
         const formData = new FormData();
         formData.append("file", { uri, name: "audio.m4a", type: "audio/m4a" } as unknown as Blob);
-        formData.append("model", "whisper-1");
 
-        const res = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        const res = await fetch(TRANSCRIBE_URL, {
           method: "POST",
-          headers: { Authorization: `Bearer ${OPENAI_KEY}` },
+          headers: { Authorization: `Bearer ${session.access_token}` },
           body: formData,
         });
 

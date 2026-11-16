@@ -66,7 +66,6 @@ Edit `.env`:
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://<your-project>.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=<your-anon-key>
-EXPO_PUBLIC_OPENAI_KEY=<your-openai-key>   # Required for voice-to-text on iOS/Android
 EXPO_PUBLIC_DEV_BYPASS=<your-dev-secret>   # Remove for production builds
 ```
 

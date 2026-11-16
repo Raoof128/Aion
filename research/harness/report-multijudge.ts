@@ -3,8 +3,9 @@
  *
  * Computes agreement statistics for the multi-judge validation sample.
  *
- * Always available (machine data): Gemini vs GPT cross-family agreement, read
- * from research/results/gpt_judge_sample15_v03.jsonl.
+ * Gemini vs GPT cross-family agreement, read from the GPT judge output
+ * (default research/results/gpt_judge_all40_v03.jsonl, the full 40-row panel
+ * reported in the paper; pass a path to read the 15-row sample instead).
  *
  * Once the two volunteer reviewers fill reviewer_1_score / reviewer_2_score in
  * research/results/human_validation_15.csv, this also reports human-vs-judge and
@@ -12,12 +13,12 @@
  * human columns and the report says so — nothing is imputed.
  *
  * Usage:
- *   tsx research/harness/report-multijudge.ts
+ *   tsx research/harness/report-multijudge.ts [path/to/gpt_judge.jsonl]
  */
 
 import { readFileSync, existsSync } from "node:fs";
 
-const GPT_JSONL = "research/results/gpt_judge_sample15_v03.jsonl";
+const GPT_JSONL = process.argv[2] || "research/results/gpt_judge_all40_v03.jsonl";
 const CSV = "research/results/human_validation_15.csv";
 
 type J = {
@@ -28,6 +29,14 @@ type J = {
   gpt_citation_support: number | null;
   gpt_false_premise_refusal: number | null;
 };
+
+if (!existsSync(GPT_JSONL)) {
+  console.error(
+    `No GPT judge output at ${GPT_JSONL}.\n` +
+      "Generate it with: GPT_JUDGE_ALL=1 tsx --env-file .env research/harness/judge-citation-gpt.ts",
+  );
+  process.exit(1);
+}
 
 const judged: J[] = readFileSync(GPT_JSONL, "utf8")
   .trim()

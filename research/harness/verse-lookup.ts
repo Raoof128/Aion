@@ -1,5 +1,7 @@
 import { createClient } from "@supabase/supabase-js";
-import { SUPABASE_URL, SUPABASE_ANON_KEY } from "./env.ts";
+import { SUPABASE_URL, SUPABASE_ANON_KEY, requireSupabaseEnv } from "./env.ts";
+
+requireSupabaseEnv();
 
 export type VerseFetched = {
   book_id: string;

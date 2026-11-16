@@ -51,9 +51,11 @@ supabase secrets list
 
 ```bash
 supabase functions deploy chat --no-verify-jwt
+supabase functions deploy record-open --no-verify-jwt
+supabase functions deploy transcribe --no-verify-jwt   # Whisper proxy for native voice input
 ```
 
-`--no-verify-jwt` is intentional — the function performs its own JWT validation using `supabase.auth.getUser()`.
+`--no-verify-jwt` is intentional — each function performs its own JWT validation using `supabase.auth.getUser()`.
 
 ### Verify
 

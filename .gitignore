@@ -53,6 +53,7 @@ scripts/.env
 # OS
 Thumbs.db
 
-# Research results
-research/results/*
-!research/results/.gitkeep
+# Research results: frozen artefacts in research/results/ are committed so the
+# paper's numbers can be recomputed offline. Only the scratch default output of
+# run-benchmark.ts is ignored.
+research/results/raw_runs*.jsonl

@@ -34,7 +34,6 @@ Edit `.env` (client environment):
 ```
 EXPO_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 EXPO_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
-EXPO_PUBLIC_OPENAI_KEY=your-openai-key    # Required for voice-to-text on iOS/Android
 EXPO_PUBLIC_DEV_BYPASS=your-dev-secret    # Remove for production builds
 ```
 
@@ -81,6 +80,8 @@ supabase secrets set \
 
 ```bash
 supabase functions deploy chat --no-verify-jwt
+supabase functions deploy record-open --no-verify-jwt
+supabase functions deploy transcribe --no-verify-jwt   # Whisper proxy for native voice input
 ```
 
 ---

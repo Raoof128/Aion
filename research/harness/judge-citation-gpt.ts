@@ -12,7 +12,7 @@
  *   tsx --env-file .env research/harness/judge-citation-gpt.ts
  *   tsx --env-file .env research/harness/judge-citation-gpt.ts --dataset <in.jsonl> --out <out.jsonl>
  *
- * Requires EXPO_PUBLIC_OPENAI_KEY in .env.
+ * Requires OPENAI_API_KEY in .env (EXPO_PUBLIC_OPENAI_KEY accepted for older .env files).
  */
 
 import { createReadStream, createWriteStream } from "node:fs";
@@ -20,7 +20,7 @@ import { createInterface } from "node:readline";
 import { fetchVerseTexts, formatVerseBlock } from "./verse-lookup.ts";
 import type { JudgedResult } from "./types.ts";
 
-const OPENAI_API_KEY = process.env.EXPO_PUBLIC_OPENAI_KEY || "";
+const OPENAI_API_KEY = process.env.OPENAI_API_KEY || process.env.EXPO_PUBLIC_OPENAI_KEY || "";
 const JUDGE_MODEL = "gpt-4.1";
 const OPENAI_URL = "https://api.openai.com/v1/chat/completions";
 const INTER_CALL_DELAY = 800;
@@ -172,7 +172,7 @@ const sleep = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 async function main() {
   if (!OPENAI_API_KEY) {
-    console.error("Error: EXPO_PUBLIC_OPENAI_KEY must be set in .env.");
+    console.error("Error: OPENAI_API_KEY must be set in .env.");
     process.exit(1);
   }
 

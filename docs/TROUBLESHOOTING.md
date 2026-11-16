@@ -27,7 +27,7 @@ This guide covers common issues encountered during development and deployment of
 
 **Issue:** The microphone button doesn't do anything or throws an error on iOS/Android.
 **Fix:**
-- Ensure `EXPO_PUBLIC_OPENAI_KEY` is set in your `.env`. Native platforms rely on OpenAI Whisper for transcription.
+- Native voice input is transcribed by the `transcribe` Edge Function. Ensure it is deployed (`supabase functions deploy transcribe`) and that the `OPENAI_API_KEY` Edge Function secret is set.
 - Ensure the app has microphone permissions enabled in your device settings.
 
 ## 5. Supabase CLI Auth Errors
