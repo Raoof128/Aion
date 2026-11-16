@@ -42,7 +42,10 @@ CREATE POLICY "No client access to transcribe_global_usage"
   USING (false);
 
 -- Limits: per user and per IP, 5/min and 20 per 3 hours; 100/day global.
--- The global row is locked FOR UPDATE so concurrent calls cannot both pass the cap.
+-- The global row is locked FOR UPDATE before any count is read, so concurrent calls run
+-- the whole check-and-insert one at a time (no TOCTOU between count and insert). Under
+-- READ COMMITTED each later statement sees rows committed by the previous lock holder.
+-- Serialising every call is acceptable at this volume (global cap 100/day).
 CREATE OR REPLACE FUNCTION check_transcribe_rate_limit(p_ip_address TEXT, p_user_id UUID DEFAULT NULL)
 RETURNS TABLE (allowed BOOLEAN, message TEXT)
 LANGUAGE plpgsql
@@ -56,6 +59,16 @@ BEGIN
     RETURN QUERY SELECT false, 'Unauthorized.'::text;
     RETURN;
   END IF;
+
+  -- Take the serialising lock first.
+  INSERT INTO transcribe_global_usage (date, request_count)
+  VALUES (CURRENT_DATE, 0)
+  ON CONFLICT (date) DO NOTHING;
+
+  SELECT request_count INTO daily_global
+  FROM transcribe_global_usage
+  WHERE date = CURRENT_DATE
+  FOR UPDATE;
 
   -- Per user (unforgeable JWT subject)
   SELECT count(*) INTO minute_count
@@ -94,15 +107,6 @@ BEGIN
     RETURN QUERY SELECT false, 'Voice input limit reached. Please type your question or try later.'::text;
     RETURN;
   END IF;
-
-  INSERT INTO transcribe_global_usage (date, request_count)
-  VALUES (CURRENT_DATE, 0)
-  ON CONFLICT (date) DO NOTHING;
-
-  SELECT request_count INTO daily_global
-  FROM transcribe_global_usage
-  WHERE date = CURRENT_DATE
-  FOR UPDATE;
 
   IF daily_global >= 100 THEN
     RETURN QUERY SELECT false, 'Voice input has reached its daily limit. Please type your question.'::text;
