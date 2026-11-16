@@ -2,8 +2,14 @@
 --
 -- Kept separate from check_rate_limit so voice notes do not spend a user's chat quota,
 -- and so transcription has its own global daily ceiling on OpenAI spend. Anonymous
--- sign-in means any client can mint a JWT, so the per-IP and global caps are the
--- real abuse control, not authentication.
+-- sign-in means any client can mint a JWT, so authentication alone is not an abuse
+-- control. Three layers bound spend:
+--   * per user (the JWT subject, which cannot be forged; Supabase Auth separately
+--     rate-limits anonymous sign-ups per IP, so minting many users is throttled),
+--   * per IP (best effort: x-forwarded-for is client-influenced),
+--   * a global daily ceiling that holds regardless of either.
+-- The Edge Function calls this only after the upload has passed validation, so
+-- malformed requests cannot spend quota.
 
 CREATE TABLE transcribe_rate_limits (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -14,6 +20,9 @@ CREATE TABLE transcribe_rate_limits (
 
 CREATE INDEX idx_transcribe_rate_limits_ip_time
   ON transcribe_rate_limits (ip_address, created_at DESC);
+
+CREATE INDEX idx_transcribe_rate_limits_user_time
+  ON transcribe_rate_limits (user_id, created_at DESC);
 
 ALTER TABLE transcribe_rate_limits ENABLE ROW LEVEL SECURITY;
 
@@ -32,7 +41,7 @@ CREATE POLICY "No client access to transcribe_global_usage"
   ON transcribe_global_usage FOR ALL
   USING (false);
 
--- Limits: 5/min per IP, 20 per 3 hours per IP, 100/day global.
+-- Limits: per user and per IP, 5/min and 20 per 3 hours; 100/day global.
 -- The global row is locked FOR UPDATE so concurrent calls cannot both pass the cap.
 CREATE OR REPLACE FUNCTION check_transcribe_rate_limit(p_ip_address TEXT, p_user_id UUID DEFAULT NULL)
 RETURNS TABLE (allowed BOOLEAN, message TEXT)
@@ -43,6 +52,31 @@ DECLARE
   window_count INTEGER;
   daily_global INTEGER;
 BEGIN
+  IF p_user_id IS NULL THEN
+    RETURN QUERY SELECT false, 'Unauthorized.'::text;
+    RETURN;
+  END IF;
+
+  -- Per user (unforgeable JWT subject)
+  SELECT count(*) INTO minute_count
+  FROM transcribe_rate_limits
+  WHERE user_id = p_user_id AND created_at > now() - interval '1 minute';
+
+  IF minute_count >= 5 THEN
+    RETURN QUERY SELECT false, 'Too many voice requests. Please wait a moment.'::text;
+    RETURN;
+  END IF;
+
+  SELECT count(*) INTO window_count
+  FROM transcribe_rate_limits
+  WHERE user_id = p_user_id AND created_at > now() - interval '3 hours';
+
+  IF window_count >= 20 THEN
+    RETURN QUERY SELECT false, 'Voice input limit reached. Please type your question or try later.'::text;
+    RETURN;
+  END IF;
+
+  -- Per IP (best effort)
   SELECT count(*) INTO minute_count
   FROM transcribe_rate_limits
   WHERE ip_address = p_ip_address AND created_at > now() - interval '1 minute';

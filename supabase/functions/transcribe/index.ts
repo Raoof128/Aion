@@ -5,9 +5,10 @@
 // session JWT and the recorded audio. Web clients use the browser Web Speech API and
 // never call this function.
 //
-// Abuse controls: anonymous sign-in means any client can mint a JWT, so the real limits
-// are the per-IP and global caps in check_transcribe_rate_limit (fail closed), plus a
-// hard byte cap enforced while streaming the body, before it is parsed.
+// Abuse controls: anonymous sign-in means any client can mint a JWT, so authentication
+// alone does not bound spend. check_transcribe_rate_limit (fail closed) applies per-user,
+// per-IP and global daily caps, and is charged only after the upload passes validation.
+// A hard byte cap is enforced while streaming the body, before it is parsed.
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.0";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
@@ -39,6 +40,8 @@ const CORS_HEADERS = {
   "Access-Control-Allow-Methods": "POST, OPTIONS",
 };
 
+// Best-effort IP for the per-IP limit. x-forwarded-for is client-influenced, so the
+// per-user (JWT subject) and global caps are the limits that cannot be bypassed.
 function getClientIp(req: Request): string {
   const forwarded = req.headers.get("x-forwarded-for");
   if (forwarded) return forwarded.split(",")[0].trim();
@@ -98,14 +101,6 @@ Deno.serve(async (req) => {
   const declared = Number(req.headers.get("content-length") ?? "0");
   if (declared > MAX_BODY_BYTES) return json({ error: "Audio too large" }, 413);
 
-  // Rate limit by IP (anonymous user ids are free to mint). Fail closed.
-  const { data: rl, error: rlError } = await serviceSupabase.rpc("check_transcribe_rate_limit", {
-    p_ip_address: getClientIp(req),
-    p_user_id: user.id,
-  });
-  if (rlError || !rl?.[0]) return json({ error: "Rate limit check failed. Please try again." }, 429);
-  if (!rl[0].allowed) return json({ error: rl[0].message ?? "Too many requests" }, 429);
-
   let raw: Uint8Array<ArrayBuffer>;
   try {
     raw = await readBodyCapped(req, MAX_BODY_BYTES);
@@ -129,6 +124,15 @@ Deno.serve(async (req) => {
   if (file.size === 0) return json({ error: "Empty audio file" }, 400);
   if (file.size > MAX_AUDIO_BYTES) return json({ error: "Audio too large" }, 413);
   if (!ALLOWED_TYPES.has(file.type)) return json({ error: "Unsupported audio type" }, 415);
+
+  // Charge quota only for a valid upload, immediately before the paid upstream call.
+  // Per user, per IP and global caps; fail closed.
+  const { data: rl, error: rlError } = await serviceSupabase.rpc("check_transcribe_rate_limit", {
+    p_ip_address: getClientIp(req),
+    p_user_id: user.id,
+  });
+  if (rlError || !rl?.[0]) return json({ error: "Rate limit check failed. Please try again." }, 429);
+  if (!rl[0].allowed) return json({ error: rl[0].message ?? "Too many requests" }, 429);
 
   const upstream = new FormData();
   upstream.append("file", file, file.name || "audio.m4a");

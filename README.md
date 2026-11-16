@@ -214,7 +214,7 @@ See [docs/TESTING.md](docs/TESTING.md) for details on the test suite and [docs/D
 ## Security
 
 - **API keys server-side only:** OpenAI (embeddings and Whisper), Gemini and `service_role` keys are Edge Function secrets. Native voice input goes through the authenticated `transcribe` function, so no OpenAI key ships in the app
-- **IP-based rate limiting:** chat 5/min burst, 30/3hrs per IP, 200/day global cap; voice transcription has its own limiter (5/min, 20/3hrs per IP, 100/day global) and a 2 MB body cap enforced while streaming
+- **IP-based rate limiting:** chat 5/min burst, 30/3hrs per IP, 200/day global cap; voice transcription has its own limiter (5/min and 20/3hrs per user and per IP, 100/day global), charged only after the upload validates, plus a 2 MB body cap enforced while streaming
 - **Response cache:** Exact-match queries served from DB at zero LLM cost
 - **Message length cap:** 500 characters max to prevent token-stuffing
 - **RLS enforced:** All tables protected; users can only access their own data
