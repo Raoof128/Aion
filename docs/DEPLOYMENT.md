@@ -24,6 +24,8 @@ supabase/migrations/20260402081000_rate_limits.sql
 supabase/migrations/20260403010000_user_verse_data.sql
 supabase/migrations/20260524000000_backend_hardening.sql
 supabase/migrations/20260524000001_optimize_embeddings.sql
+supabase/migrations/20260525000000_streak_system.sql
+supabase/migrations/20261116000000_transcribe_rate_limit.sql
 ```
 
 > **Production caution:** Migration `20260524000000_backend_hardening.sql` adds FK constraints to existing tables. Run `EXPLAIN` on the migration and verify data integrity (no orphaned `user_id` values) before applying to a populated production database.

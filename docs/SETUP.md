@@ -58,6 +58,8 @@ Apply all migrations in order via `supabase db push` or your Supabase SQL Editor
 3. `supabase/migrations/20260403010000_user_verse_data.sql` — Highlights, bookmarks, and notes tables
 4. `supabase/migrations/20260524000000_backend_hardening.sql` — Security hardening, FK constraints, triggers
 5. `supabase/migrations/20260524000001_optimize_embeddings.sql` — halfvec migration, IVFFlat index rebuild
+6. `supabase/migrations/20260525000000_streak_system.sql` — Reading streak tables and `update_streak`
+7. `supabase/migrations/20261116000000_transcribe_rate_limit.sql` — Separate rate limiter for the `transcribe` (voice) function
 
 Enable **Anonymous Sign-Ins** in Supabase Dashboard > Authentication > Providers.
 

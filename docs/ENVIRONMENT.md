@@ -24,7 +24,7 @@ EXPO_PUBLIC_DEV_BYPASS=
 
 Copy from the example: `cp .env.example .env`
 
-> **No OpenAI key in the client.** Native voice input posts the recording to the `transcribe` Edge Function with the user's Supabase session JWT; the function calls Whisper with the server-side `OPENAI_API_KEY` secret. Web uses the browser Web Speech API.
+> **No OpenAI key in the client.** Native voice input posts the recording to the `transcribe` Edge Function with the user's Supabase session JWT; the function applies `check_transcribe_rate_limit` (fail closed), caps the body at 2 MB while streaming, and calls Whisper with the server-side `OPENAI_API_KEY` secret. Web uses the browser Web Speech API.
 
 The research harness reads `GEMINI_API_KEY` (Gemini judge) and `OPENAI_API_KEY` (GPT judge) from the same `.env`. Neither has the `EXPO_PUBLIC_` prefix, so neither is bundled.
 

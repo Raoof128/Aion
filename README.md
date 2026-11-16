@@ -147,7 +147,7 @@ Aion/
 │   ├── ingest.ts                   # Full Bible ingestion pipeline (BSB + embeddings)
 │   └── fix-incomplete.ts           # Targeted re-ingest for incomplete books
 ├── supabase/
-│   ├── migrations/                 # 5 SQL migration files (see Setup)
+│   ├── migrations/                 # 7 SQL migration files (see Setup)
 │   └── functions/
 │       ├── chat/index.ts           # RAG Edge Function (Deno runtime)
 │       ├── record-open/index.ts    # Daily-streak recording
@@ -213,8 +213,8 @@ See [docs/TESTING.md](docs/TESTING.md) for details on the test suite and [docs/D
 
 ## Security
 
-- **API keys server-side only:** OpenAI (embeddings and Whisper), Gemini and `service_role` keys are Edge Function secrets. Native voice input goes through the authenticated `transcribe` function (2 MB cap), so no OpenAI key ships in the app
-- **IP-based rate limiting:** 5/min burst, 30/3hrs per IP, 200/day global cap
+- **API keys server-side only:** OpenAI (embeddings and Whisper), Gemini and `service_role` keys are Edge Function secrets. Native voice input goes through the authenticated `transcribe` function, so no OpenAI key ships in the app
+- **IP-based rate limiting:** chat 5/min burst, 30/3hrs per IP, 200/day global cap; voice transcription has its own limiter (5/min, 20/3hrs per IP, 100/day global) and a 2 MB body cap enforced while streaming
 - **Response cache:** Exact-match queries served from DB at zero LLM cost
 - **Message length cap:** 500 characters max to prevent token-stuffing
 - **RLS enforced:** All tables protected; users can only access their own data
