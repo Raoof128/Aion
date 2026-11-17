@@ -6,6 +6,14 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
 
+### 2026-11-17 (Australia/Sydney)
+**Raouf:**
+- **Scope:** Repository hygiene
+- **Summary:** Removed `__pycache__/inspect.cpython-312.pyc`, a Python bytecode file committed by accident on 16 Nov, and added `__pycache__/` and `*.pyc` to `.gitignore`.
+- **Files Changed:** `__pycache__/inspect.cpython-312.pyc` (removed), `.gitignore`
+- **Verification:** `git ls-files | grep -c pyc` returns 0. No source file changed.
+- **Follow-ups:** None.
+
 ### 2026-11-16 (Australia/Sydney)
 **Raouf:**
 - **Scope:** Reviewer readiness: offline reproducibility, README research section, artefact gap
