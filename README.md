@@ -28,6 +28,9 @@ Aion is also the system under test for a small benchmark on **retrieval quality,
 
 **How to read these figures.**
 
+- These are development-set figures. There is no held-out split: the same 40 questions were used while building v1 to v3, and several accepted verse clusters were widened after looking at system output (the dataset's notes mark them, for example "retrieved by v1").
+- The six refusals are four false-premise questions and two adversarial ones.
+- The chat function passes up to six verses to the model; Recall@5 is computed over the first five.
 - Recall@5 was 0.882 on gold_40 v0.2. The accepted verse clusters for two questions (`aion_023`, `aion_033`) were widened after looking at the v3 system's failures, which gives 0.941 on v0.3. The paper's Table 1 states this; the history is in [research/README.md](research/README.md).
 - A retrieval question scores a hit if any of the top five verses is the gold verse or a member of its accepted cluster.
 - Citation support is scored by an LLM judge from the same model family as the answering model, which the paper notes can inflate scores. The 0 / 34 figure uses a cutoff of 0.5, and one answer sits exactly on it.
