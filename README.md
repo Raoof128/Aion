@@ -26,6 +26,13 @@ Aion is also the system under test for a small benchmark on **retrieval quality,
 | Unsupported citations (score < 0.5) | 0 / 34 |
 | False-premise and adversarial refusals | 6 / 6 |
 
+**How to read these figures.**
+
+- Recall@5 was 0.882 on gold_40 v0.2. The accepted verse clusters for two questions (`aion_023`, `aion_033`) were widened after looking at the v3 system's failures, which gives 0.941 on v0.3. The paper's Table 1 states this; the history is in [research/README.md](research/README.md).
+- A retrieval question scores a hit if any of the top five verses is the gold verse or a member of its accepted cluster.
+- Citation support is scored by an LLM judge from the same model family as the answering model, which the paper notes can inflate scores. The 0 / 34 figure uses a cutoff of 0.5, and one answer sits exactly on it.
+- The paper's cross-judge table cannot yet be recomputed from this repository: the raw GPT judge output was not committed (see "Artefact status" in [research/README.md](research/README.md)).
+
 **Recompute the headline numbers offline.** No API keys and no network access needed; the scripts read the frozen JSONL artefacts committed in `research/results/`:
 
 ```bash
@@ -33,6 +40,8 @@ npm ci
 npm run research:metrics -- research/results/v3_direct_chapter_gold40_v03.jsonl   # R@5, P@5, MRR
 npm run research:judge-report                                                     # citation support, refusals
 ```
+
+**How it was built.** Much of the code was written with AI coding assistants working under the rules in [AGENT.md](AGENT.md); those commits carry `Co-Authored-By` trailers.
 
 **Scope.** This is a pilot: 40 questions written by the system's author, one translation (BSB), single frozen runs over a non-deterministic IVFFlat index, and automated LLM judges rather than expert human annotation. The paper's Limitations section quantifies each of these. Open failures (`aion_027`, `aion_035`, `aion_036`) are listed in [research/README.md](research/README.md#open-failures).
 

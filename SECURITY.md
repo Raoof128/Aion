@@ -10,7 +10,7 @@
 
 If you discover a security vulnerability within Aion, please report it responsibly.
 
-**Do not open a public issue.** Instead, email the maintainers directly with:
+**Do not open a public issue.** Instead, use GitHub's private vulnerability reporting (the **Report a vulnerability** button under this repository's Security tab) and include:
 
 - A description of the vulnerability
 - Steps to reproduce
