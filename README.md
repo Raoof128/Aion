@@ -14,8 +14,9 @@ Users interact through a Perplexity-style chat interface with dynamic prompt sug
 
 Aion is also the system under test for a small benchmark on **retrieval quality, citation faithfulness and false-premise robustness** in verse-grounded RAG.
 
-- **Preprint:** [research/paper/latex/acl_latex.pdf](research/paper/latex/acl_latex.pdf) · DOI [10.5281/zenodo.20522874](https://doi.org/10.5281/zenodo.20522874)
-- **Benchmark:** 40 hand-annotated questions across six categories ([gold_40 v0.3](research/datasets/aion_bibleqa_gold_40_v0.3.jsonl), [annotation guidelines](research/datasets/annotation_guidelines.md))
+- **Preprint (v1.0, as published):** [research/paper/latex/acl_latex.pdf](research/paper/latex/acl_latex.pdf) · DOI [10.5281/zenodo.20522874](https://doi.org/10.5281/zenodo.20522874)
+- **Corrections:** [acl_latex_v1.1_draft.tex](research/paper/latex/acl_latex_v1.1_draft.tex) is a corrected source, labelled "v1.1 draft, corrects v1.0; not yet published". It has not been compiled or deposited. What it corrects is listed in [research/README.md](research/README.md#known-issues-in-preprint-v10-and-their-status-in-the-v11-draft).
+- **Benchmark:** 40 questions across six categories, written and annotated by one person, the system's author ([gold_40 v0.3](research/datasets/aion_bibleqa_gold_40_v0.3.jsonl), [annotation guidelines](research/datasets/annotation_guidelines.md))
 - **Harness, judges, frozen results:** [research/](research/README.md)
 
 | Metric (gold_40 v0.3, v3 system) | Score |
@@ -34,7 +35,9 @@ Aion is also the system under test for a small benchmark on **retrieval quality,
 - Recall@5 was 0.882 on gold_40 v0.2. The accepted verse clusters for two questions (`aion_023`, `aion_033`) were widened after looking at the v3 system's failures, which gives 0.941 on v0.3. The paper's Table 1 states this; the history is in [research/README.md](research/README.md).
 - A retrieval question scores a hit if any of the top five verses is the gold verse or a member of its accepted cluster.
 - Citation support is scored by an LLM judge from the same model family as the answering model, which the paper notes can inflate scores. The 0 / 34 figure uses a cutoff of 0.5, and one answer sits exactly on it.
+- The 95% Wilson interval for Recall@5 (32 of 34) is [0.81, 0.98]. The published v1.0 prints [0.80, 0.97]; the v1.1 draft corrects it.
 - The paper's cross-judge table cannot yet be recomputed from this repository: the raw GPT judge output was not committed (see "Artefact status" in [research/README.md](research/README.md)).
+- Every figure in this section is recomputed from the frozen files and compared with the table above by [tests/research-headline-numbers.test.ts](tests/research-headline-numbers.test.ts), which runs in `./check.sh` and in CI. [research/README.md](research/README.md#where-each-number-comes-from) maps each number to its file.
 
 **Recompute the headline numbers offline.** No API keys and no network access needed; the scripts read the frozen JSONL artefacts committed in `research/results/`:
 
@@ -58,7 +61,7 @@ npm run research:judge-report                                                   
 - **Verse highlights & bookmarks** — Colour-coded highlighting and bookmarking persisted per user
 - **Voice-to-text** — Mic input via Web Speech API (web) or OpenAI Whisper through a server-side Edge Function (iOS/Android)
 - **Text-to-speech** — Read-aloud support via platform TTS engines
-- **Daily verse notifications** — Push notification with a rotating verse of the day
+- **Verse of the day** — A rotating verse on the home screen. `lib/notifications.ts` holds a browser-notification helper for it (web Notification API) that no screen calls yet; there is no native push
 - **Prompt suggestions** — Dynamic suggestion pills on the home screen to inspire exploration
 - **Conversation history** — Persistent chat history accessible from the More tab
 - **Settings** — Font size and theme controls
@@ -78,7 +81,7 @@ npm run research:judge-report                                                   
 ## Tech Stack
 
 - **Frontend:** React Native + Expo + Expo Router
-- **Desktop:** Tauri v2 (native macOS/Windows/Linux wrapper, ~5MB)
+- **Desktop:** Tauri v2 (native macOS/Windows/Linux wrapper)
 - **Backend:** Supabase (PostgreSQL + pgvector + Edge Functions)
 - **Auth:** Supabase Anonymous Auth
 - **Embedding Model:** OpenAI `text-embedding-3-small` (stored as `halfvec(1536)`)
@@ -142,7 +145,7 @@ Aion/
 │   ├── bible-data.ts               # OT/NT book lists, VOTD rotation logic
 │   ├── bookBackgroundSettings.ts   # Per-book background settings (AsyncStorage)
 │   ├── chat.ts                     # SSE streaming + Supabase API calls
-│   ├── notifications.ts            # Daily verse push notifications
+│   ├── notifications.ts            # Daily verse browser-notification helper (not wired to a screen yet)
 │   ├── settings.tsx                # App-wide settings (font size, theme)
 │   ├── supabase.ts                 # Supabase client + isSupabaseConfigured helper
 │   ├── theme.ts                    # Design system (colours, fonts, tokens)
@@ -165,11 +168,13 @@ Aion/
 │       ├── record-open/index.ts    # Daily-streak recording
 │       └── transcribe/index.ts     # Whisper proxy for native voice input
 ├── research/                       # Aion-BibleQA benchmark, harness, judges, frozen results, paper
-├── tests/                          # Node.js test suite (tsx runner, 79 tests)
+├── tests/                          # Node.js test suite (tsx runner, 114 tests)
 │   ├── bible-data.test.ts
 │   ├── bible-reference-parser.test.ts
 │   ├── bookBackgroundSettings.test.ts
 │   ├── notifications.test.ts
+│   ├── research-headline-numbers.test.ts  # Pins the research numbers to the frozen files
+│   ├── research-metrics.test.ts
 │   ├── settings.test.ts
 │   ├── streak-helpers.test.ts
 │   ├── supabase.test.ts

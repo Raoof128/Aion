@@ -46,7 +46,7 @@
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
 | Mobile App | React Native + Expo | Cross-platform iOS/Android |
-| Desktop App | Tauri v2 | Native macOS/Windows/Linux (~5MB) |
+| Desktop App | Tauri v2 | Native macOS/Windows/Linux |
 | Routing | Expo Router | File-based navigation with tab + stack layout |
 | Styling | React Native StyleSheet | Cross-platform styling with centralised theme |
 | State | React Query | Server state caching for chat history |
@@ -254,7 +254,7 @@ Stack screens (separate from tabs):
 | `bible-data.ts` | Static OT/NT book list with chapter counts; VOTD rotation by day-of-year |
 | `bookBackgroundSettings.ts` | AsyncStorage load/save/reset for per-book background position, scale, and overlay |
 | `chat.ts` | SSE streaming hook; Supabase conversation/message API calls |
-| `notifications.ts` | Daily verse push notification scheduling and storage toggle |
+| `notifications.ts` | Daily verse browser-notification helper (web Notification API) and storage toggle; not called from a screen yet, no native push |
 | `settings.tsx` | App-wide settings context (font size scale, theme selection) |
 | `supabase.ts` | Supabase anon client; `isSupabaseConfigured` helper for dev warning banner |
 | `theme.ts` | Centralised design tokens — colours, font families, sizes, spacing |

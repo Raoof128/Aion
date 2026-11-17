@@ -37,11 +37,14 @@ CI (`.github/workflows/ci.yml`) runs the same four steps on every push and pull 
 | `tests/streak-helpers.test.ts` | Streak Helpers | `isoWeekStart` across DST boundaries, `buildWeekDays` 7-day calendar construction |
 | `tests/bible-reference-parser.test.ts` | Reference Parser | Full names, abbreviations, numbered books (1 John, 2 Timothy), verse ranges (Matt 6:14–15), multi-ref, chapter-only refs (Psalm 23, 1 Corinthians 15), CHAPTER_REGEX backtrack edge cases, case-insensitive matching, null for non-refs |
 
-**Total: 79 tests across 9 files.** All must pass before any PR is merged.
+| `tests/research-metrics.test.ts` | Retrieval metrics | `normaliseCoord`, `recallAt5`, `precisionAt5`, `mrr` on small hand-built cases |
+| `tests/research-headline-numbers.test.ts` | Research numbers | Recomputes every research figure quoted in `README.md` and `research/README.md` from the frozen files in `research/results/` and `research/datasets/`, and compares the README tables with the result. Offline: no model or network calls |
+
+**Total: 114 tests across 11 files.** All must pass before any PR is merged.
 
 ## Benchmark Harness
 
-The research benchmark (`research/harness/`) exercises the live Edge Function and is **not** part of `npm test`. It runs via:
+The live research benchmark (`research/harness/`) exercises the deployed Edge Function and is **not** part of `npm test`; only the offline checks of its frozen outputs are (see the two `research-*` rows above). The live benchmark runs via:
 
 ```bash
 npm run research:benchmark   # full gold_40 run against live Edge Function
