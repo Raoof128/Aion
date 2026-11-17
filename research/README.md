@@ -44,6 +44,19 @@ results/    — frozen run outputs + artefact markdown
 | v3 direct_chapter | gold_40 v0.2 | 0.882 | Direct DB chapter lookup; aion_035 fixed, aion_036 lost accidental rescue |
 | v3 direct_chapter | gold_40 v0.3 | 0.941 | Annotation cluster expansion for aion_023 + aion_033 |
 
+The step from 0.676 to 0.882 is mostly an annotation change, not a system change: `results/v2_chapter_ref_gold40_v02_summary.md` attributes +0.177 to the v0.1 → v0.2 cluster expansion and +0.029 to the v2 system.
+
+## Known issues in preprint v1.0
+
+Found in a November 2026 review of the paper against the committed artefacts. They do not change the headline numbers, and they will be corrected in the next version of the preprint.
+
+- **Development set, not held-out.** The same 40 questions drove v1 to v3, and accepted clusters were widened after looking at system output. The Limitations section should say so.
+- **The v1 → v2 jump is mostly annotation.** The paper's progression table scores v1 on v0.1 gold and v2 and v3 on v0.2 gold, and credits annotation only for the v0.3 step. See the note above.
+- **"Top-5 verses" in context.** The chat function passes up to six verses to the model (20 of the 40 frozen rows have six). Recall@5 is computed over the first five.
+- **"6/6 false-premise refusals"** in the abstract is four false-premise questions plus two adversarial ones, as the Results section says.
+- **`aion_034`.** The paper says it passes Recall@5 because JAS.2.17 was retrieved. The frozen row's retrieved list is `2CO.1.24, JAS.2.14, GAL.3.2, JUD.1.1, GAL.3.5, 1TH.1.3`; it passes through the cluster members JAS.2.14 and GAL.3.2.
+- **Single annotator.** There is no inter-annotator agreement figure, and some dataset notes still say "needs verification" on rows marked verified.
+
 ## Dataset schema version: 0.3
 
 ### v0.1 (baseline)
