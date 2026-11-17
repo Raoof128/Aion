@@ -57,3 +57,7 @@ Thumbs.db
 # paper's numbers can be recomputed offline. Only the scratch default output of
 # run-benchmark.ts is ignored.
 research/results/raw_runs*.jsonl
+
+# Python bytecode
+__pycache__/
+*.pyc
