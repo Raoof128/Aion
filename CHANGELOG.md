@@ -1,10 +1,20 @@
 # Changelog
 
+> **What this file is.** The per-change log for human readers, newest first. [AGENT.md](AGENT.md) holds the rules for AI coding assistants and repeats the same entries, because those rules require every session to log to both files. The overlap is intended.
+
 All notable changes to this project will be documented in this file.
 
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.1.0/).
 
 ## Change Log
+
+### 2026-11-17 (Australia/Sydney) — third review
+**Raouf:**
+- **Scope:** Research numbers pinned by a test; preprint v1.1 correction draft; dataset and app documentation
+- **Summary:** (1) New `tests/research-headline-numbers.test.ts` recomputes every research figure quoted in `README.md` and `research/README.md` from the frozen files (Recall@5 32/34 = 0.941, MRR 0.773, citation support 0.978, none below 0.5, refusals 4 false-premise + 2 adversarial, the per-category table, the progression rows, the three-run range, both Wilson intervals) and compares the README tables with the result. (2) `research/paper/latex/acl_latex_v1.1_draft.tex` is a corrected copy of the preprint source, labelled "v1.1 draft, corrects v1.0; not yet published". It fixes the six known issues plus two found in this pass: the overall Wilson interval is [0.81, 0.98], not the printed [0.80, 0.97], and the paper now says the GPT judge output is not in the repository. The published `acl_latex.tex` and `acl_latex.pdf` are unchanged. The draft was not compiled: no LaTeX toolchain was available. (3) `research/README.md` gains the v1-on-v0.2 row (0.853), a table of every frozen run rescored against every gold version, a "Where each number comes from" table, and the status of each known issue. (4) `annotation_guidelines.md` now describes v0.3, states that there is one annotator, records how the clusters were widened, and lists the ten rows whose notes still ask for verification; the dataset file is unchanged. (5) README corrections: the daily-verse notification helper is not wired to a screen and there is no native push; the unmeasured "~5MB" desktop size is removed; test count is 114. (6) `SECURITY.md` no longer lists a `0.1.x` version that does not exist; `docs/DEPLOYMENT.md` replaces a TODO with the manual scheduling step; two developer-machine paths in `docs/superpowers` are generalised. (7) This file and `CHANGELOG.md` each open with a line saying what they are. The Supabase CLI rule is restated without the command pattern, and an account email address in a 24 May log entry is removed from the current tree (it remains in git history).
+- **Files Changed:** `tests/research-headline-numbers.test.ts` (new), `research/paper/latex/acl_latex_v1.1_draft.tex` (new), `research/README.md`, `research/datasets/annotation_guidelines.md`, `research/datasets/thematic_annotation_notes.md`, `research/harness/types.ts`, `research/paper/{limitations,results,method}.md`, `README.md`, `SECURITY.md`, `docs/{TESTING,DEPLOYMENT,ARCHITECTURE}.md`, `docs/superpowers/plans/2026-04-02-aion-mvp.md`, `AGENT.md`, `CHANGELOG.md`
+- **Verification:** `./check.sh` green (format, lint, types, 114/114 tests). Changing one figure in the README table makes the new test fail. `npm run research:metrics` and `npm run research:judge-report` print the same figures. `shasum -a 256 research/paper/latex/acl_latex.pdf` is unchanged (`7ebb1bc3…`). Every file in `assets/` is referenced from code, so none was removed.
+- **Follow-ups:** Compile the v1.1 draft and decide whether to publish it on Zenodo. Regenerate and commit `results/gpt_judge_all40_v03.jsonl`. `assets/` is 177 MB of 2 to 3 MB PNGs; re-encoding them would shrink the checkout and is the owner's call.
 
 ### 2026-11-17 (Australia/Sydney) — second review
 **Raouf:**

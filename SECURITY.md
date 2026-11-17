@@ -2,9 +2,7 @@
 
 ## Supported Versions
 
-| Version | Supported |
-|---------|-----------|
-| 0.1.x   | Yes       |
+Aion has no tagged releases. Only the current `main` branch is supported.
 
 ## Reporting a Vulnerability
 
@@ -38,6 +36,8 @@ Rate limiting is keyed on the client's IP address (via `x-forwarded-for`), not o
 - **5 requests/minute** burst protection
 - **30 requests/3 hours** per IP
 - **200 requests/day** global hard cap
+
+Voice transcription has a separate limiter, keyed on both the authenticated user and the IP: 5/minute and 20/3 hours each, and 100/day globally.
 
 ### Fail-Closed Design
 If the rate limiting system encounters an error, requests are denied by default rather than allowed through.

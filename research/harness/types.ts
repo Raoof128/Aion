@@ -5,7 +5,8 @@ export type VerseCoord = {
 };
 
 export type BenchmarkQuestion = {
-  schema_version: "0.1";
+  /** The dataset version in which the row last changed. The row layout is the same in all three. */
+  schema_version: "0.1" | "0.2" | "0.3";
   id: string;
   question: string;
   category: "direct" | "thematic" | "interpretive" | "multi_hop" | "false_premise" | "adversarial";
@@ -18,6 +19,7 @@ export type BenchmarkQuestion = {
     | "refuse_adversarial"
     | "clarify_ambiguous";
   false_premise: boolean;
+  annotation_status?: string;
   notes: string;
 };
 

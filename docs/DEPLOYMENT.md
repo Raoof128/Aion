@@ -156,19 +156,17 @@ Output is placed in `src-tauri/target/release/bundle/`. macOS produces a `.dmg`,
 
 ## 6. Rate Limit Maintenance
 
-The `rate_limits` table accumulates rows over time. A `cleanup_rate_limits()` function exists in the database but is not yet scheduled.
-
-**TODO:** Schedule via pg_cron in the Supabase dashboard:
+The `rate_limits` and `transcribe_rate_limits` tables accumulate rows over time. The migrations create `cleanup_rate_limits()` and `cleanup_transcribe_rate_limits()` but do not schedule them, so scheduling is a manual step on each deployment. With the `pg_cron` extension enabled, run this once in the SQL editor:
 
 ```sql
 SELECT cron.schedule(
   'cleanup-rate-limits',
   '0 3 * * *',   -- 3am daily
-  $$ SELECT cleanup_rate_limits(); $$
+  $$ SELECT cleanup_rate_limits(); SELECT cleanup_transcribe_rate_limits(); $$
 );
 ```
 
-Without this, the `rate_limits` table will grow unbounded.
+Without this, both tables grow without bound.
 
 ---
 

@@ -1,6 +1,6 @@
 # Results
 
-<!-- Status: REVISED 2026-06-04 -->
+<!-- Status: REVISED 2026-06-04; brought into line with the v1.1 draft on 2026-11-17. The LaTeX is the reference. -->
 
 ## 5.1 Main Results
 
@@ -30,13 +30,13 @@
 
 Three observations:
 
-**Direct and interpretive categories are solved.** R@5=1.00 and citation_support=1.00 for all 17 questions in these categories. The correct verse appears in the top-5 retrieved set for every direct and interpretive question. MRR=0.929 for interpretive (vs 1.000 for direct) reflects one question (aion_006) where the correct verse was retrieved but ranked second rather than first; no citation failure resulted because the model still cited it faithfully.
+**Direct and interpretive categories have no failures on this set.** R@5=1.00 and citation_support=1.00 for all 17 questions in these categories. The correct verse appears in the top-5 retrieved set for every direct and interpretive question. MRR=0.929 for interpretive (vs 1.000 for direct) reflects one question (aion_006) where the correct verse was retrieved but ranked second rather than first; no citation failure resulted because the model still cited it faithfully.
 
 **Thematic and multi_hop categories contain the remaining retrieval failures.** Two questions fail R@5: aion_027 (thematic, grace semantic drift — salutation formulas retrieved instead of EPH.2.8-9) and aion_036 (multi_hop, IVFFlat boundary — PHP.4.6 and MAT.6.25 inconsistently absent from semantic results). Citation faithfulness is still high for these categories (cs=0.979 thematic, cs=0.900 multi_hop) — the system uses retrieved verses faithfully even when retrieval returned suboptimal content. For aion_027 specifically, the system retrieved salutation verses (EPH.4.7, 2TH.1.2) and cited them faithfully in the answer; citation_support=1.00 for that row because the judge scored faithfulness to the retrieved content, not to the ideal content. This is the retrieval-faithfulness split in action: R@5=0 but cs=1.00.
 
 **MRR=0.773 versus R@5=0.941.** The gap reflects cases where the correct verse is retrieved but not ranked first. For a citation system where the answer model prioritizes top-ranked context, verse rank matters independently of whether the verse was retrieved at all.
 
-**False-premise and adversarial robustness is perfect.** All six refusal-category questions scored 1. The system correctly identified verses that do not exist, misattributed quotes, and requests to fabricate scripture. No fabricated content appeared in any answer.
+**Refusal categories.** All six refusal-category questions scored 1 (four false-premise, two adversarial; the adversarial sample of two is too small to generalise from). The system correctly identified verses that do not exist, misattributed quotes, and requests to fabricate scripture. No fabricated content appeared in any answer.
 
 ## 5.3 Benchmark Progression (v1 → v3)
 
@@ -45,9 +45,12 @@ Three observations:
 | System | Dataset | R@5 | MRR | Notes |
 |--------|---------|-----|-----|-------|
 | v1 hybrid-ref | v0.1 | 0.676 | 0.552 | Baseline; chapter-only parser gap |
+| v1 hybrid-ref | v0.2 | 0.853 | 0.633 | Same v1 run rescored on v0.2 gold: annotation change only |
 | v2 chapter-ref | v0.2 | 0.882 | 0.700 | Chapter parser added; annotation expansion |
 | v3 direct-chapter | v0.2 | 0.882 | 0.714 | Architecture change; same dataset |
 | v3 direct-chapter | v0.3 | **0.941** | **0.773** | Annotation expansion for aion_023/033 |
+
+Of the 0.676 → 0.882 difference between the v1 and v2 rows, +0.177 is the v0.1 → v0.2 annotation change and +0.029 (one question) is the v2 system. The 95% Wilson interval for the final R@5 (32 of 34) is [0.81, 0.98].
 
 v3 on v0.2 vs v2 on v0.2 (same dataset, different architecture): R@5 holds at 0.882. The architecture change fixes aion_035 (multi-hop, Psalm 23 + John 10) but exposes aion_036 as an accidental success in v2, where an unrestricted semantic fallback happened to retrieve PHP.4.6 by chance.
 

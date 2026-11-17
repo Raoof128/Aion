@@ -55,7 +55,7 @@ Figure 1 shows the full pipeline.
                                 │
                                 ▼
 ┌─────────────────────────────────────────────────────────────────────┐
-│  Context Assembly  —  top-5 verses: "BOOK CH:VS — {text}"           │
+│  Context Assembly  —  up to 6 verses: "BOOK CH:VS — {text}"         │
 └───────────────────────────────┬─────────────────────────────────────┘
                                 │
                                 ▼
@@ -91,7 +91,7 @@ Retrieval proceeds in layers, ordered by specificity:
 
 **Layer 4 — hybrid semantic fallback**: For queries with no parsed references, the system runs an unconstrained semantic search over all verses using the query embedding. Keywords extracted from the query are used to bias results toward verses with matching lexical content.
 
-**Context assembly**: The top-5 verses across all layers are assembled into a context block formatted as `BOOK CHAPTER:VERSE — {text}` on separate lines.
+**Context assembly**: Up to six verses across all layers (retrieval metrics read the first five) are assembled into a context block formatted as `BOOK CHAPTER:VERSE — {text}` on separate lines.
 
 ## 3.4 Answer Generation
 

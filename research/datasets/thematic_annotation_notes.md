@@ -1,5 +1,7 @@
 # Thematic Annotation Notes
 
+> **Historical working notes, kept for provenance.** Written on 26 May 2026 during the first annotation pass. The draft file named below (`aion_bibleqa_gold_40_draft.jsonl`) was never committed; the committed datasets are `aion_bibleqa_gold_40.jsonl` (v0.1), `_v0.2` and `_v0.3`. The dataset has one annotator and no second annotator's labels. For the current description of the dataset, see `annotation_guidelines.md`.
+
 **Date:** 2026-05-26  
 **Status:** Draft — coords marked `needs_review` require BSB corpus verification before locking  
 **Purpose:** Guide for co-annotation of thematic questions in `aion_bibleqa_gold_40_draft.jsonl`
