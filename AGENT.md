@@ -10,6 +10,14 @@ These rules govern the development of the Aion project.
 
 ## Change Log
 
+### 2026-11-17 (Australia/Sydney) — second review
+**Raouf:**
+- **Scope:** README and research README: development-set status and known issues in preprint v1.0
+- **Summary:** A second review compared the paper with the committed artefacts. The README now says the figures are development-set figures with no held-out split, that the six refusals are four false-premise and two adversarial questions, and that the model sees up to six verses while Recall@5 covers five. `research/README.md` gains a "Known issues in preprint v1.0" section listing six discrepancies between the paper and the artefacts, including the `aion_034` sentence that names a verse the frozen row does not contain, and notes that the 0.676 → 0.882 step is mostly an annotation change.
+- **Files Changed:** `README.md`, `research/README.md`, `AGENT.md`, `CHANGELOG.md`
+- **Verification:** Each item checked against `research/results/v3_direct_chapter_gold40_v03_judged.jsonl`, `research/results/v2_chapter_ref_gold40_v02_summary.md`, `supabase/functions/chat/index.ts` and `research/paper/latex/acl_latex.tex`. No code changed.
+- **Follow-ups:** Publish a corrected preprint version on Zenodo. Add a test that pins the headline numbers to the frozen files.
+
 ### 2026-11-17 (Australia/Sydney)
 **Raouf:**
 - **Scope:** README research section, security contact, local paths in the logs

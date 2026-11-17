@@ -48,7 +48,7 @@ The step from 0.676 to 0.882 is mostly an annotation change, not a system change
 
 ## Known issues in preprint v1.0
 
-Found in a November 2026 review of the paper against the committed artefacts. They do not change the headline numbers, and they will be corrected in the next version of the preprint.
+Found in a November 2026 review of the paper against the committed artefacts. They do not change the headline numbers. The published v1.0 has not been revised; a later version should correct them.
 
 - **Development set, not held-out.** The same 40 questions drove v1 to v3, and accepted clusters were widened after looking at system output. The Limitations section should say so.
 - **The v1 → v2 jump is mostly annotation.** The paper's progression table scores v1 on v0.1 gold and v2 and v3 on v0.2 gold, and credits annotation only for the v0.3 step. See the note above.
